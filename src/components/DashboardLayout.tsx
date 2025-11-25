@@ -60,21 +60,20 @@ const DashboardLayout = ({ children, title, userType }: DashboardLayoutProps) =>
         <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar */}
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-64 p-0">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         <header className="bg-card border-b border-border p-4 sm:p-6 flex items-center gap-4">
-          <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
+          {/* Mobile Sidebar */}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <SidebarContent />
+            </SheetContent>
+          </Sheet>
           <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
         </header>
         <div className="p-4 sm:p-6">
