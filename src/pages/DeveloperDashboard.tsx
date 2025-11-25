@@ -2,8 +2,9 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LeadScoreCard from "@/components/LeadScoreCard";
 import CampaignBuilder from "@/components/CampaignBuilder";
+import LeadsManagement from "@/components/LeadsManagement";
+import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import { Building2, Users, TrendingUp, Target, Plus } from "lucide-react";
 
 const DeveloperDashboard = () => {
@@ -86,19 +87,8 @@ const DeveloperDashboard = () => {
           <CampaignBuilder />
         </TabsContent>
 
-        <TabsContent value="leads" className="space-y-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Lead Pipeline</h2>
-            <div className="flex gap-2">
-              <Button variant="outline">Filter</Button>
-              <Button variant="outline">Sort</Button>
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockLeads.map((lead) => (
-              <LeadScoreCard key={lead.id} lead={lead} />
-            ))}
-          </div>
+        <TabsContent value="leads">
+          <LeadsManagement />
         </TabsContent>
 
         <TabsContent value="developments">
@@ -116,61 +106,7 @@ const DeveloperDashboard = () => {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">Campaign Performance</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-secondary/50 rounded-lg">
-                  <div>
-                    <div className="font-medium">Marina Heights - Meta</div>
-                    <div className="text-sm text-muted-foreground">Last 30 days</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-success">4.2x</div>
-                    <div className="text-sm text-muted-foreground">ROI</div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center p-4 bg-secondary/50 rounded-lg">
-                  <div>
-                    <div className="font-medium">Skyline Tower - Google</div>
-                    <div className="text-sm text-muted-foreground">Last 30 days</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-success">3.8x</div>
-                    <div className="text-sm text-muted-foreground">ROI</div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">Conversion Funnel</h3>
-              <div className="space-y-3">
-                {[
-                  { stage: "Leads", count: 847, percentage: 100 },
-                  { stage: "Qualified", count: 156, percentage: 18 },
-                  { stage: "Viewing Booked", count: 89, percentage: 10 },
-                  { stage: "Offers Made", count: 34, percentage: 4 },
-                  { stage: "Sold", count: 12, percentage: 1.4 }
-                ].map((stage) => (
-                  <div key={stage.stage} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{stage.stage}</span>
-                      <span className="text-muted-foreground">
-                        {stage.count} ({stage.percentage}%)
-                      </span>
-                    </div>
-                    <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all"
-                        style={{ width: `${stage.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
+          <AnalyticsDashboard />
         </TabsContent>
       </Tabs>
     </DashboardLayout>
