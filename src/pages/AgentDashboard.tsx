@@ -1,6 +1,10 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CampaignBuilder from "@/components/CampaignBuilder";
+import LeadsManagement from "@/components/LeadsManagement";
+import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import { Home, Users, Calendar, TrendingUp, Plus } from "lucide-react";
 import LeadScoreCard from "@/components/LeadScoreCard";
 
@@ -87,14 +91,44 @@ const AgentDashboard = () => {
         </Card>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold mb-6">High-Intent Leads</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockLeads.map((lead) => (
-            <LeadScoreCard key={lead.id} lead={lead} />
-          ))}
-        </div>
-      </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+          <TabsTrigger value="leads">Leads</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <div>
+            <h2 className="text-2xl font-bold mb-6">High-Intent Leads</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mockLeads.map((lead) => (
+                <LeadScoreCard key={lead.id} lead={lead} />
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="campaigns">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">AI Campaign Builder</h2>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New Campaign
+            </Button>
+          </div>
+          <CampaignBuilder />
+        </TabsContent>
+
+        <TabsContent value="leads">
+          <LeadsManagement />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <AnalyticsDashboard />
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };
