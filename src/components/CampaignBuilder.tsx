@@ -16,9 +16,24 @@ const CampaignBuilder = () => {
 
   const aiSuggestions = {
     targetMarkets: [
-      { name: "Nigerian HNWIs", audience: "35-55, Income £100k+", size: "2.4M" },
-      { name: "UK Investors", audience: "40-60, Property investors", size: "1.8M" },
-      { name: "Dubai Expats", audience: "30-50, British expats", size: "850K" }
+      { 
+        name: "Nigerian HNWIs", 
+        audience: "35-55, Income £100k+", 
+        size: "2.4M",
+        reasoning: "Nigeria has the largest economy in Africa with growing wealth. UK property is viewed as stable investment for capital preservation and education planning. This segment actively seeks premium developments with rental yield potential."
+      },
+      { 
+        name: "UK Investors", 
+        audience: "40-60, Property investors", 
+        size: "1.8M",
+        reasoning: "Established domestic investors seeking portfolio diversification and rental income. Price point aligns with their investment criteria. Location offers strong capital appreciation potential and tenant demand."
+      },
+      { 
+        name: "Dubai Expats", 
+        audience: "30-50, British expats", 
+        size: "850K",
+        reasoning: "British professionals in Dubai maintain strong UK ties and seek property for retirement planning or family use. Tax-advantaged income makes them ideal buyers. They value quality developments in familiar UK locations."
+      }
     ],
     channels: [
       { 
@@ -27,7 +42,9 @@ const CampaignBuilder = () => {
         roi: "4.2x",
         reach: "150k-200k",
         description: "Facebook & Instagram targeting high-net-worth individuals",
-        recommended: true
+        recommended: true,
+        reasoning: "Highest budget allocation justified by superior targeting capabilities for international HNWIs. Meta's audience segmentation allows precise location, income, and interest-based targeting across Nigeria, UK, and Dubai. Visual format ideal for showcasing premium property features. Expected 4.2x ROI based on engagement rates and lead quality from similar developments.",
+        budgetJustification: "£2,500 supports comprehensive creative testing (3 ad sets × 5 variants) across target markets. Ensures sufficient daily budget (£83/day) to optimize algorithm learning and reach qualified prospects at scale."
       },
       { 
         name: "Google Ads", 
@@ -35,7 +52,9 @@ const CampaignBuilder = () => {
         roi: "3.8x",
         reach: "80k-120k",
         description: "Search ads targeting property investment keywords",
-        recommended: true
+        recommended: true,
+        reasoning: "Captures high-intent buyers actively searching for 'UK property investment', 'buy property [location]', and mortgage-related terms. Search ads convert better than display for consideration-stage buyers. £1,800 budget targets 50+ high-value keywords with avg CPC of £3-5, generating 360-600 qualified clicks monthly.",
+        budgetJustification: "Budget sized to dominate search results for primary keywords while testing long-tail variations. Cost-per-acquisition analysis shows this investment generates 15-20 quality leads per month at acceptable CAC."
       },
       { 
         name: "LinkedIn Ads", 
@@ -43,7 +62,9 @@ const CampaignBuilder = () => {
         roi: "3.5x",
         reach: "40k-60k",
         description: "Professional network targeting business owners & executives",
-        recommended: false
+        recommended: false,
+        reasoning: "Targets verified professionals in finance, real estate, and business ownership roles. While reach is lower, audience quality is premium—matched to your target profile. Sponsored content and InMail allow direct engagement with decision-makers in key markets.",
+        budgetJustification: "Higher CPM (£15-25) but justified by audience quality. Budget supports 2 campaigns: thought leadership content (£800) and direct InMail outreach (£400), generating 25-30 qualified leads monthly."
       },
       { 
         name: "TikTok Ads", 
@@ -51,7 +72,9 @@ const CampaignBuilder = () => {
         roi: "2.9x",
         reach: "200k-300k",
         description: "Short-form video content for younger investors",
-        recommended: false
+        recommended: false,
+        reasoning: "Emerging channel for reaching younger HNWIs (28-40) and first-time investors. Lowest CPC but requires different creative approach. Strong reach potential but less proven for property price point above £500k. Consider as experimental budget for brand awareness and long-term audience building.",
+        budgetJustification: "Modest budget appropriate for testing creative formats and audience response. £500 generates significant reach (200k+) due to low CPM (£2-4), useful for top-of-funnel awareness before scaling investment."
       }
     ],
     creativeThemes: [
@@ -221,8 +244,10 @@ const CampaignBuilder = () => {
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-border">
-                    <div className="text-xs text-muted-foreground">Potential Reach</div>
-                    <div className="text-lg font-bold text-primary">{market.size}</div>
+                    <div className="text-xs text-muted-foreground mb-2">Potential Reach</div>
+                    <div className="text-lg font-bold text-primary mb-3">{market.size}</div>
+                    <div className="text-xs text-muted-foreground mb-1 font-medium">Why This Segment?</div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{market.reasoning}</p>
                   </div>
                 </Card>
               ))}
@@ -266,6 +291,14 @@ const CampaignBuilder = () => {
                           {channel.roi} ROI
                         </Badge>
                       </div>
+                      
+                      <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border">
+                        <div className="text-xs font-medium text-foreground mb-2">Why This Channel?</div>
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-3">{channel.reasoning}</p>
+                        <div className="text-xs font-medium text-foreground mb-2">Budget Justification</div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{channel.budgetJustification}</p>
+                      </div>
+
                       <div className="grid grid-cols-3 gap-4 mt-4">
                         <div>
                           <div className="text-xs text-muted-foreground">Budget</div>
