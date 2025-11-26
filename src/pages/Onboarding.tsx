@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Building2, Users, BarChart3, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/naybourhood-logo.jpeg";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -43,7 +44,8 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Welcome to Naybourhood.ai</h1>
+          <img src={logo} alt="Naybourhood" className="h-12 w-auto mx-auto mb-6" />
+          <h1 className="text-4xl font-bold mb-4">Welcome</h1>
           <p className="text-xl text-muted-foreground">
             Let's get you set up. What best describes you?
           </p>
