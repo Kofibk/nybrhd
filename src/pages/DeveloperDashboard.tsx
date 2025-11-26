@@ -6,6 +6,7 @@ import CampaignBuilder from "@/components/CampaignBuilder";
 import LeadsManagement from "@/components/LeadsManagement";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import WhatsAppLeadNurturing from "@/components/WhatsAppLeadNurturing";
+import EmailAutomation from "@/components/EmailAutomation";
 import { Building2, Users, TrendingUp, Target, Plus } from "lucide-react";
 
 const DeveloperDashboard = () => {
@@ -70,10 +71,11 @@ const DeveloperDashboard = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="campaigns" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="developments">Developments</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
@@ -95,6 +97,10 @@ const DeveloperDashboard = () => {
 
         <TabsContent value="whatsapp">
           <WhatsAppLeadNurturing />
+        </TabsContent>
+
+        <TabsContent value="email">
+          <EmailAutomation />
         </TabsContent>
 
         <TabsContent value="developments">
