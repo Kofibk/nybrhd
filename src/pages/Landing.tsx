@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Building2, Users, TrendingUp, Sparkles, Target, BarChart3, MessageSquare, CheckCircle2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/naybourhood-logo.jpeg";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ const Landing = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-accent/5 to-background">
         <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
+            <img src={logo} alt="Naybourhood" className="h-12 w-auto mx-auto mb-8" />
             <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
               <Sparkles className="h-4 w-4" />
               AI-Powered Property Sales Platform
@@ -75,7 +77,7 @@ const Landing = () => {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Naybourhood.ai helps property developers, estate agents, and mortgage brokers attract, qualify, nurture, and convert buyers globally—all on autopilot.
+              Help property developers, estate agents, and mortgage brokers attract, qualify, nurture, and convert buyers globally—all on autopilot.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
