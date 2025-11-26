@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Home, BarChart3, Users, Settings, LogOut, Sparkles, Menu } from "lucide-react";
 import { ReactNode, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,14 +12,18 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, title, userType }: DashboardLayoutProps) => {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
   
+  const basePath = `/${userType}`;
   const navigation = [
-    { name: "Dashboard", icon: Home, href: "#" },
-    { name: "Campaigns", icon: Sparkles, href: "#" },
-    { name: "Leads", icon: Users, href: "#" },
-    { name: "Analytics", icon: BarChart3, href: "#" },
-    { name: "Settings", icon: Settings, href: "#" },
+    { name: "Dashboard", icon: Home, href: basePath },
+    { name: "Campaigns", icon: Sparkles, href: `${basePath}/campaigns` },
+    { name: "Leads", icon: Users, href: `${basePath}/leads` },
+    { name: "Analytics", icon: BarChart3, href: `${basePath}/analytics` },
+    { name: "Settings", icon: Settings, href: `${basePath}/settings` },
   ];
+
+  const isActive = (href: string) => location.pathname === href;
 
   const SidebarContent = () => (
     <>
@@ -31,14 +36,16 @@ const DashboardLayout = ({ children, title, userType }: DashboardLayoutProps) =>
         <ul className="space-y-1 sm:space-y-2">
           {navigation.map((item) => (
             <li key={item.name}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-sm sm:text-base"
-                onClick={() => setOpen(false)}
-              >
-                <item.icon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
-                {item.name}
-              </Button>
+              <Link to={item.href}>
+                <Button
+                  variant={isActive(item.href) ? "secondary" : "ghost"}
+                  className="w-full justify-start text-sm sm:text-base"
+                  onClick={() => setOpen(false)}
+                >
+                  <item.icon className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
+                  {item.name}
+                </Button>
+              </Link>
             </li>
           ))}
         </ul>
