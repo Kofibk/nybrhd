@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Home, BarChart3, Users, Settings, LogOut, Sparkles, Menu } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import logo from "@/assets/naybourhood-logo.jpeg";
+import { LogoWithTransparency } from "./LogoWithTransparency";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -29,7 +29,7 @@ const DashboardLayout = ({ children, title, userType }: DashboardLayoutProps) =>
   const SidebarContent = () => (
     <>
       <div className="p-4 sm:p-6 border-b border-border">
-        <img src={logo} alt="Naybourhood" className="h-8 sm:h-10 w-auto mb-2" />
+        <LogoWithTransparency className="h-8 sm:h-10 w-auto mb-2" />
         <p className="text-xs sm:text-sm text-muted-foreground mt-1 capitalize">{userType} Portal</p>
       </div>
       
