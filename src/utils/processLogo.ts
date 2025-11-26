@@ -1,4 +1,4 @@
-import { removeBackground, loadImage } from './backgroundRemoval';
+import { removeBackgroundFromImage, loadImage } from './backgroundRemoval';
 
 export const processLogoBackground = async (logoPath: string): Promise<string> => {
   try {
@@ -10,7 +10,7 @@ export const processLogoBackground = async (logoPath: string): Promise<string> =
     const img = await loadImage(blob);
     
     // Remove background
-    const processedBlob = await removeBackground(img);
+    const processedBlob = await removeBackgroundFromImage(img);
     
     // Create object URL for the processed image
     return URL.createObjectURL(processedBlob);
