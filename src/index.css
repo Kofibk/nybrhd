@@ -1,113 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Naybourhood.ai Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    /* Primary: #1E2A38 (Midnight Navy) - HSL: 213 31% 17% */
+    --primary: 213 31% 17%;
+    --primary-foreground: 34 33% 96%;
 
+    /* Secondary: #F8F4EF (Warm Beige) - HSL: 34 33% 96% */
+    --secondary: 34 33% 96%;
+    --secondary-foreground: 213 31% 17%;
+
+    /* Accent: #FFC870 (Gold Yellow) - HSL: 38 100% 72% */
+    --accent: 38 100% 72%;
+    --accent-foreground: 213 31% 17%;
+
+    /* Background */
+    --background: 34 33% 96%;
+    --foreground: 216 18% 30%;
+
+    /* Card */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 216 18% 30%;
 
+    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 216 18% 30%;
 
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
+    /* Muted */
+    --muted: 34 20% 92%;
+    --muted-foreground: 216 10% 50%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 0%;
-
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 40%;
-
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 0% 20%;
+    /* Destructive / Error: #EF4444 */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 0%;
+    /* Border & Input */
+    --border: 213 15% 85%;
+    --input: 213 15% 85%;
+    --ring: 38 100% 72%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
     
-    /* Premium SaaS tokens */
-    --success: 0 0% 0%;
+    /* Success: #34D399 */
+    --success: 160 67% 52%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 0 0% 20%;
-    --warning-foreground: 0 0% 100%;
+    /* Warning: #FBBF24 */
+    --warning: 45 93% 56%;
+    --warning-foreground: 213 31% 17%;
     
-    --info: 0 0% 0%;
+    /* Info */
+    --info: 213 31% 17%;
     --info-foreground: 0 0% 100%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 0%) 0%, hsl(0 0% 20%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 0%) 0%, hsl(0 0% 30%) 100%);
+
+    /* Sidebar */
+    --sidebar-background: 213 31% 17%;
+    --sidebar-foreground: 34 33% 96%;
+    --sidebar-primary: 38 100% 72%;
+    --sidebar-primary-foreground: 213 31% 17%;
+    --sidebar-accent: 213 31% 24%;
+    --sidebar-accent-foreground: 34 33% 96%;
+    --sidebar-border: 213 31% 24%;
+    --sidebar-ring: 38 100% 72%;
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 0%;
-    --sidebar-primary: 0 0% 0%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 0%;
+    --shadow-sm: 0 1px 2px 0 rgb(30 42 56 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(30 42 56 / 0.08), 0 2px 4px -2px rgb(30 42 56 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(30 42 56 / 0.08), 0 4px 6px -4px rgb(30 42 56 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(30 42 56 / 0.08), 0 8px 10px -6px rgb(30 42 56 / 0.05);
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --primary: 38 100% 72%;
+    --primary-foreground: 213 31% 17%;
 
-    --card: 0 0% 5%;
-    --card-foreground: 0 0% 100%;
+    --secondary: 213 31% 24%;
+    --secondary-foreground: 34 33% 96%;
 
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 100%;
+    --accent: 38 100% 72%;
+    --accent-foreground: 213 31% 17%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --background: 213 31% 12%;
+    --foreground: 34 33% 96%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
+    --card: 213 31% 17%;
+    --card-foreground: 34 33% 96%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 60%;
+    --popover: 213 31% 17%;
+    --popover-foreground: 34 33% 96%;
 
-    --accent: 0 0% 90%;
-    --accent-foreground: 0 0% 0%;
+    --muted: 213 31% 24%;
+    --muted-foreground: 213 15% 65%;
 
-    --destructive: 0 0% 80%;
-    --destructive-foreground: 0 0% 0%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 0% 100%;
-    
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 0% 100%;
+    --border: 213 31% 24%;
+    --input: 213 31% 24%;
+    --ring: 38 100% 72%;
+
+    --sidebar-background: 213 31% 12%;
+    --sidebar-foreground: 34 33% 96%;
+    --sidebar-primary: 38 100% 72%;
+    --sidebar-primary-foreground: 213 31% 17%;
+    --sidebar-accent: 213 31% 20%;
+    --sidebar-accent-foreground: 34 33% 96%;
+    --sidebar-border: 213 31% 20%;
+    --sidebar-ring: 38 100% 72%;
   }
 }
 
@@ -117,6 +122,17 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }

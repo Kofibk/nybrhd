@@ -5,207 +5,231 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Building2, Bell, Shield, CreditCard } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Building2, 
+  Users, 
+  Link2, 
+  Bell,
+  Upload,
+  Download,
+  Plus,
+  Trash2
+} from "lucide-react";
+import { useState } from "react";
 
 interface SettingsProps {
   userType: "developer" | "agent" | "broker";
 }
 
 const Settings = ({ userType }: SettingsProps) => {
+  const [logo, setLogo] = useState<string | null>(null);
+
+  const teamMembers = [
+    { name: "John Smith", email: "john@example.com", role: "Admin", status: "active" },
+    { name: "Sarah Johnson", email: "sarah@example.com", role: "Manager", status: "active" },
+    { name: "Mike Chen", email: "mike@example.com", role: "Agent", status: "pending" },
+  ];
+
+  const integrations = [
+    { name: "Meta Ads", description: "Connect your Meta Business account", connected: true, icon: "📘" },
+    { name: "Google Ads", description: "Connect your Google Ads account", connected: true, icon: "🔍" },
+    { name: "WhatsApp Business", description: "Enable WhatsApp messaging", connected: false, icon: "💬" },
+    { name: "Zapier", description: "Automate workflows with 5000+ apps", connected: false, icon: "⚡" },
+  ];
+
   return (
     <DashboardLayout title="Settings" userType={userType}>
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="company">Company</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
+      <Tabs defaultValue="company" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsTrigger value="company">Company Info</TabsTrigger>
+          <TabsTrigger value="team">Team Access</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <User className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-bold">Profile Settings</h3>
-            </div>
-            <div className="space-y-4 max-w-xl">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Smith" />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="john.smith@example.com" />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" defaultValue="+44 7700 900123" />
-              </div>
-              <div>
-                <Label htmlFor="title">Job Title</Label>
-                <Input id="title" defaultValue="Senior Property Developer" />
-              </div>
-              <Button>Save Changes</Button>
-            </div>
-          </Card>
-        </TabsContent>
-
+        {/* Company Info Tab */}
         <TabsContent value="company">
-          <Card className="p-6">
+          <Card className="p-6 shadow-card">
             <div className="flex items-center gap-3 mb-6">
               <Building2 className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-bold">Company Information</h3>
+              <h3 className="text-xl font-semibold">Company Information</h3>
             </div>
-            <div className="space-y-4 max-w-xl">
+            
+            <div className="space-y-6 max-w-2xl">
+              {/* Logo Upload */}
               <div>
-                <Label htmlFor="companyName">Company Name</Label>
-                <Input id="companyName" defaultValue="Premier Developments Ltd" />
+                <Label className="mb-2 block">Company Logo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-border">
+                    {logo ? (
+                      <img src={logo} alt="Logo" className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Logo
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 2MB</p>
+                  </div>
+                </div>
               </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input id="companyName" defaultValue="Premier Developments Ltd" className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="companyWebsite">Website</Label>
+                  <Input id="companyWebsite" defaultValue="https://premierdevelopments.com" className="mt-1" />
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="companyWebsite">Website</Label>
-                <Input id="companyWebsite" defaultValue="https://premierdevelopments.com" />
+                <Label htmlFor="companyRegion">Primary Region</Label>
+                <Input id="companyRegion" defaultValue="United Kingdom" className="mt-1" />
               </div>
+
               <div>
-                <Label htmlFor="companyAddress">Address</Label>
-                <Input id="companyAddress" defaultValue="123 Business Street, London, UK" />
+                <Label htmlFor="budgetThreshold">Monthly Budget Threshold (£)</Label>
+                <Input id="budgetThreshold" type="number" defaultValue="10000" className="mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">Alert when monthly spend exceeds this amount</p>
               </div>
-              <div>
-                <Label htmlFor="companyPhone">Company Phone</Label>
-                <Input id="companyPhone" defaultValue="+44 20 1234 5678" />
-              </div>
+
               <Button>Save Changes</Button>
             </div>
           </Card>
         </TabsContent>
 
-        <TabsContent value="notifications">
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Bell className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-bold">Notification Preferences</h3>
+        {/* Team Access Tab */}
+        <TabsContent value="team">
+          <Card className="p-6 shadow-card">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 text-primary" />
+                <h3 className="text-xl font-semibold">Team Access</h3>
+              </div>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Invite User
+              </Button>
             </div>
-            <div className="space-y-6 max-w-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">New Lead Notifications</div>
-                  <p className="text-sm text-muted-foreground">Get notified when new leads arrive</p>
+            
+            <div className="space-y-4">
+              {teamMembers.map((member, index) => (
+                <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-primary font-medium">{member.name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-foreground">{member.name}</div>
+                      <div className="text-sm text-muted-foreground">{member.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={member.status === "active" ? "default" : "secondary"}>
+                      {member.role}
+                    </Badge>
+                    {member.status === "pending" && (
+                      <Badge variant="outline">Pending</Badge>
+                    )}
+                    <Button variant="ghost" size="icon">
+                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
                 </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Email Notifications</div>
-                  <p className="text-sm text-muted-foreground">Receive email updates</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">SMS Notifications</div>
-                  <p className="text-sm text-muted-foreground">Receive SMS alerts</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">WhatsApp Notifications</div>
-                  <p className="text-sm text-muted-foreground">Get updates on WhatsApp</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Weekly Summary</div>
-                  <p className="text-sm text-muted-foreground">Receive weekly performance reports</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Button>Save Preferences</Button>
+              ))}
             </div>
           </Card>
         </TabsContent>
 
-        <TabsContent value="security">
-          <Card className="p-6">
+        {/* Integrations Tab */}
+        <TabsContent value="integrations">
+          <Card className="p-6 shadow-card">
             <div className="flex items-center gap-3 mb-6">
-              <Shield className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-bold">Security Settings</h3>
+              <Link2 className="h-6 w-6 text-primary" />
+              <h3 className="text-xl font-semibold">Integrations</h3>
             </div>
-            <div className="space-y-6 max-w-xl">
-              <div>
-                <h4 className="font-semibold mb-4">Change Password</h4>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" />
+            
+            <div className="space-y-4">
+              {integrations.map((integration, index) => (
+                <div key={index} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="text-2xl">{integration.icon}</div>
+                    <div>
+                      <div className="font-medium text-foreground">{integration.name}</div>
+                      <div className="text-sm text-muted-foreground">{integration.description}</div>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" />
+                  <div className="flex items-center gap-3">
+                    {integration.connected ? (
+                      <>
+                        <Badge variant="default" className="bg-success">Connected</Badge>
+                        <Button variant="outline" size="sm">Manage</Button>
+                      </>
+                    ) : (
+                      <Button size="sm">Connect</Button>
+                    )}
                   </div>
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" />
-                  </div>
-                  <Button>Update Password</Button>
                 </div>
-              </div>
-              <div className="pt-6 border-t">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="font-medium">Two-Factor Authentication</div>
-                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-                  </div>
-                  <Switch />
-                </div>
-              </div>
+              ))}
             </div>
           </Card>
         </TabsContent>
 
-        <TabsContent value="billing">
-          <Card className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <CreditCard className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-bold">Billing & Subscription</h3>
-            </div>
-            <div className="space-y-6 max-w-xl">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div className="font-semibold text-lg">Professional Plan</div>
-                    <p className="text-sm text-muted-foreground">Billed monthly</p>
+        {/* Preferences Tab */}
+        <TabsContent value="preferences">
+          <div className="space-y-6">
+            <Card className="p-6 shadow-card">
+              <div className="flex items-center gap-3 mb-6">
+                <Bell className="h-6 w-6 text-primary" />
+                <h3 className="text-xl font-semibold">Notification Preferences</h3>
+              </div>
+              
+              <div className="space-y-6 max-w-2xl">
+                {[
+                  { label: "New Lead Notifications", description: "Get notified when new leads arrive", enabled: true },
+                  { label: "Campaign Alerts", description: "Receive alerts about campaign performance", enabled: true },
+                  { label: "Weekly Summary", description: "Receive weekly performance reports", enabled: true },
+                  { label: "AI Recommendations", description: "Get AI-powered optimization tips", enabled: false },
+                ].map((pref, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-foreground">{pref.label}</div>
+                      <p className="text-sm text-muted-foreground">{pref.description}</p>
+                    </div>
+                    <Switch defaultChecked={pref.enabled} />
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold">$99</div>
-                    <p className="text-sm text-muted-foreground">/month</p>
-                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-6 shadow-card">
+              <div className="flex items-center gap-3 mb-6">
+                <Download className="h-6 w-6 text-primary" />
+                <h3 className="text-xl font-semibold">Data Export</h3>
+              </div>
+              
+              <div className="space-y-4 max-w-2xl">
+                <p className="text-muted-foreground">Download your leads and campaign data in CSV format.</p>
+                <div className="flex gap-3">
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export All Leads
+                  </Button>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Campaigns
+                  </Button>
                 </div>
-                <div className="text-sm text-muted-foreground">Next billing date: Dec 1, 2024</div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-3">Payment Method</h4>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <CreditCard className="h-5 w-5" />
-                  <div className="flex-1">
-                    <div className="font-medium">•••• •••• •••• 4242</div>
-                    <div className="text-sm text-muted-foreground">Expires 12/25</div>
-                  </div>
-                  <Button variant="outline" size="sm">Update</Button>
-                </div>
-              </div>
-              <div>
-                <Button variant="outline" className="w-full">View Billing History</Button>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </DashboardLayout>
