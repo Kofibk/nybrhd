@@ -23,6 +23,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { 
   Mail, 
@@ -33,10 +41,19 @@ import {
   User,
   Building,
   MessageSquare,
-  X
+  Download,
+  Filter,
+  ArrowUpDown,
+  ChevronDown,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Clock,
+  FileText
 } from "lucide-react";
 import { demoLeads } from "@/lib/demoData";
 import { Lead } from "@/lib/types";
+import { toast } from "@/hooks/use-toast";
 
 interface AdminLeadsTableProps {
   searchQuery: string;
@@ -44,7 +61,17 @@ interface AdminLeadsTableProps {
 
 const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [clientFilter, setClientFilter] = useState<string>("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [scoreFilter, setScoreFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<string>("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [leadStatuses, setLeadStatuses] = useState<Record<string, string>>({});
+
+  // Get unique clients/campaigns for filter
+  const uniqueClients = [...new Set(demoLeads.map(lead => lead.campaignName))].filter(Boolean);
+  const uniqueCountries = [...new Set(demoLeads.map(lead => lead.country))];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -98,40 +125,202 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
     });
   };
 
-  const filteredLeads = demoLeads.filter((lead) => {
-    const matchesSearch =
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.campaignName?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
   const totalScore = (lead: Lead) => Math.round((lead.intentScore + lead.qualityScore) / 2);
+
+  const getLeadStatus = (lead: Lead) => leadStatuses[lead.id] || lead.status;
+
+  const updateLeadStatus = (leadId: string, newStatus: string) => {
+    setLeadStatuses(prev => ({ ...prev, [leadId]: newStatus }));
+    if (selectedLead?.id === leadId) {
+      setSelectedLead({ ...selectedLead, status: newStatus as Lead["status"] });
+    }
+    toast({
+      title: "Status updated",
+      description: `Lead status changed to ${getStatusLabel(newStatus)}.`,
+    });
+  };
+
+  const filteredLeads = demoLeads
+    .filter((lead) => {
+      const matchesSearch =
+        lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.campaignName?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const currentStatus = getLeadStatus(lead);
+      const matchesStatus = statusFilter === "all" || currentStatus === statusFilter;
+      const matchesClient = clientFilter === "all" || lead.campaignName === clientFilter;
+      const matchesCountry = countryFilter === "all" || lead.country === countryFilter;
+      
+      const score = totalScore(lead);
+      let matchesScore = true;
+      if (scoreFilter === "high") matchesScore = score >= 80;
+      else if (scoreFilter === "medium") matchesScore = score >= 60 && score < 80;
+      else if (scoreFilter === "low") matchesScore = score < 60;
+
+      return matchesSearch && matchesStatus && matchesClient && matchesCountry && matchesScore;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "score":
+          comparison = totalScore(a) - totalScore(b);
+          break;
+        case "createdAt":
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "country":
+          comparison = a.country.localeCompare(b.country);
+          break;
+        default:
+          comparison = 0;
+      }
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+  const exportToCSV = () => {
+    const headers = ["Name", "Email", "Phone", "Country", "Campaign", "Intent Score", "Quality Score", "Combined Score", "Status", "Budget", "Bedrooms", "Date", "Notes"];
+    const rows = filteredLeads.map(lead => [
+      lead.name,
+      lead.email,
+      lead.phone,
+      lead.country,
+      lead.campaignName || "",
+      lead.intentScore,
+      lead.qualityScore,
+      totalScore(lead),
+      getStatusLabel(getLeadStatus(lead)),
+      lead.budget,
+      lead.bedrooms,
+      formatDate(lead.createdAt),
+      lead.notes || ""
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `leads_export_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export successful",
+      description: `${filteredLeads.length} leads exported to CSV.`,
+    });
+  };
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  };
 
   return (
     <>
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row justify-between gap-3">
-            <CardTitle className="text-base md:text-lg">All Leads</CardTitle>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="booked_viewing">Viewing Booked</SelectItem>
-                <SelectItem value="offer">Offer Made</SelectItem>
-                <SelectItem value="won">Won</SelectItem>
-                <SelectItem value="lost">Lost</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
+              <CardTitle className="text-base md:text-lg">All Leads ({filteredLeads.length})</CardTitle>
+              <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
+            
+            {/* Filters Row */}
+            <div className="flex flex-wrap gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="booked_viewing">Viewing Booked</SelectItem>
+                  <SelectItem value="offer">Offer Made</SelectItem>
+                  <SelectItem value="won">Won</SelectItem>
+                  <SelectItem value="lost">Lost</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={clientFilter} onValueChange={setClientFilter}>
+                <SelectTrigger className="w-full sm:w-44 h-8 text-xs">
+                  <SelectValue placeholder="Client/Campaign" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Clients</SelectItem>
+                  {uniqueClients.map(client => (
+                    <SelectItem key={client} value={client!}>{client}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={countryFilter} onValueChange={setCountryFilter}>
+                <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
+                  <SelectValue placeholder="Country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Countries</SelectItem>
+                  {uniqueCountries.map(country => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={scoreFilter} onValueChange={setScoreFilter}>
+                <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
+                  <SelectValue placeholder="Score" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Scores</SelectItem>
+                  <SelectItem value="high">High (80+)</SelectItem>
+                  <SelectItem value="medium">Medium (60-79)</SelectItem>
+                  <SelectItem value="low">Low (&lt;60)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+                    <ArrowUpDown className="h-3 w-3" />
+                    Sort
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => toggleSort("createdAt")}>
+                    Date {sortField === "createdAt" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleSort("name")}>
+                    Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleSort("score")}>
+                    Score {sortField === "score" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleSort("country")}>
+                    Country {sortField === "country" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -139,13 +328,21 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Name</TableHead>
+                  <TableHead className="text-xs cursor-pointer" onClick={() => toggleSort("name")}>
+                    Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </TableHead>
                   <TableHead className="text-xs hidden md:table-cell">Email</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell">Country</TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell cursor-pointer" onClick={() => toggleSort("country")}>
+                    Country {sortField === "country" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </TableHead>
                   <TableHead className="text-xs hidden sm:table-cell">Campaign</TableHead>
-                  <TableHead className="text-xs">Score</TableHead>
+                  <TableHead className="text-xs cursor-pointer" onClick={() => toggleSort("score")}>
+                    Score {sortField === "score" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </TableHead>
                   <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Date</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell cursor-pointer" onClick={() => toggleSort("createdAt")}>
+                    Date {sortField === "createdAt" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -173,8 +370,8 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`text-[10px] md:text-xs ${getStatusColor(lead.status)}`}>
-                        {getStatusLabel(lead.status)}
+                      <Badge variant="outline" className={`text-[10px] md:text-xs ${getStatusColor(getLeadStatus(lead))}`}>
+                        {getStatusLabel(getLeadStatus(lead))}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs md:text-sm hidden md:table-cell">
@@ -202,14 +399,73 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                 <div className="flex items-start justify-between">
                   <div>
                     <SheetTitle className="text-xl">{selectedLead.name}</SheetTitle>
-                    <Badge variant="outline" className={`mt-2 ${getStatusColor(selectedLead.status)}`}>
-                      {getStatusLabel(selectedLead.status)}
+                    <Badge variant="outline" className={`mt-2 ${getStatusColor(getLeadStatus(selectedLead))}`}>
+                      {getStatusLabel(getLeadStatus(selectedLead))}
                     </Badge>
                   </div>
                 </div>
               </SheetHeader>
 
               <div className="space-y-6">
+                {/* Status Update Actions */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Update Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant={getLeadStatus(selectedLead) === "contacted" ? "default" : "outline"} 
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => updateLeadStatus(selectedLead.id, "contacted")}
+                      >
+                        <Phone className="h-3 w-3 mr-1" />
+                        Contacted
+                      </Button>
+                      <Button 
+                        variant={getLeadStatus(selectedLead) === "booked_viewing" ? "default" : "outline"} 
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => updateLeadStatus(selectedLead.id, "booked_viewing")}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        Book Viewing
+                      </Button>
+                      <Button 
+                        variant={getLeadStatus(selectedLead) === "offer" ? "default" : "outline"} 
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => updateLeadStatus(selectedLead.id, "offer")}
+                      >
+                        <Clock className="h-3 w-3 mr-1" />
+                        Offer Made
+                      </Button>
+                      <Button 
+                        variant={getLeadStatus(selectedLead) === "won" ? "default" : "outline"} 
+                        size="sm"
+                        className="text-xs text-green-600"
+                        onClick={() => updateLeadStatus(selectedLead.id, "won")}
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Won
+                      </Button>
+                      <Button 
+                        variant={getLeadStatus(selectedLead) === "lost" ? "default" : "outline"} 
+                        size="sm"
+                        className="text-xs text-red-600 col-span-2"
+                        onClick={() => updateLeadStatus(selectedLead.id, "lost")}
+                      >
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Mark as Lost
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Scores Section */}
                 <Card>
                   <CardHeader className="pb-2">
