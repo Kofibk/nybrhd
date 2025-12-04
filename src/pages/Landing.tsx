@@ -69,7 +69,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <LogoWithTransparency className="h-8 w-8" />
+              <LogoWithTransparency className="h-8 w-auto" />
               <span className="font-semibold text-foreground">Naybourhood.ai</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
@@ -258,7 +258,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <LogoWithTransparency className="h-6 w-6" />
+              <LogoWithTransparency className="h-6 w-auto" />
               <span className="text-sm text-muted-foreground">© 2024 Naybourhood.ai. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-6">
