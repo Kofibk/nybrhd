@@ -110,24 +110,26 @@ const CampaignBuilder = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Sparkles className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold">AI-Powered Campaign Builder</h2>
-          <Badge variant="secondary" className="ml-auto">Step 1 of 3</Badge>
+    <div className="space-y-4 md:space-y-6">
+      <Card className="p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4 md:mb-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            <h2 className="text-lg md:text-2xl font-bold">AI-Powered Campaign Builder</h2>
+          </div>
+          <Badge variant="secondary" className="sm:ml-auto text-xs">Step 1 of 3</Badge>
         </div>
 
-        <div className="space-y-6 mb-6">
-          <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-4 md:space-y-6 mb-4 md:mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="development">Development Name *</Label>
-              <Input id="development" placeholder="e.g., Marina Heights" />
+              <Label htmlFor="development" className="text-sm">Development Name *</Label>
+              <Input id="development" placeholder="e.g., Marina Heights" className="mt-1.5" />
             </div>
             <div>
-              <Label htmlFor="campaign-type">Campaign Type *</Label>
+              <Label htmlFor="campaign-type" className="text-sm">Campaign Type *</Label>
               <Select value={campaignType} onValueChange={setCampaignType}>
-                <SelectTrigger id="campaign-type">
+                <SelectTrigger id="campaign-type" className="mt-1.5">
                   <SelectValue placeholder="Select campaign type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,55 +142,57 @@ const CampaignBuilder = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="location">Location *</Label>
-              <Input id="location" placeholder="e.g., Dubai Marina, London" />
+              <Label htmlFor="location" className="text-sm">Location *</Label>
+              <Input id="location" placeholder="e.g., Dubai Marina, London" className="mt-1.5" />
             </div>
             <div>
-              <Label htmlFor="price">Price Range *</Label>
-              <Input id="price" placeholder="e.g., £500k - £2M" />
+              <Label htmlFor="price" className="text-sm">Price Range *</Label>
+              <Input id="price" placeholder="e.g., £500k - £2M" className="mt-1.5" />
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="units">Available Units</Label>
-              <Input id="units" type="number" placeholder="e.g., 45" />
+              <Label htmlFor="units" className="text-sm">Available Units</Label>
+              <Input id="units" type="number" placeholder="e.g., 45" className="mt-1.5" />
             </div>
             <div>
-              <Label htmlFor="completion">Completion Date</Label>
-              <Input id="completion" placeholder="e.g., Q4 2025" />
+              <Label htmlFor="completion" className="text-sm">Completion Date</Label>
+              <Input id="completion" placeholder="e.g., Q4 2025" className="mt-1.5" />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="target">Target Buyer Profile *</Label>
+            <Label htmlFor="target" className="text-sm">Target Buyer Profile *</Label>
             <Textarea 
               id="target" 
               placeholder="e.g., International investors, 35-55 years old, high net worth, looking for UK property investment with rental yield"
               rows={3}
+              className="mt-1.5"
             />
           </div>
 
           <div>
-            <Label htmlFor="usp">Unique Selling Points</Label>
+            <Label htmlFor="usp" className="text-sm">Unique Selling Points</Label>
             <Textarea 
               id="usp" 
               placeholder="e.g., Waterfront location, 5-star amenities, 7% guaranteed rental yield, prime city center location"
               rows={3}
+              className="mt-1.5"
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
-              <Label htmlFor="budget">Monthly Budget</Label>
-              <Input id="budget" placeholder="e.g., £5,000" />
+              <Label htmlFor="budget" className="text-sm">Monthly Budget</Label>
+              <Input id="budget" placeholder="e.g., £5,000" className="mt-1.5" />
             </div>
             <div>
-              <Label htmlFor="duration">Campaign Duration</Label>
+              <Label htmlFor="duration" className="text-sm">Campaign Duration</Label>
               <Select>
-                <SelectTrigger id="duration">
+                <SelectTrigger id="duration" className="mt-1.5">
                   <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,47 +211,47 @@ const CampaignBuilder = () => {
           className="w-full"
           size="lg"
         >
-          <Sparkles className="mr-2 h-5 w-5" />
+          <Sparkles className="mr-2 h-4 w-4 md:h-5 md:w-5" />
           Generate AI Campaign Strategy
         </Button>
       </Card>
 
       {showSuggestions && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-          <Card className="p-6 border-primary/50 border-2">
+        <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4">
+          <Card className="p-4 md:p-6 border-primary/50 border-2">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
-              <h3 className="text-xl font-bold">AI Campaign Strategy Generated</h3>
+              <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+              <h3 className="text-lg md:text-xl font-bold">AI Campaign Strategy Generated</h3>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Based on your inputs, we've created a comprehensive campaign strategy optimized for your target audience.
             </p>
           </Card>
 
           {/* Target Markets */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
+          <Card className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
               <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <h3 className="text-xl font-bold">Target Market Segments</h3>
+                <Target className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                <h3 className="text-base md:text-xl font-bold">Target Market Segments</h3>
               </div>
-              <Badge>AI Recommended</Badge>
+              <Badge className="text-xs">AI Recommended</Badge>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {aiSuggestions.targetMarkets.map((market, index) => (
-                <Card key={index} className="p-4 border-2 hover:border-primary/50 transition-all">
+                <Card key={index} className="p-3 md:p-4 border-2 hover:border-primary/50 transition-all">
                   <div className="flex items-start gap-2 mb-2">
-                    <Globe className="h-5 w-5 text-primary mt-1" />
+                    <Globe className="h-4 w-4 md:h-5 md:w-5 text-primary mt-0.5" />
                     <div>
-                      <h4 className="font-bold">{market.name}</h4>
-                      <p className="text-sm text-muted-foreground">{market.audience}</p>
+                      <h4 className="font-bold text-sm md:text-base">{market.name}</h4>
+                      <p className="text-xs md:text-sm text-muted-foreground">{market.audience}</p>
                     </div>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <div className="text-xs text-muted-foreground mb-2">Potential Reach</div>
-                    <div className="text-lg font-bold text-primary mb-3">{market.size}</div>
-                    <div className="text-xs text-muted-foreground mb-1 font-medium">Why This Segment?</div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{market.reasoning}</p>
+                  <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-border">
+                    <div className="text-[10px] md:text-xs text-muted-foreground mb-1">Potential Reach</div>
+                    <div className="text-base md:text-lg font-bold text-primary mb-2 md:mb-3">{market.size}</div>
+                    <div className="text-[10px] md:text-xs text-muted-foreground mb-1 font-medium">Why This Segment?</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground leading-relaxed">{market.reasoning}</p>
                   </div>
                 </Card>
               ))}
@@ -255,62 +259,63 @@ const CampaignBuilder = () => {
           </Card>
 
           {/* Channel Strategy */}
-          <Card className="p-6">
+          <Card className="p-4 md:p-6">
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <h3 className="text-xl font-bold">Recommended Channel Mix</h3>
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <h3 className="text-base md:text-xl font-bold">Recommended Channel Mix</h3>
             </div>
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
               {aiSuggestions.channels.map((channel, index) => (
                 <Card 
                   key={index} 
-                  className={`p-5 border-2 transition-all cursor-pointer ${
+                  className={`p-3 md:p-5 border-2 transition-all cursor-pointer ${
                     selectedChannels.includes(channel.name)
                       ? "border-primary bg-primary/5"
                       : "hover:border-primary/50"
                   }`}
                   onClick={() => toggleChannel(channel.name)}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3 md:gap-4">
                     <Checkbox 
                       checked={selectedChannels.includes(channel.name)}
                       onCheckedChange={() => toggleChannel(channel.name)}
+                      className="mt-1"
                     />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-2 mb-2">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-lg">{channel.name}</h4>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="font-bold text-sm md:text-lg">{channel.name}</h4>
                             {channel.recommended && (
-                              <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                              <Badge variant="secondary" className="text-[10px] md:text-xs">Recommended</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">{channel.description}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">{channel.description}</p>
                         </div>
-                        <Badge variant="outline" className="text-green-600 border-green-600">
+                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs self-start">
                           {channel.roi} ROI
                         </Badge>
                       </div>
                       
-                      <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border">
-                        <div className="text-xs font-medium text-foreground mb-2">Why This Channel?</div>
-                        <p className="text-xs text-muted-foreground leading-relaxed mb-3">{channel.reasoning}</p>
-                        <div className="text-xs font-medium text-foreground mb-2">Budget Justification</div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{channel.budgetJustification}</p>
+                      <div className="mt-3 md:mt-4 p-2 md:p-3 bg-muted/30 rounded-lg border border-border">
+                        <div className="text-[10px] md:text-xs font-medium text-foreground mb-1 md:mb-2">Why This Channel?</div>
+                        <p className="text-[10px] md:text-xs text-muted-foreground leading-relaxed mb-2 md:mb-3">{channel.reasoning}</p>
+                        <div className="text-[10px] md:text-xs font-medium text-foreground mb-1 md:mb-2">Budget Justification</div>
+                        <p className="text-[10px] md:text-xs text-muted-foreground leading-relaxed">{channel.budgetJustification}</p>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div className="grid grid-cols-3 gap-2 md:gap-4 mt-3 md:mt-4">
                         <div>
-                          <div className="text-xs text-muted-foreground">Budget</div>
-                          <div className="font-bold text-primary">{channel.budget}/mo</div>
+                          <div className="text-[10px] md:text-xs text-muted-foreground">Budget</div>
+                          <div className="font-bold text-primary text-sm md:text-base">{channel.budget}/mo</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground">Est. Reach</div>
-                          <div className="font-bold">{channel.reach}</div>
+                          <div className="text-[10px] md:text-xs text-muted-foreground">Est. Reach</div>
+                          <div className="font-bold text-sm md:text-base">{channel.reach}</div>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground">Expected ROI</div>
-                          <div className="font-bold text-green-600">{channel.roi}</div>
+                          <div className="text-[10px] md:text-xs text-muted-foreground">Expected ROI</div>
+                          <div className="font-bold text-green-600 text-sm md:text-base">{channel.roi}</div>
                         </div>
                       </div>
                     </div>
@@ -318,43 +323,43 @@ const CampaignBuilder = () => {
                 </Card>
               ))}
             </div>
-            <div className="p-4 bg-primary/5 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">Selected Channels Total</span>
-                <span className="text-2xl font-bold text-primary">
+            <div className="p-3 md:p-4 bg-primary/5 rounded-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2 mb-1 md:mb-2">
+                <span className="font-medium text-sm md:text-base">Selected Channels Total</span>
+                <span className="text-xl md:text-2xl font-bold text-primary">
                   £{selectedChannels.reduce((sum, channel) => {
                     const ch = aiSuggestions.channels.find(c => c.name === channel);
                     return sum + (ch ? parseInt(ch.budget.replace(/[£,]/g, '')) : 0);
                   }, 0).toLocaleString()}/month
                 </span>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs md:text-sm text-muted-foreground">
                 {selectedChannels.length} channel{selectedChannels.length !== 1 ? 's' : ''} selected
               </div>
             </div>
           </Card>
 
           {/* Creative Strategy */}
-          <Card className="p-6">
+          <Card className="p-4 md:p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Zap className="h-5 w-5 text-primary" />
-              <h3 className="text-xl font-bold">Creative Strategy & Themes</h3>
+              <Zap className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <h3 className="text-base md:text-xl font-bold">Creative Strategy & Themes</h3>
             </div>
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
               {aiSuggestions.creativeThemes.map((theme, index) => (
-                <Card key={index} className="p-5 border-2 border-border">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-primary/10 text-primary rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 font-bold">
+                <Card key={index} className="p-3 md:p-5 border-2 border-border">
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <div className="bg-primary/10 text-primary rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center flex-shrink-0 font-bold text-sm md:text-base">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-lg mb-2">{theme.title}</h4>
-                      <p className="text-sm text-muted-foreground mb-3">{theme.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm md:text-lg mb-1 md:mb-2">{theme.title}</h4>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-2 md:mb-3">{theme.description}</p>
                       <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-2">Recommended Formats:</div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="text-[10px] md:text-xs font-medium text-muted-foreground mb-1.5 md:mb-2">Recommended Formats:</div>
+                        <div className="flex flex-wrap gap-1.5 md:gap-2">
                           {theme.formats.map((format, i) => (
-                            <Badge key={i} variant="outline">{format}</Badge>
+                            <Badge key={i} variant="outline" className="text-[10px] md:text-xs">{format}</Badge>
                           ))}
                         </div>
                       </div>
@@ -365,42 +370,36 @@ const CampaignBuilder = () => {
             </div>
           </Card>
 
-          {/* Ad Creatives */}
-          <Card className="p-6">
+          {/* Recommended Ad Creatives */}
+          <Card className="p-4 md:p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Image className="h-5 w-5 text-primary" />
-              <h3 className="text-xl font-bold">AI-Generated Ad Creatives</h3>
+              <Image className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <h3 className="text-base md:text-xl font-bold">Recommended Ad Creatives</h3>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {aiSuggestions.adCreatives.map((creative, index) => (
-                <Card key={index} className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    {creative.type === "Video" && <Video className="h-5 w-5 text-primary" />}
-                    {creative.type === "Carousel" && <Image className="h-5 w-5 text-primary" />}
-                    {creative.type === "Static Image" && <FileText className="h-5 w-5 text-primary" />}
-                    <div>
-                      <h4 className="font-bold">{creative.type}</h4>
-                      <div className="text-sm text-muted-foreground">{creative.count} variants</div>
-                    </div>
+                <Card key={index} className="p-3 md:p-4 border-2 border-border text-center">
+                  <div className="bg-primary/10 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center mx-auto mb-2 md:mb-3">
+                    {creative.type === "Video" && <Video className="h-5 w-5 md:h-6 md:w-6 text-primary" />}
+                    {creative.type === "Carousel" && <Image className="h-5 w-5 md:h-6 md:w-6 text-primary" />}
+                    {creative.type === "Static Image" && <FileText className="h-5 w-5 md:h-6 md:w-6 text-primary" />}
                   </div>
-                  <p className="text-sm text-muted-foreground">{creative.description}</p>
+                  <h4 className="font-bold text-sm md:text-base">{creative.type}</h4>
+                  <div className="text-xl md:text-2xl font-bold text-primary my-1">{creative.count}</div>
+                  <p className="text-[10px] md:text-xs text-muted-foreground">{creative.description}</p>
                 </Card>
               ))}
             </div>
           </Card>
 
           {/* Action Buttons */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <Button size="lg" variant="outline" className="w-full">
-              <FileText className="mr-2 h-4 w-4" />
-              Save as Draft
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+            <Button variant="outline" className="flex-1 order-2 sm:order-1">
+              Modify Strategy
             </Button>
-            <Button size="lg" variant="outline" className="w-full">
-              Export Strategy
-            </Button>
-            <Button size="lg" className="w-full">
+            <Button className="flex-1 order-1 sm:order-2" size="lg">
               <Sparkles className="mr-2 h-4 w-4" />
-              Launch Campaign
+              Continue to Campaign Setup
             </Button>
           </div>
         </div>

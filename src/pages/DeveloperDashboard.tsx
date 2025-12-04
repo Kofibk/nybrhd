@@ -101,66 +101,66 @@ const DeveloperDashboard = () => {
   return (
     <DashboardLayout title="Dashboard" userType="developer" userName={userName}>
       {/* Welcome Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-foreground">Welcome Back, {userName}</h2>
-        <p className="text-muted-foreground">Here's what's happening with your campaigns today.</p>
+      <div className="mb-4 md:mb-6">
+        <h2 className="text-xl md:text-2xl font-semibold text-foreground">Welcome Back, {userName}</h2>
+        <p className="text-sm md:text-base text-muted-foreground">Here's what's happening with your campaigns today.</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map((stat) => (
-          <Card key={stat.label} className="p-5 shadow-card hover:shadow-card-hover transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className={`p-2 rounded-lg bg-muted`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+          <Card key={stat.label} className="p-3 md:p-5 shadow-card hover:shadow-card-hover transition-shadow">
+            <div className="flex items-start justify-between mb-2 md:mb-3">
+              <div className={`p-1.5 md:p-2 rounded-lg bg-muted`}>
+                <stat.icon className={`h-4 w-4 md:h-5 md:w-5 ${stat.color}`} />
               </div>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
-            <div className="text-sm text-muted-foreground mb-1">{stat.label}</div>
-            <div className="text-xs text-success">{stat.change}</div>
+            <div className="text-lg md:text-2xl font-bold text-foreground mb-0.5 md:mb-1">{stat.value}</div>
+            <div className="text-xs md:text-sm text-muted-foreground mb-0.5 md:mb-1">{stat.label}</div>
+            <div className="text-[10px] md:text-xs text-success">{stat.change}</div>
           </Card>
         ))}
       </div>
 
       {/* Active Campaigns Section */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Active Campaigns</h3>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 className="text-base md:text-lg font-semibold text-foreground">Active Campaigns</h3>
           <Link to="/developer/campaigns">
-            <Button variant="default" size="sm">
+            <Button variant="default" size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              Launch New Campaign
+              Launch Campaign
             </Button>
           </Link>
         </div>
         <Card className="shadow-card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[500px]">
               <thead className="bg-muted/50">
-                <tr className="text-left text-sm text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Campaign Name</th>
-                  <th className="px-4 py-3 font-medium">Budget</th>
-                  <th className="px-4 py-3 font-medium">CTR</th>
-                  <th className="px-4 py-3 font-medium">CPL</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium"></th>
+                <tr className="text-left text-xs md:text-sm text-muted-foreground">
+                  <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Campaign</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Budget</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden sm:table-cell">CTR</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 font-medium">CPL</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Status</th>
+                  <th className="px-3 md:px-4 py-2 md:py-3 font-medium"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {activeCampaigns.map((campaign, index) => (
                   <tr key={index} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{campaign.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{campaign.budget}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{campaign.ctr}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{campaign.cpl}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={getStatusBadgeVariant(campaign.status)} className="capitalize">
+                    <td className="px-3 md:px-4 py-2 md:py-3 font-medium text-foreground text-xs md:text-sm">{campaign.name}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{campaign.budget}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm hidden sm:table-cell">{campaign.ctr}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{campaign.cpl}</td>
+                    <td className="px-3 md:px-4 py-2 md:py-3">
+                      <Badge variant={getStatusBadgeVariant(campaign.status)} className="capitalize text-[10px] md:text-xs">
                         {campaign.status}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3">
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
+                    <td className="px-3 md:px-4 py-2 md:py-3">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8">
+                        <MoreHorizontal className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     </td>
                   </tr>
@@ -172,23 +172,23 @@ const DeveloperDashboard = () => {
       </div>
 
       {/* Development Overview */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-foreground">Development Overview</h3>
-          <Button variant="outline" size="sm">
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 className="text-base md:text-lg font-semibold text-foreground">Development Overview</h3>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Building2 className="h-4 w-4 mr-2" />
             Add Development
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {developments.map((dev, index) => (
-            <Card key={index} className="p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer">
-              <div className="text-3xl mb-3">{dev.image}</div>
-              <h4 className="font-semibold text-foreground mb-1">{dev.name}</h4>
-              <p className="text-sm text-muted-foreground mb-3">
+            <Card key={index} className="p-3 md:p-5 shadow-card hover:shadow-card-hover transition-all cursor-pointer">
+              <div className="text-2xl md:text-3xl mb-2 md:mb-3">{dev.image}</div>
+              <h4 className="font-semibold text-foreground mb-0.5 md:mb-1 text-sm md:text-base">{dev.name}</h4>
+              <p className="text-xs md:text-sm text-muted-foreground mb-2 md:mb-3">
                 {dev.sold}/{dev.units} units sold
               </p>
-              <Badge variant={getStatusBadgeVariant(dev.status)}>{dev.status}</Badge>
+              <Badge variant={getStatusBadgeVariant(dev.status)} className="text-[10px] md:text-xs">{dev.status}</Badge>
             </Card>
           ))}
         </div>
@@ -197,18 +197,18 @@ const DeveloperDashboard = () => {
       {/* AI Recommendations */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <Lightbulb className="h-5 w-5 text-accent" />
-          <h3 className="text-lg font-semibold text-foreground">AI Recommendations</h3>
+          <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-accent" />
+          <h3 className="text-base md:text-lg font-semibold text-foreground">AI Recommendations</h3>
         </div>
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-4 pb-4">
+          <div className="flex gap-3 md:gap-4 pb-4">
             {aiRecommendations.map((rec, index) => (
-              <Card key={index} className="p-5 min-w-[300px] max-w-[320px] shadow-card hover:shadow-card-hover transition-shadow flex-shrink-0">
-                <h4 className="font-semibold text-foreground mb-2 whitespace-normal">{rec.title}</h4>
-                <p className="text-sm text-muted-foreground mb-4 whitespace-normal">{rec.description}</p>
-                <Button variant="outline" size="sm" className="w-full">
+              <Card key={index} className="p-4 md:p-5 min-w-[260px] md:min-w-[300px] max-w-[280px] md:max-w-[320px] shadow-card hover:shadow-card-hover transition-shadow flex-shrink-0">
+                <h4 className="font-semibold text-foreground mb-2 whitespace-normal text-sm md:text-base">{rec.title}</h4>
+                <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4 whitespace-normal">{rec.description}</p>
+                <Button variant="outline" size="sm" className="w-full text-xs md:text-sm">
                   {rec.action}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-2" />
                 </Button>
               </Card>
             ))}

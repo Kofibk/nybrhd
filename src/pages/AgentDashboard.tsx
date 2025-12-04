@@ -52,101 +52,103 @@ const AgentDashboard = () => {
     switch (status) {
       case "Live":
       case "Active":
-        return <Badge className="bg-success/10 text-success border-success/20">● {status}</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20 text-[10px] md:text-xs">● {status}</Badge>;
       case "Pre-Launch":
-        return <Badge className="bg-warning/10 text-warning border-warning/20">● {status}</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20 text-[10px] md:text-xs">● {status}</Badge>;
       case "Sold Out":
       case "Paused":
-        return <Badge variant="secondary">● {status}</Badge>;
+        return <Badge variant="secondary" className="text-[10px] md:text-xs">● {status}</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline" className="text-[10px] md:text-xs">{status}</Badge>;
     }
   };
 
   return (
     <DashboardLayout title="Agent Dashboard" userType="agent" userName="Agent">
       {/* Welcome Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-foreground">Welcome Back, Agent</h2>
-        <p className="text-muted-foreground">Here's your property sales overview</p>
+      <div className="mb-6 md:mb-8">
+        <h2 className="text-xl md:text-2xl font-bold text-foreground">Welcome Back, Agent</h2>
+        <p className="text-sm md:text-base text-muted-foreground">Here's your property sales overview</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {stats.map((stat) => (
-          <Card key={stat.label} className="p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <stat.icon className="h-5 w-5 text-primary" />
+          <Card key={stat.label} className="p-3 md:p-5">
+            <div className="flex items-start justify-between mb-2 md:mb-3">
+              <div className="p-1.5 md:p-2 rounded-lg bg-primary/10">
+                <stat.icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
               </div>
-              <span className="text-xs text-success font-medium">{stat.change}</span>
+              <span className="text-[10px] md:text-xs text-success font-medium">{stat.change}</span>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
-            <div className="text-sm text-muted-foreground">{stat.label}</div>
+            <div className="text-lg md:text-2xl font-bold text-foreground mb-0.5 md:mb-1">{stat.value}</div>
+            <div className="text-xs md:text-sm text-muted-foreground">{stat.label}</div>
           </Card>
         ))}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
-          <TabsTrigger value="campaigns" className="data-[state=active]:bg-background">Campaigns</TabsTrigger>
-          <TabsTrigger value="leads" className="data-[state=active]:bg-background">Leads</TabsTrigger>
-          <TabsTrigger value="analytics" className="data-[state=active]:bg-background">Analytics</TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+        <TabsList className="bg-muted/50 p-1 w-full overflow-x-auto flex justify-start">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-background text-xs md:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="campaigns" className="data-[state=active]:bg-background text-xs md:text-sm">Campaigns</TabsTrigger>
+          <TabsTrigger value="leads" className="data-[state=active]:bg-background text-xs md:text-sm">Leads</TabsTrigger>
+          <TabsTrigger value="analytics" className="data-[state=active]:bg-background text-xs md:text-sm">Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-4 md:space-y-6">
           {/* Active Campaigns Table */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground">Active Campaigns</h3>
-              <Button size="sm">
+          <Card className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
+              <h3 className="text-base md:text-lg font-semibold text-foreground">Active Campaigns</h3>
+              <Button size="sm" className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Launch New Campaign
+                Launch Campaign
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campaign Name</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>CTR</TableHead>
-                  <TableHead>CPL</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeCampaigns.map((campaign) => (
-                  <TableRow key={campaign.id}>
-                    <TableCell className="font-medium">{campaign.name}</TableCell>
-                    <TableCell>{campaign.budget}</TableCell>
-                    <TableCell>{campaign.ctr}</TableCell>
-                    <TableCell>{campaign.cpl}</TableCell>
-                    <TableCell>{getStatusBadge(campaign.status)}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs md:text-sm">Campaign</TableHead>
+                    <TableHead className="text-xs md:text-sm">Budget</TableHead>
+                    <TableHead className="text-xs md:text-sm hidden sm:table-cell">CTR</TableHead>
+                    <TableHead className="text-xs md:text-sm">CPL</TableHead>
+                    <TableHead className="text-xs md:text-sm">Status</TableHead>
+                    <TableHead className="text-xs md:text-sm"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {activeCampaigns.map((campaign) => (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="font-medium text-xs md:text-sm">{campaign.name}</TableCell>
+                      <TableCell className="text-xs md:text-sm">{campaign.budget}</TableCell>
+                      <TableCell className="text-xs md:text-sm hidden sm:table-cell">{campaign.ctr}</TableCell>
+                      <TableCell className="text-xs md:text-sm">{campaign.cpl}</TableCell>
+                      <TableCell>{getStatusBadge(campaign.status)}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 md:h-8 md:w-8 p-0">
+                          <Eye className="h-3 w-3 md:h-4 md:w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
 
           {/* Property Overview */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-6">Property Overview</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold text-foreground mb-4 md:mb-6">Property Overview</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {properties.map((property) => (
-                <div key={property.id} className="p-4 rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
-                  <div className="aspect-video bg-muted rounded-md mb-3 flex items-center justify-center">
-                    <Home className="h-8 w-8 text-muted-foreground/50" />
+                <div key={property.id} className="p-3 md:p-4 rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
+                  <div className="aspect-video bg-muted rounded-md mb-2 md:mb-3 flex items-center justify-center">
+                    <Home className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground/50" />
                   </div>
-                  <h4 className="font-medium text-foreground mb-1">{property.name}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {property.available} of {property.units} units available
+                  <h4 className="font-medium text-foreground mb-0.5 md:mb-1 text-sm md:text-base">{property.name}</h4>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-2">
+                    {property.available} of {property.units} available
                   </p>
                   {getStatusBadge(property.status)}
                 </div>
@@ -155,17 +157,17 @@ const AgentDashboard = () => {
           </Card>
 
           {/* AI Recommendations */}
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Sparkles className="h-5 w-5 text-accent" />
-              <h3 className="text-lg font-semibold text-foreground">AI Recommendations</h3>
+          <Card className="p-4 md:p-6">
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
+              <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-accent" />
+              <h3 className="text-base md:text-lg font-semibold text-foreground">AI Recommendations</h3>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {aiRecommendations.map((rec, index) => (
-                <div key={index} className="p-4 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 transition-colors">
-                  <h4 className="font-medium text-foreground mb-2">{rec.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-4">{rec.description}</p>
-                  <Button variant="outline" size="sm" className="w-full">
+                <div key={index} className="p-3 md:p-4 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                  <h4 className="font-medium text-foreground mb-1 md:mb-2 text-sm md:text-base">{rec.title}</h4>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{rec.description}</p>
+                  <Button variant="outline" size="sm" className="w-full text-xs md:text-sm">
                     {rec.action}
                     <ArrowUpRight className="h-3 w-3 ml-1" />
                   </Button>
@@ -176,9 +178,9 @@ const AgentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-foreground">AI Campaign Builder</h2>
-            <Button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
+            <h2 className="text-lg md:text-xl font-semibold text-foreground">AI Campaign Builder</h2>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               New Campaign
             </Button>
