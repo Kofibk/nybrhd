@@ -22,6 +22,29 @@ export interface Development {
   image: string;
 }
 
+export type CreativeType = "static" | "carousel" | "video";
+
+export interface CreativeAsset {
+  id: string;
+  type: CreativeType;
+  url: string;
+  thumbnail?: string;
+}
+
+export interface AudienceTargeting {
+  countries: string[];
+}
+
+export interface LeadFormFields {
+  fullName: boolean;
+  email: boolean;
+  phone: boolean;
+  budgetRange: boolean;
+  paymentMethod: boolean; // cash or mortgage
+  buyerStatus: boolean; // browsing vs actively looking
+  purchaseTimeline: boolean;
+}
+
 export interface Campaign {
   id: string;
   name: string;
@@ -38,21 +61,30 @@ export interface Campaign {
   channel: "meta";
   createdAt: string;
   creatives?: CampaignCreative;
+  targeting?: AudienceTargeting;
+  formFields?: LeadFormFields;
   metaCampaignId?: string;
   metaAdsetId?: string;
   metaFormId?: string;
   metaAdIds?: string[];
+  aiRecommendations?: AIRecommendation[];
 }
 
 export interface CampaignCreative {
-  images: string[];
+  assets: CreativeAsset[];
   selectedHeadline: string;
   selectedPrimaryText: string;
   selectedCta: string;
   generatedHeadlines: string[];
   generatedPrimaryTexts: string[];
   generatedCtas: string[];
+  // Legacy support
+  images?: string[];
 }
+
+export type PaymentMethod = "cash" | "mortgage" | "undecided";
+export type BuyerStatus = "browsing" | "actively_looking";
+export type PurchaseTimeline = "within_28_days" | "0_3_months" | "3_6_months" | "6_9_months" | "9_12_months" | "12_months_plus";
 
 export interface Lead {
   id: string;
@@ -63,6 +95,9 @@ export interface Lead {
   country: string;
   budget: string;
   bedrooms: string;
+  paymentMethod?: PaymentMethod;
+  buyerStatus?: BuyerStatus;
+  purchaseTimeline?: PurchaseTimeline;
   intentScore: number;
   qualityScore: number;
   status: "new" | "contacted" | "booked_viewing" | "offer" | "won" | "lost";
@@ -70,6 +105,16 @@ export interface Lead {
   campaignName: string;
   createdAt: string;
   notes: string;
+  aiRecommendations?: AIRecommendation[];
+}
+
+export interface AIRecommendation {
+  id: string;
+  type: "targeting" | "budget" | "creative" | "timing" | "follow_up" | "next_action";
+  title: string;
+  description: string;
+  confidence: number;
+  priority: "high" | "medium" | "low";
 }
 
 export interface DailyMetrics {
@@ -100,3 +145,27 @@ export interface AuthSession {
   userId: string;
   user: User;
 }
+
+// Available countries for targeting
+export const TARGET_COUNTRIES = [
+  { code: "GB", name: "United Kingdom" },
+  { code: "NG", name: "Nigeria" },
+  { code: "AE", name: "UAE" },
+  { code: "SG", name: "Singapore" },
+  { code: "HK", name: "Hong Kong" },
+  { code: "US", name: "United States" },
+  { code: "IN", name: "India" },
+  { code: "KE", name: "Kenya" },
+  { code: "GH", name: "Ghana" },
+  { code: "ZA", name: "South Africa" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "QA", name: "Qatar" },
+  { code: "KW", name: "Kuwait" },
+  { code: "MY", name: "Malaysia" },
+  { code: "AU", name: "Australia" },
+  { code: "CA", name: "Canada" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "CH", name: "Switzerland" },
+  { code: "NL", name: "Netherlands" },
+];
