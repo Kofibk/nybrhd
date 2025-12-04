@@ -43,30 +43,30 @@ const Onboarding = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
-        <div className="text-center mb-12">
-          <LogoWithTransparency className="h-12 w-auto mx-auto mb-6" />
-          <h1 className="text-4xl font-bold mb-4">Welcome</h1>
-          <p className="text-xl text-muted-foreground">
+        <div className="text-center mb-8 md:mb-12">
+          <LogoWithTransparency className="h-10 md:h-12 w-auto mx-auto mb-4 md:mb-6" />
+          <h1 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">Welcome</h1>
+          <p className="text-base md:text-xl text-muted-foreground">
             Let's get you set up. What best describes you?
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           {userTypes.map((type) => (
             <Card
               key={type.id}
-              className={`p-8 cursor-pointer transition-all hover:shadow-lg ${
+              className={`p-5 md:p-8 cursor-pointer transition-all hover:shadow-lg ${
                 selectedType === type.id
-                  ? "border-2 border-primary shadow-xl scale-105"
+                  ? "border-2 border-primary shadow-xl scale-[1.02] md:scale-105"
                   : "border-2 border-transparent"
               }`}
               onClick={() => setSelectedType(type.id)}
             >
-              <type.icon className={`h-16 w-16 mb-6 ${
+              <type.icon className={`h-10 w-10 md:h-16 md:w-16 mb-3 md:mb-6 ${
                 selectedType === type.id ? "text-primary" : "text-muted-foreground"
               }`} />
-              <h3 className="text-xl font-bold mb-2">{type.title}</h3>
-              <p className="text-muted-foreground">{type.description}</p>
+              <h3 className="text-lg md:text-xl font-bold mb-1 md:mb-2">{type.title}</h3>
+              <p className="text-sm md:text-base text-muted-foreground">{type.description}</p>
             </Card>
           ))}
         </div>
@@ -76,12 +76,12 @@ const Onboarding = () => {
             size="lg"
             disabled={!selectedType}
             onClick={handleContinue}
-            className="px-12"
+            className="w-full sm:w-auto px-12"
           >
             Continue
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-xs md:text-sm text-muted-foreground mt-3 md:mt-4">
             You can change this later in your account settings
           </p>
         </div>
