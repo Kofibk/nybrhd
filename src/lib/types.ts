@@ -33,6 +33,7 @@ export interface CreativeAsset {
 
 export interface AudienceTargeting {
   countries: string[];
+  cities?: string[];
 }
 
 export interface LeadFormFields {
@@ -45,12 +46,21 @@ export interface LeadFormFields {
   purchaseTimeline: boolean;
 }
 
+// User-specific campaign types
+export type DeveloperObjective = "leads" | "viewings" | "awareness";
+export type AgentObjective = "valuations" | "offers" | "awareness";
+export type BrokerObjective = "leads" | "awareness";
+export type CampaignObjective = DeveloperObjective | AgentObjective | BrokerObjective;
+
+export type AgentFocusSegment = "lettings" | "new_builds" | "resales";
+export type BrokerProduct = "residential" | "buy_to_let" | "bridging" | "life_insurance" | "home_insurance";
+
 export interface Campaign {
   id: string;
   name: string;
   developmentId: string;
   developmentName: string;
-  objective: "leads" | "viewings" | "awareness";
+  objective: CampaignObjective;
   status: "draft" | "live" | "paused" | "completed";
   budget: number;
   dailyCap?: number;
@@ -68,6 +78,11 @@ export interface Campaign {
   metaFormId?: string;
   metaAdIds?: string[];
   aiRecommendations?: AIRecommendation[];
+  // Agent-specific
+  focusSegment?: AgentFocusSegment;
+  propertyDetails?: string;
+  // Broker-specific
+  product?: BrokerProduct;
 }
 
 export interface CampaignCreative {
@@ -168,4 +183,52 @@ export const TARGET_COUNTRIES = [
   { code: "FR", name: "France" },
   { code: "CH", name: "Switzerland" },
   { code: "NL", name: "Netherlands" },
+];
+
+// Popular cities for targeting
+export const TARGET_CITIES = [
+  // UK
+  { code: "london", name: "London", country: "GB" },
+  { code: "manchester", name: "Manchester", country: "GB" },
+  { code: "birmingham", name: "Birmingham", country: "GB" },
+  { code: "leeds", name: "Leeds", country: "GB" },
+  { code: "liverpool", name: "Liverpool", country: "GB" },
+  { code: "edinburgh", name: "Edinburgh", country: "GB" },
+  { code: "bristol", name: "Bristol", country: "GB" },
+  // Nigeria
+  { code: "lagos", name: "Lagos", country: "NG" },
+  { code: "abuja", name: "Abuja", country: "NG" },
+  { code: "port_harcourt", name: "Port Harcourt", country: "NG" },
+  // UAE
+  { code: "dubai", name: "Dubai", country: "AE" },
+  { code: "abu_dhabi", name: "Abu Dhabi", country: "AE" },
+  // US
+  { code: "new_york", name: "New York", country: "US" },
+  { code: "los_angeles", name: "Los Angeles", country: "US" },
+  { code: "miami", name: "Miami", country: "US" },
+  { code: "houston", name: "Houston", country: "US" },
+  // Other
+  { code: "singapore_city", name: "Singapore", country: "SG" },
+  { code: "hong_kong_city", name: "Hong Kong", country: "HK" },
+  { code: "johannesburg", name: "Johannesburg", country: "ZA" },
+  { code: "nairobi", name: "Nairobi", country: "KE" },
+  { code: "accra", name: "Accra", country: "GH" },
+  { code: "sydney", name: "Sydney", country: "AU" },
+  { code: "toronto", name: "Toronto", country: "CA" },
+];
+
+// Broker products
+export const BROKER_PRODUCTS = [
+  { value: "residential", label: "Residential Mortgage" },
+  { value: "buy_to_let", label: "Buy To Let" },
+  { value: "bridging", label: "Bridging Loan" },
+  { value: "life_insurance", label: "Life Insurance" },
+  { value: "home_insurance", label: "Home Insurance" },
+];
+
+// Agent focus segments
+export const AGENT_FOCUS_SEGMENTS = [
+  { value: "lettings", label: "Lettings" },
+  { value: "new_builds", label: "New Builds" },
+  { value: "resales", label: "Resales" },
 ];
