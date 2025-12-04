@@ -83,7 +83,6 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
   const [uploadType, setUploadType] = useState<CreativeType>("static");
   
   const developments = getDevelopments();
-  const selectedDevelopment = developments.find((d) => d.id === data.developmentId);
   
   // AI City Recommendations hook
   const { 
@@ -126,6 +125,8 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     propertyValue: "",
     borrowAmount: "",
   });
+
+  const selectedDevelopment = developments.find((d) => d.id === data.developmentId);
 
   // Fetch AI city recommendations when entering Step 2
   useEffect(() => {
