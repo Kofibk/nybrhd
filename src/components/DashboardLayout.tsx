@@ -19,8 +19,7 @@ import {
   BarChart3, 
   Settings, 
   LogOut, 
-  Menu,
-  ChevronLeft 
+  Menu 
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -36,7 +35,6 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, title, userType, userName = "User" }: DashboardLayoutProps) => {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -76,10 +74,10 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
                     isActive(item.href)
                       ? "bg-sidebar-accent text-sidebar-primary font-medium"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  } ${collapsed && !isMobile ? "px-3" : ""}`}
+                  }`}
                 >
-                  <item.icon className={`h-5 w-5 ${collapsed && !isMobile ? "" : "mr-3"}`} />
-                  {(!collapsed || isMobile) && item.name}
+                  <item.icon className="h-5 w-5 mr-3" />
+                  {item.name}
                 </Button>
               </Link>
             </li>
@@ -93,12 +91,10 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
           <AlertDialogTrigger asChild>
             <Button 
               variant="ghost" 
-              className={`w-full justify-start text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 ${
-                collapsed && !isMobile ? "px-3" : ""
-              }`}
+              className="w-full justify-start text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10"
             >
-              <LogOut className={`h-5 w-5 ${collapsed && !isMobile ? "" : "mr-3"}`} />
-              {(!collapsed || isMobile) && "Logout"}
+              <LogOut className="h-5 w-5 mr-3" />
+              Logout
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -122,19 +118,9 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
     <div className="min-h-screen bg-background flex w-full">
       {/* Desktop Sidebar */}
       <aside 
-        className={`hidden lg:flex flex-col transition-all duration-300 ${
-          collapsed ? "w-16" : "w-64"
-        }`}
+        className="hidden lg:flex flex-col w-64"
       >
         <SidebarContent />
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-20 -right-3 bg-card border border-border rounded-full p-1.5 shadow-sm hover:bg-muted transition-colors z-10"
-          style={{ left: collapsed ? "52px" : "248px" }}
-        >
-          <ChevronLeft className={`h-4 w-4 text-muted-foreground transition-transform ${collapsed ? "rotate-180" : ""}`} />
-        </button>
       </aside>
 
       {/* Main Content */}
