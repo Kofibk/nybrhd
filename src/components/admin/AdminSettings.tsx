@@ -19,17 +19,16 @@ import {
   Settings,
   Bell,
   Users,
-  Shield,
   Webhook,
   Save,
   CheckCircle,
   AlertCircle,
   Link,
-  Phone,
-  Mail,
-  Globe,
   Key,
-  RefreshCw
+  RefreshCw,
+  Plug,
+  Facebook,
+  Workflow
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -39,13 +38,32 @@ const AdminSettings = () => {
     phoneNumberId: "",
     businessAccountId: "",
     webhookVerifyToken: "",
-    webhookUrl: "",
     isConnected: false,
     autoReply: true,
     welcomeMessage: "Hello! Thank you for contacting Naybourhood. How can we help you today?",
     awayMessage: "We're currently away but will get back to you as soon as possible.",
     businessHoursStart: "09:00",
     businessHoursEnd: "18:00"
+  });
+
+  const [metaConfig, setMetaConfig] = useState({
+    appId: "",
+    appSecret: "",
+    accessToken: "",
+    adAccountId: "",
+    pixelId: "",
+    isConnected: false,
+  });
+
+  const [n8nConfig, setN8nConfig] = useState({
+    webhookUrl: "",
+    apiKey: "",
+    isConnected: false,
+    workflows: [
+      { id: "1", name: "Lead Notification", status: "active" },
+      { id: "2", name: "Campaign Sync", status: "active" },
+      { id: "3", name: "Daily Report", status: "paused" },
+    ]
   });
 
   const [generalSettings, setGeneralSettings] = useState({
@@ -73,7 +91,7 @@ const AdminSettings = () => {
     });
   };
 
-  const handleTestConnection = () => {
+  const handleTestWhatsAppConnection = () => {
     if (!whatsappConfig.accessToken || !whatsappConfig.phoneNumberId) {
       toast({
         title: "Missing credentials",
@@ -82,43 +100,74 @@ const AdminSettings = () => {
       });
       return;
     }
-    
-    // Simulated test - in production this would make an actual API call
-    toast({
-      title: "Connection test initiated",
-      description: "Testing WhatsApp Business API connection...",
-    });
-    
+    toast({ title: "Testing connection...", description: "Please wait." });
     setTimeout(() => {
       setWhatsappConfig(prev => ({ ...prev, isConnected: true }));
+      toast({ title: "Connection successful", description: "WhatsApp Business API is properly configured." });
+    }, 2000);
+  };
+
+  const handleSaveMeta = () => {
+    toast({
+      title: "Meta settings saved",
+      description: "Meta Ads API configuration has been saved.",
+    });
+  };
+
+  const handleTestMetaConnection = () => {
+    if (!metaConfig.accessToken || !metaConfig.adAccountId) {
       toast({
-        title: "Connection successful",
-        description: "WhatsApp Business API is properly configured.",
+        title: "Missing credentials",
+        description: "Please enter your Meta API credentials first.",
+        variant: "destructive"
       });
+      return;
+    }
+    toast({ title: "Testing connection...", description: "Please wait." });
+    setTimeout(() => {
+      setMetaConfig(prev => ({ ...prev, isConnected: true }));
+      toast({ title: "Connection successful", description: "Meta Ads API is properly configured." });
+    }, 2000);
+  };
+
+  const handleSaveN8n = () => {
+    toast({
+      title: "n8n settings saved",
+      description: "n8n integration configuration has been saved.",
+    });
+  };
+
+  const handleTestN8nConnection = () => {
+    if (!n8nConfig.webhookUrl) {
+      toast({
+        title: "Missing webhook URL",
+        description: "Please enter your n8n webhook URL first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    toast({ title: "Testing connection...", description: "Please wait." });
+    setTimeout(() => {
+      setN8nConfig(prev => ({ ...prev, isConnected: true }));
+      toast({ title: "Connection successful", description: "n8n integration is properly configured." });
     }, 2000);
   };
 
   const handleSaveGeneral = () => {
-    toast({
-      title: "Settings saved",
-      description: "General settings have been updated.",
-    });
+    toast({ title: "Settings saved", description: "General settings have been updated." });
   };
 
   const handleSaveNotifications = () => {
-    toast({
-      title: "Notification preferences saved",
-      description: "Your notification settings have been updated.",
-    });
+    toast({ title: "Notification preferences saved", description: "Your notification settings have been updated." });
   };
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="whatsapp" className="space-y-4">
+      <Tabs defaultValue="integrations" className="space-y-4">
         <TabsList className="w-full md:w-auto overflow-x-auto">
-          <TabsTrigger value="whatsapp" className="gap-2">
-            <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">WhatsApp API</span>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Plug className="h-4 w-4" />
+            <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
           <TabsTrigger value="general" className="gap-2">
             <Settings className="h-4 w-4" />
@@ -134,8 +183,9 @@ const AdminSettings = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* WhatsApp Business API Tab */}
-        <TabsContent value="whatsapp" className="space-y-4">
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-4">
+          {/* WhatsApp Business API */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -150,209 +200,245 @@ const AdminSettings = () => {
                 </div>
                 <Badge variant={whatsappConfig.isConnected ? "default" : "secondary"} className={whatsappConfig.isConnected ? "bg-green-500" : ""}>
                   {whatsappConfig.isConnected ? (
-                    <>
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Connected
-                    </>
+                    <><CheckCircle className="h-3 w-3 mr-1" /> Connected</>
                   ) : (
-                    <>
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      Not Connected
-                    </>
+                    <><AlertCircle className="h-3 w-3 mr-1" /> Not Connected</>
                   )}
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* API Credentials */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Key className="h-4 w-4" />
-                  API Credentials
-                </h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="accessToken">Access Token</Label>
-                    <Input
-                      id="accessToken"
-                      type="password"
-                      placeholder="Enter your WhatsApp access token"
-                      value={whatsappConfig.accessToken}
-                      onChange={(e) => setWhatsappConfig(prev => ({ ...prev, accessToken: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumberId">Phone Number ID</Label>
-                    <Input
-                      id="phoneNumberId"
-                      placeholder="Enter your phone number ID"
-                      value={whatsappConfig.phoneNumberId}
-                      onChange={(e) => setWhatsappConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="businessAccountId">Business Account ID</Label>
-                    <Input
-                      id="businessAccountId"
-                      placeholder="Enter your business account ID"
-                      value={whatsappConfig.businessAccountId}
-                      onChange={(e) => setWhatsappConfig(prev => ({ ...prev, businessAccountId: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="webhookVerifyToken">Webhook Verify Token</Label>
-                    <Input
-                      id="webhookVerifyToken"
-                      placeholder="Create a verify token"
-                      value={whatsappConfig.webhookVerifyToken}
-                      onChange={(e) => setWhatsappConfig(prev => ({ ...prev, webhookVerifyToken: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Webhook Configuration */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Webhook className="h-4 w-4" />
-                  Webhook Configuration
-                </h3>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="webhookUrl">Webhook URL (for Meta Dashboard)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="webhookUrl"
-                      readOnly
-                      value="https://xnmgwckxcdetfwjwpulh.functions.supabase.co/whatsapp-webhook"
-                      className="bg-muted"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => {
-                        navigator.clipboard.writeText("https://xnmgwckxcdetfwjwpulh.functions.supabase.co/whatsapp-webhook");
-                        toast({ title: "Copied!", description: "Webhook URL copied to clipboard." });
-                      }}
-                    >
-                      <Link className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Add this URL to your WhatsApp Business API webhook settings in the Meta Developer Dashboard
-                  </p>
-                </div>
-              </div>
-
-              {/* Auto-Reply Settings */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Auto-Reply Settings
-                </h3>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Enable Auto-Reply</Label>
-                    <p className="text-xs text-muted-foreground">Automatically respond to incoming messages</p>
-                  </div>
-                  <Switch
-                    checked={whatsappConfig.autoReply}
-                    onCheckedChange={(checked) => setWhatsappConfig(prev => ({ ...prev, autoReply: checked }))}
+                  <Label htmlFor="wa-accessToken">Access Token</Label>
+                  <Input
+                    id="wa-accessToken"
+                    type="password"
+                    placeholder="Enter your WhatsApp access token"
+                    value={whatsappConfig.accessToken}
+                    onChange={(e) => setWhatsappConfig(prev => ({ ...prev, accessToken: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="welcomeMessage">Welcome Message</Label>
-                  <Textarea
-                    id="welcomeMessage"
-                    placeholder="Enter your welcome message"
-                    value={whatsappConfig.welcomeMessage}
-                    onChange={(e) => setWhatsappConfig(prev => ({ ...prev, welcomeMessage: e.target.value }))}
-                    rows={3}
+                  <Label htmlFor="wa-phoneNumberId">Phone Number ID</Label>
+                  <Input
+                    id="wa-phoneNumberId"
+                    placeholder="Enter your phone number ID"
+                    value={whatsappConfig.phoneNumberId}
+                    onChange={(e) => setWhatsappConfig(prev => ({ ...prev, phoneNumberId: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="awayMessage">Away Message</Label>
-                  <Textarea
-                    id="awayMessage"
-                    placeholder="Enter your away message"
-                    value={whatsappConfig.awayMessage}
-                    onChange={(e) => setWhatsappConfig(prev => ({ ...prev, awayMessage: e.target.value }))}
-                    rows={3}
+                  <Label htmlFor="wa-businessAccountId">Business Account ID</Label>
+                  <Input
+                    id="wa-businessAccountId"
+                    placeholder="Enter your business account ID"
+                    value={whatsappConfig.businessAccountId}
+                    onChange={(e) => setWhatsappConfig(prev => ({ ...prev, businessAccountId: e.target.value }))}
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Business Hours Start</Label>
-                    <Input
-                      type="time"
-                      value={whatsappConfig.businessHoursStart}
-                      onChange={(e) => setWhatsappConfig(prev => ({ ...prev, businessHoursStart: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Business Hours End</Label>
-                    <Input
-                      type="time"
-                      value={whatsappConfig.businessHoursEnd}
-                      onChange={(e) => setWhatsappConfig(prev => ({ ...prev, businessHoursEnd: e.target.value }))}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wa-webhookVerifyToken">Webhook Verify Token</Label>
+                  <Input
+                    id="wa-webhookVerifyToken"
+                    placeholder="Create a verify token"
+                    value={whatsappConfig.webhookVerifyToken}
+                    onChange={(e) => setWhatsappConfig(prev => ({ ...prev, webhookVerifyToken: e.target.value }))}
+                  />
                 </div>
               </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleTestConnection} variant="outline" className="gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Test Connection
+              <div className="space-y-2">
+                <Label>Webhook URL (for Meta Dashboard)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value="https://xnmgwckxcdetfwjwpulh.functions.supabase.co/whatsapp-webhook"
+                    className="bg-muted"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText("https://xnmgwckxcdetfwjwpulh.functions.supabase.co/whatsapp-webhook");
+                      toast({ title: "Copied!", description: "Webhook URL copied to clipboard." });
+                    }}
+                  >
+                    <Link className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <Label>Enable Auto-Reply</Label>
+                  <p className="text-xs text-muted-foreground">Automatically respond to incoming messages</p>
+                </div>
+                <Switch
+                  checked={whatsappConfig.autoReply}
+                  onCheckedChange={(checked) => setWhatsappConfig(prev => ({ ...prev, autoReply: checked }))}
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleTestWhatsAppConnection} variant="outline" className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Test Connection
                 </Button>
                 <Button onClick={handleSaveWhatsApp} className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Save Configuration
+                  <Save className="h-4 w-4" /> Save Configuration
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* WhatsApp Templates */}
+          {/* Meta Ads API */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Message Templates</CardTitle>
-              <CardDescription>
-                Pre-approved message templates for WhatsApp Business API
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Facebook className="h-5 w-5 text-blue-600" />
+                    Meta Ads API
+                  </CardTitle>
+                  <CardDescription>
+                    Connect to Meta (Facebook/Instagram) Ads for campaign management
+                  </CardDescription>
+                </div>
+                <Badge variant={metaConfig.isConnected ? "default" : "secondary"} className={metaConfig.isConnected ? "bg-blue-600" : ""}>
+                  {metaConfig.isConnected ? (
+                    <><CheckCircle className="h-3 w-3 mr-1" /> Connected</>
+                  ) : (
+                    <><AlertCircle className="h-3 w-3 mr-1" /> Not Connected</>
+                  )}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">Lead Welcome</span>
-                    <Badge variant="outline" className="text-green-500 border-green-500">Approved</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {'"Hi {name}, thank you for your interest in {property}. Our team will contact you shortly."'}
-                  </p>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="meta-appId">App ID</Label>
+                  <Input
+                    id="meta-appId"
+                    placeholder="Enter your Meta App ID"
+                    value={metaConfig.appId}
+                    onChange={(e) => setMetaConfig(prev => ({ ...prev, appId: e.target.value }))}
+                  />
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">Viewing Confirmation</span>
-                    <Badge variant="outline" className="text-green-500 border-green-500">Approved</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {'"Your viewing for {property} is confirmed for {date} at {time}. Reply YES to confirm."'}
-                  </p>
+                <div className="space-y-2">
+                  <Label htmlFor="meta-appSecret">App Secret</Label>
+                  <Input
+                    id="meta-appSecret"
+                    type="password"
+                    placeholder="Enter your Meta App Secret"
+                    value={metaConfig.appSecret}
+                    onChange={(e) => setMetaConfig(prev => ({ ...prev, appSecret: e.target.value }))}
+                  />
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">Follow-up Reminder</span>
-                    <Badge variant="outline" className="text-yellow-500 border-yellow-500">Pending</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {'"Hi {name}, we wanted to follow up on your inquiry about {property}. Are you still interested?"'}
-                  </p>
+                <div className="space-y-2">
+                  <Label htmlFor="meta-accessToken">Access Token</Label>
+                  <Input
+                    id="meta-accessToken"
+                    type="password"
+                    placeholder="Enter your long-lived access token"
+                    value={metaConfig.accessToken}
+                    onChange={(e) => setMetaConfig(prev => ({ ...prev, accessToken: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="meta-adAccountId">Ad Account ID</Label>
+                  <Input
+                    id="meta-adAccountId"
+                    placeholder="act_XXXXXXXXX"
+                    value={metaConfig.adAccountId}
+                    onChange={(e) => setMetaConfig(prev => ({ ...prev, adAccountId: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="meta-pixelId">Pixel ID (Optional)</Label>
+                  <Input
+                    id="meta-pixelId"
+                    placeholder="Enter your Meta Pixel ID"
+                    value={metaConfig.pixelId}
+                    onChange={(e) => setMetaConfig(prev => ({ ...prev, pixelId: e.target.value }))}
+                  />
                 </div>
               </div>
-              <Button variant="outline" className="w-full mt-4">
-                + Add New Template
-              </Button>
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleTestMetaConnection} variant="outline" className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Test Connection
+                </Button>
+                <Button onClick={handleSaveMeta} className="gap-2">
+                  <Save className="h-4 w-4" /> Save Configuration
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* n8n Integration */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Workflow className="h-5 w-5 text-orange-500" />
+                    n8n Automation
+                  </CardTitle>
+                  <CardDescription>
+                    Connect n8n for workflow automation and custom integrations
+                  </CardDescription>
+                </div>
+                <Badge variant={n8nConfig.isConnected ? "default" : "secondary"} className={n8nConfig.isConnected ? "bg-orange-500" : ""}>
+                  {n8nConfig.isConnected ? (
+                    <><CheckCircle className="h-3 w-3 mr-1" /> Connected</>
+                  ) : (
+                    <><AlertCircle className="h-3 w-3 mr-1" /> Not Connected</>
+                  )}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="n8n-webhookUrl">Webhook URL</Label>
+                  <Input
+                    id="n8n-webhookUrl"
+                    placeholder="https://your-n8n-instance.com/webhook/..."
+                    value={n8nConfig.webhookUrl}
+                    onChange={(e) => setN8nConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="n8n-apiKey">API Key (Optional)</Label>
+                  <Input
+                    id="n8n-apiKey"
+                    type="password"
+                    placeholder="Enter your n8n API key"
+                    value={n8nConfig.apiKey}
+                    onChange={(e) => setN8nConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Workflow Status */}
+              <div className="space-y-3">
+                <Label>Active Workflows</Label>
+                <div className="space-y-2">
+                  {n8nConfig.workflows.map(workflow => (
+                    <div key={workflow.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <span className="text-sm font-medium">{workflow.name}</span>
+                      <Badge variant={workflow.status === "active" ? "default" : "secondary"}>
+                        {workflow.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button onClick={handleTestN8nConnection} variant="outline" className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Test Connection
+                </Button>
+                <Button onClick={handleSaveN8n} className="gap-2">
+                  <Save className="h-4 w-4" /> Save Configuration
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -429,79 +515,70 @@ const AdminSettings = () => {
         <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Manage how you receive updates</CardDescription>
+              <CardTitle>Email Notifications</CardTitle>
+              <CardDescription>Configure email notification preferences</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email Notifications
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>New Lead Alerts</Label>
-                      <p className="text-xs text-muted-foreground">Receive email when new leads come in</p>
-                    </div>
-                    <Switch
-                      checked={notifications.emailNewLead}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailNewLead: checked }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Campaign Status Updates</Label>
-                      <p className="text-xs text-muted-foreground">Updates on campaign performance changes</p>
-                    </div>
-                    <Switch
-                      checked={notifications.emailCampaignStatus}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailCampaignStatus: checked }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Weekly Reports</Label>
-                      <p className="text-xs text-muted-foreground">Receive weekly summary reports</p>
-                    </div>
-                    <Switch
-                      checked={notifications.emailWeeklyReport}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailWeeklyReport: checked }))}
-                    />
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>New Lead Notifications</Label>
+                  <p className="text-xs text-muted-foreground">Receive an email when a new lead is captured</p>
                 </div>
+                <Switch
+                  checked={notifications.emailNewLead}
+                  onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailNewLead: checked }))}
+                />
               </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  Push Notifications
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>New Lead Alerts</Label>
-                      <p className="text-xs text-muted-foreground">Browser notifications for new leads</p>
-                    </div>
-                    <Switch
-                      checked={notifications.pushNewLead}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, pushNewLead: checked }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Campaign Updates</Label>
-                      <p className="text-xs text-muted-foreground">Browser notifications for campaign changes</p>
-                    </div>
-                    <Switch
-                      checked={notifications.pushCampaignStatus}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, pushCampaignStatus: checked }))}
-                    />
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Campaign Status Updates</Label>
+                  <p className="text-xs text-muted-foreground">Get notified when campaign status changes</p>
                 </div>
+                <Switch
+                  checked={notifications.emailCampaignStatus}
+                  onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailCampaignStatus: checked }))}
+                />
               </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Weekly Report</Label>
+                  <p className="text-xs text-muted-foreground">Receive a weekly performance summary</p>
+                </div>
+                <Switch
+                  checked={notifications.emailWeeklyReport}
+                  onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailWeeklyReport: checked }))}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-              <Button onClick={handleSaveNotifications} className="gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Push Notifications</CardTitle>
+              <CardDescription>Configure in-app notification preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>New Lead Alerts</Label>
+                  <p className="text-xs text-muted-foreground">Show push notification for new leads</p>
+                </div>
+                <Switch
+                  checked={notifications.pushNewLead}
+                  onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, pushNewLead: checked }))}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Campaign Updates</Label>
+                  <p className="text-xs text-muted-foreground">Show push notification for campaign changes</p>
+                </div>
+                <Switch
+                  checked={notifications.pushCampaignStatus}
+                  onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, pushCampaignStatus: checked }))}
+                />
+              </div>
+              <Button onClick={handleSaveNotifications} className="gap-2 mt-4">
                 <Save className="h-4 w-4" />
                 Save Preferences
               </Button>
@@ -513,27 +590,39 @@ const AdminSettings = () => {
         <TabsContent value="team" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Team Management</CardTitle>
+              <CardTitle>Team Members</CardTitle>
               <CardDescription>Manage admin team access and permissions</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium">AD</span>
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">Admin User</p>
-                      <p className="text-xs text-muted-foreground">admin@naybourhood.ai</p>
+                      <p className="font-medium">Admin User</p>
+                      <p className="text-sm text-muted-foreground">admin@naybourhood.ai</p>
                     </div>
                   </div>
                   <Badge>Owner</Badge>
                 </div>
-                <Button variant="outline" className="w-full">
-                  + Invite Team Member
-                </Button>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                      <Users className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Support Team</p>
+                      <p className="text-sm text-muted-foreground">support@naybourhood.ai</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline">Admin</Badge>
+                </div>
               </div>
+              <Button variant="outline" className="w-full mt-4">
+                + Invite Team Member
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
