@@ -18,6 +18,8 @@ import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import Settings from "./pages/Settings";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminRoute from "./components/admin/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +109,9 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/broker/settings" element={<ProtectedRoute><Settings userType="broker" /></ProtectedRoute>} />
+
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
