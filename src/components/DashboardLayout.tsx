@@ -60,13 +60,7 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
       {/* Logo & Brand */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <LogoWithTransparency className="h-8 w-auto flex-shrink-0" />
-          {(!collapsed || isMobile) && (
-            <div>
-              <span className="font-semibold text-sidebar-foreground text-sm">Naybourhood.ai</span>
-              <p className="text-xs text-sidebar-foreground/60">AI-Powered Property Sales</p>
-            </div>
-          )}
+          <LogoWithTransparency className="h-10 w-auto flex-shrink-0" />
         </div>
       </div>
       
