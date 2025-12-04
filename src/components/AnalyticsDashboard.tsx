@@ -97,62 +97,64 @@ const AnalyticsDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Filters Bar */}
-      <Card className="p-4 shadow-card">
-        <div className="flex flex-wrap items-center gap-4">
+      <Card className="p-3 md:p-4 shadow-card">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filters:</span>
           </div>
           
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Date Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-              <SelectItem value="30d">Last 30 Days</SelectItem>
-              <SelectItem value="90d">Last 90 Days</SelectItem>
-              <SelectItem value="ytd">Year to Date</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-full text-xs md:text-sm">
+                <SelectValue placeholder="Date Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 Days</SelectItem>
+                <SelectItem value="30d">Last 30 Days</SelectItem>
+                <SelectItem value="90d">Last 90 Days</SelectItem>
+                <SelectItem value="ytd">Year to Date</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={campaign} onValueChange={setCampaign}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Campaign" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Campaigns</SelectItem>
-              <SelectItem value="meta">Meta Ads</SelectItem>
-              <SelectItem value="google">Google Ads</SelectItem>
-              <SelectItem value="linkedin">LinkedIn</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={campaign} onValueChange={setCampaign}>
+              <SelectTrigger className="w-full text-xs md:text-sm">
+                <SelectValue placeholder="Campaign" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Campaigns</SelectItem>
+                <SelectItem value="meta">Meta Ads</SelectItem>
+                <SelectItem value="google">Google Ads</SelectItem>
+                <SelectItem value="linkedin">LinkedIn</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={region} onValueChange={setRegion}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              <SelectItem value="uk">United Kingdom</SelectItem>
-              <SelectItem value="nigeria">Nigeria</SelectItem>
-              <SelectItem value="uae">UAE</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={region} onValueChange={setRegion}>
+              <SelectTrigger className="w-full text-xs md:text-sm">
+                <SelectValue placeholder="Region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                <SelectItem value="uk">United Kingdom</SelectItem>
+                <SelectItem value="nigeria">Nigeria</SelectItem>
+                <SelectItem value="uae">UAE</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <div className="flex items-center gap-2 min-w-[200px]">
-            <span className="text-sm text-muted-foreground">Score:</span>
-            <Slider
-              value={scoreThreshold}
-              onValueChange={setScoreThreshold}
-              max={10}
-              step={1}
-              className="flex-1"
-            />
-            <span className="text-sm font-medium w-6">{scoreThreshold[0]}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Score:</span>
+              <Slider
+                value={scoreThreshold}
+                onValueChange={setScoreThreshold}
+                max={10}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-xs md:text-sm font-medium w-4">{scoreThreshold[0]}</span>
+            </div>
           </div>
 
-          <Button variant="outline" size="sm" className="ml-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto sm:self-end text-xs md:text-sm">
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
@@ -160,56 +162,56 @@ const AnalyticsDashboard = () => {
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         {summaryStats.map((stat) => (
-          <Card key={stat.label} className="p-5 shadow-card">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <stat.icon className="h-5 w-5 text-primary" />
+          <Card key={stat.label} className="p-3 md:p-5 shadow-card">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <div className="p-1.5 md:p-2 rounded-lg bg-muted">
+                <stat.icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
               </div>
-              <div className={`flex items-center text-sm ${stat.trend === "up" ? "text-success" : "text-destructive"}`}>
-                {stat.trend === "up" ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
+              <div className={`flex items-center text-xs md:text-sm ${stat.trend === "up" ? "text-success" : "text-destructive"}`}>
+                {stat.trend === "up" ? <TrendingUp className="h-3 w-3 md:h-4 md:w-4" /> : <TrendingDown className="h-3 w-3 md:h-4 md:w-4" />}
               </div>
             </div>
-            <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
-            <div className="text-sm text-muted-foreground">{stat.label}</div>
-            <div className="text-xs text-success mt-1">{stat.change}</div>
+            <div className="text-lg md:text-2xl font-bold text-foreground mb-0.5 md:mb-1">{stat.value}</div>
+            <div className="text-xs md:text-sm text-muted-foreground truncate">{stat.label}</div>
+            <div className="text-[10px] md:text-xs text-success mt-0.5 md:mt-1 truncate">{stat.change}</div>
           </Card>
         ))}
       </div>
 
       {/* Section 1: Campaign Performance Overview */}
-      <Card className="p-6 shadow-card">
-        <h3 className="text-lg font-semibold mb-4">Campaign Performance Overview</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <Card className="p-4 md:p-6 shadow-card">
+        <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Campaign Performance Overview</h3>
+        <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+          <table className="w-full min-w-[700px]">
             <thead className="bg-muted/50">
-              <tr className="text-left text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Campaign Name</th>
-                <th className="px-4 py-3 font-medium">Total Leads</th>
-                <th className="px-4 py-3 font-medium">Avg. CPL</th>
-                <th className="px-4 py-3 font-medium">Avg. Intent</th>
-                <th className="px-4 py-3 font-medium">Avg. Quality</th>
-                <th className="px-4 py-3 font-medium">% High-Intent</th>
-                <th className="px-4 py-3 font-medium">Viewings</th>
-                <th className="px-4 py-3 font-medium">Offers</th>
+              <tr className="text-left text-xs md:text-sm text-muted-foreground">
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Campaign Name</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Leads</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Avg. CPL</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Intent</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Quality</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">High-Intent</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Viewings</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Offers</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {campaignPerformance.map((campaign, index) => (
                 <tr key={index} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{campaign.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{campaign.leads}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{campaign.avgCPL}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 md:px-4 py-2 md:py-3 font-medium text-foreground text-xs md:text-sm">{campaign.name}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{campaign.leads}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{campaign.avgCPL}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm">
                     <span className={getScoreColor(campaign.avgIntent)}>{campaign.avgIntent}%</span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-xs md:text-sm">
                     <span className={getScoreColor(campaign.avgQuality)}>{campaign.avgQuality}%</span>
                   </td>
-                  <td className="px-4 py-3 text-success font-medium">{campaign.highIntent}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{campaign.viewings}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{campaign.offers}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-success font-medium text-xs md:text-sm">{campaign.highIntent}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{campaign.viewings}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{campaign.offers}</td>
                 </tr>
               ))}
             </tbody>
@@ -218,27 +220,27 @@ const AnalyticsDashboard = () => {
       </Card>
 
       {/* Section 2: Lead Quality by Channel & Region */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="p-6 shadow-card">
-          <h3 className="text-lg font-semibold mb-4">Lead Quality by Region</h3>
-          <div className="space-y-4">
+      <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
+        <Card className="p-4 md:p-6 shadow-card">
+          <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Lead Quality by Region</h3>
+          <div className="space-y-3 md:space-y-4">
             {regionData.map((item, index) => (
-              <div key={index} className="p-4 border border-border rounded-lg">
+              <div key={index} className="p-3 md:p-4 border border-border rounded-lg">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-foreground">{item.region}</h4>
-                  <Badge variant="outline">{item.campaigns} campaigns</Badge>
+                  <h4 className="font-medium text-foreground text-sm md:text-base">{item.region}</h4>
+                  <Badge variant="outline" className="text-[10px] md:text-xs">{item.campaigns} campaigns</Badge>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-3 gap-2 md:gap-4 text-xs md:text-sm">
                   <div>
-                    <div className="text-muted-foreground">Leads</div>
+                    <div className="text-muted-foreground text-[10px] md:text-xs">Leads</div>
                     <div className="font-semibold">{item.leads}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Avg Quality</div>
+                    <div className="text-muted-foreground text-[10px] md:text-xs">Quality</div>
                     <div className={`font-semibold ${getScoreColor(item.avgQuality)}`}>{item.avgQuality}%</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Avg Intent</div>
+                    <div className="text-muted-foreground text-[10px] md:text-xs">Intent</div>
                     <div className={`font-semibold ${getScoreColor(item.avgIntent)}`}>{item.avgIntent}%</div>
                   </div>
                 </div>
@@ -247,9 +249,9 @@ const AnalyticsDashboard = () => {
           </div>
         </Card>
 
-        <Card className="p-6 shadow-card">
-          <h3 className="text-lg font-semibold mb-4">Lead Source Performance</h3>
-          <div className="space-y-4">
+        <Card className="p-4 md:p-6 shadow-card">
+          <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Lead Source Performance</h3>
+          <div className="space-y-3 md:space-y-4">
             {[
               { source: "Meta Ads", leads: 296, highIntent: 68, color: "bg-blue-500" },
               { source: "Google Ads", leads: 237, highIntent: 54, color: "bg-red-500" },
@@ -277,43 +279,43 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Section 3: Lead Scoring Breakdown */}
-      <Card className="p-6 shadow-card">
-        <h3 className="text-lg font-semibold mb-4">Lead Scoring Breakdown</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <Card className="p-4 md:p-6 shadow-card">
+        <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Lead Scoring Breakdown</h3>
+        <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-muted/50">
-              <tr className="text-left text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Lead Name</th>
-                <th className="px-4 py-3 font-medium">Campaign Source</th>
-                <th className="px-4 py-3 font-medium">Intent Score</th>
-                <th className="px-4 py-3 font-medium">Quality Score</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Development</th>
+              <tr className="text-left text-xs md:text-sm text-muted-foreground">
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Lead Name</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Campaign</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Intent</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Quality</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Status</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden sm:table-cell">Development</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {leadScoreData.map((lead, index) => (
                 <tr key={index} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{lead.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{lead.campaign}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Progress value={lead.intent} className="w-16 h-2" />
-                      <span className={`text-sm ${getScoreColor(lead.intent)}`}>{lead.intent}</span>
+                  <td className="px-3 md:px-4 py-2 md:py-3 font-medium text-foreground text-xs md:text-sm">{lead.name}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{lead.campaign}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3">
+                    <div className="flex items-center gap-1 md:gap-2">
+                      <Progress value={lead.intent} className="w-10 md:w-16 h-2" />
+                      <span className={`text-xs md:text-sm ${getScoreColor(lead.intent)}`}>{lead.intent}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Progress value={lead.quality} className="w-16 h-2" />
-                      <span className={`text-sm ${getScoreColor(lead.quality)}`}>{lead.quality}</span>
+                  <td className="px-3 md:px-4 py-2 md:py-3">
+                    <div className="flex items-center gap-1 md:gap-2">
+                      <Progress value={lead.quality} className="w-10 md:w-16 h-2" />
+                      <span className={`text-xs md:text-sm ${getScoreColor(lead.quality)}`}>{lead.quality}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={lead.status === "Closed" ? "default" : "secondary"}>
+                  <td className="px-3 md:px-4 py-2 md:py-3">
+                    <Badge variant={lead.status === "Closed" ? "default" : "secondary"} className="text-[10px] md:text-xs">
                       {lead.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{lead.development}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm hidden sm:table-cell">{lead.development}</td>
                 </tr>
               ))}
             </tbody>

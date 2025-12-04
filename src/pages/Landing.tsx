@@ -186,13 +186,13 @@ const Landing = () => {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-24 bg-secondary/30">
+      <section id="pricing" className="py-16 md:py-24 bg-secondary/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-lg text-muted-foreground">Choose the plan that fits your business</p>
+          <div className="text-center mb-10 md:mb-16">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 md:mb-4">Simple, Transparent Pricing</h2>
+            <p className="text-base md:text-lg text-muted-foreground">Choose the plan that fits your business</p>
           </div>
-          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
             {pricing.map((plan) => (
               <Card 
                 key={plan.name} 
