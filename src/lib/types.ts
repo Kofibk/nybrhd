@@ -46,11 +46,8 @@ export interface LeadFormFields {
   purchaseTimeline: boolean;
 }
 
-// User-specific campaign types
-export type DeveloperObjective = "leads" | "viewings" | "awareness";
-export type AgentObjective = "valuations" | "offers" | "awareness";
-export type BrokerObjective = "leads" | "awareness";
-export type CampaignObjective = DeveloperObjective | AgentObjective | BrokerObjective;
+// User-specific campaign types - simplified to Leads or Awareness
+export type CampaignObjective = "leads" | "awareness";
 
 export type AgentFocusSegment = "lettings" | "new_builds" | "resales";
 export type BrokerProduct = "residential" | "buy_to_let" | "bridging" | "life_insurance" | "home_insurance";

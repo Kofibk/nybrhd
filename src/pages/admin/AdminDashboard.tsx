@@ -35,7 +35,6 @@ const AdminDashboard = () => {
     totalLeads: 1247,
     totalSpend: 45600,
     avgCPL: 36.57,
-    monthlyRevenue: 12500,
   };
 
   return (
@@ -44,7 +43,7 @@ const AdminDashboard = () => {
       
       <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4 mb-4 md:mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4 mb-4 md:mb-8">
           <Card>
             <CardContent className="p-3 md:p-4">
               <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
@@ -92,16 +91,6 @@ const AdminDashboard = () => {
                 <span className="text-[10px] md:text-xs">Avg CPL</span>
               </div>
               <p className="text-lg md:text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-3 md:p-4">
-              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
-                <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="text-[10px] md:text-xs">Monthly Revenue</span>
-              </div>
-              <p className="text-lg md:text-2xl font-bold text-green-600">£{stats.monthlyRevenue.toLocaleString()}</p>
             </CardContent>
           </Card>
         </div>

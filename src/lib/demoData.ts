@@ -146,7 +146,7 @@ export const demoCampaigns: Campaign[] = [
     name: "Garden Residences - First Time Buyers",
     developmentId: "dev_4",
     developmentName: "Garden Residences",
-    objective: "viewings",
+    objective: "leads",
     status: "draft",
     budget: 1200,
     startDate: "2024-11-20",
