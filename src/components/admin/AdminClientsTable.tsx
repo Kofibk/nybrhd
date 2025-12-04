@@ -208,10 +208,11 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>All Clients ({filteredClients.length})</CardTitle>
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="text-base md:text-lg">All Clients ({filteredClients.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6 md:pt-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -299,6 +300,7 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
