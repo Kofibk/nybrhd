@@ -18,6 +18,7 @@ import {
   BROKER_PRODUCTS, AGENT_FOCUS_SEGMENTS 
 } from "@/lib/types";
 import { useAICityRecommendations } from "@/hooks/useAICityRecommendations";
+import { useAIBudgetOptimization } from "@/hooks/useAIBudgetOptimization";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -90,12 +91,19 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     isLoading: isLoadingCityRecs, 
     fetchRecommendations: fetchCityRecommendations 
   } = useAICityRecommendations();
+
+  // AI Budget Optimization hook
+  const {
+    optimization: budgetOptimization,
+    isLoading: isLoadingBudget,
+    fetchOptimization: fetchBudgetOptimization,
+  } = useAIBudgetOptimization();
   
   const [data, setData] = useState<WizardData>({
     roleType: userType,
     developmentId: "",
     campaignName: "",
-    objective: userType === "broker" ? "leads" : userType === "agent" ? "valuations" : "leads",
+    objective: "leads",
     budget: 0,
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
@@ -255,23 +263,10 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     }
   };
 
-  // Get objectives based on user type
+  // Get objectives - simplified to Leads or Awareness for all user types
   const getObjectives = () => {
-    if (userType === "agent") {
-      return [
-        { value: "valuations", label: "Valuations", desc: "Get property valuations" },
-        { value: "offers", label: "Offers", desc: "Receive property offers" },
-        { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
-      ];
-    } else if (userType === "broker") {
-      return [
-        { value: "leads", label: "Leads", desc: "Generate enquiries" },
-        { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
-      ];
-    }
     return [
       { value: "leads", label: "Leads", desc: "Generate enquiries" },
-      { value: "viewings", label: "Viewings", desc: "Book property viewings" },
       { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
     ];
   };
@@ -742,6 +737,107 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
             <div>
               <h2 className="text-lg md:text-xl font-semibold mb-1">Budget & Schedule</h2>
               <p className="text-sm text-muted-foreground">Set your campaign budget and timeline</p>
+            </div>
+
+            {/* AI Budget Optimization */}
+            <div className="bg-accent/10 border border-accent/30 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-accent" />
+                  <h3 className="font-medium">AI Budget Optimizer</h3>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchBudgetOptimization({
+                    userType,
+                    objective: data.objective,
+                    currentBudget: data.budget,
+                    targetCountries: data.targetCountries,
+                    targetCities: data.targetCities,
+                    product: data.product,
+                    propertyDetails: data.propertyDetails,
+                    focusSegment: data.focusSegment,
+                    developmentName: selectedDevelopment?.name,
+                  })}
+                  disabled={isLoadingBudget}
+                >
+                  {isLoadingBudget ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Get AI Recommendations
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {budgetOptimization ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-background rounded-lg border">
+                      <p className="text-xs text-muted-foreground mb-1">Recommended Budget</p>
+                      <p className="text-lg font-bold text-primary">£{budgetOptimization.recommendedBudget.toLocaleString()}</p>
+                    </div>
+                    <div className="p-3 bg-background rounded-lg border">
+                      <p className="text-xs text-muted-foreground mb-1">Recommended Daily Cap</p>
+                      <p className="text-lg font-bold text-primary">£{budgetOptimization.recommendedDailyCap.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-background rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">Expected CPL Range</p>
+                    <p className="font-medium">£{budgetOptimization.expectedCPLMin} - £{budgetOptimization.expectedCPLMax}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium mb-2">AI Analysis</p>
+                    <p className="text-sm text-muted-foreground">{budgetOptimization.budgetReasoning}</p>
+                  </div>
+
+                  {budgetOptimization.optimizationTips && budgetOptimization.optimizationTips.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-2">Optimization Tips</p>
+                      <ul className="space-y-1">
+                        {budgetOptimization.optimizationTips.map((tip, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <Lightbulb className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                            <span>{tip}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        setData({
+                          ...data,
+                          budget: budgetOptimization.recommendedBudget,
+                          dailyCap: budgetOptimization.recommendedDailyCap,
+                        });
+                        toast.success("Applied AI-recommended budget");
+                      }}
+                    >
+                      Apply Recommendations
+                    </Button>
+                    <Badge variant="secondary" className="flex items-center">
+                      {budgetOptimization.confidence}% confidence
+                    </Badge>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Click "Get AI Recommendations" to receive personalized budget suggestions based on your campaign settings.
+                </p>
+              )}
             </div>
 
             <div>
