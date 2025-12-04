@@ -1,0 +1,213 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import DashboardLayout from "@/components/DashboardLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getCampaigns, saveCampaigns } from "@/lib/api";
+import { UserRole, Campaign } from "@/lib/types";
+import { toast } from "sonner";
+import {
+  Plus,
+  MoreHorizontal,
+  Pause,
+  Play,
+  Copy,
+  Eye,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+interface CampaignsListProps {
+  userType: UserRole;
+}
+
+const CampaignsList = ({ userType }: CampaignsListProps) => {
+  const navigate = useNavigate();
+  const [campaigns, setCampaigns] = useState<Campaign[]>(getCampaigns());
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "live": return "default";
+      case "draft": return "secondary";
+      case "paused": return "outline";
+      case "completed": return "secondary";
+      default: return "default";
+    }
+  };
+
+  const handlePauseResume = (campaign: Campaign) => {
+    const updated = campaigns.map((c) => {
+      if (c.id === campaign.id) {
+        const newStatus = c.status === "live" ? "paused" : "live";
+        return { ...c, status: newStatus as Campaign["status"] };
+      }
+      return c;
+    });
+    setCampaigns(updated);
+    saveCampaigns(updated);
+    toast.success(campaign.status === "live" ? "Campaign paused" : "Campaign resumed");
+  };
+
+  const handleDuplicate = (campaign: Campaign) => {
+    const newCampaign: Campaign = {
+      ...campaign,
+      id: `camp_${Date.now()}`,
+      name: `${campaign.name} (Copy)`,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      metaCampaignId: undefined,
+      metaAdsetId: undefined,
+      metaFormId: undefined,
+      metaAdIds: undefined,
+    };
+    const updated = [...campaigns, newCampaign];
+    setCampaigns(updated);
+    saveCampaigns(updated);
+    toast.success("Campaign duplicated as draft");
+  };
+
+  // Calculate leads per campaign (mock)
+  const getLeadsCount = (campaignId: string) => {
+    const leadsPerCampaign: Record<string, number> = {
+      camp_1: 124,
+      camp_2: 0,
+      camp_3: 0,
+    };
+    return leadsPerCampaign[campaignId] || Math.floor(Math.random() * 50);
+  };
+
+  const getCPL = (campaignId: string) => {
+    const cplPerCampaign: Record<string, string> = {
+      camp_1: "£20.16",
+      camp_2: "-",
+      camp_3: "-",
+    };
+    return cplPerCampaign[campaignId] || "£0.00";
+  };
+
+  return (
+    <DashboardLayout title="Campaigns" userType={userType}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold">All Campaigns</h2>
+          <p className="text-sm text-muted-foreground">Manage your Meta advertising campaigns</p>
+        </div>
+        <Button onClick={() => navigate(`/${userType}/campaigns/new`)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Campaign
+        </Button>
+      </div>
+
+      {/* Campaigns Table */}
+      <Card className="shadow-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr className="text-left text-sm text-muted-foreground">
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Development</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Leads</th>
+                <th className="px-4 py-3 font-medium">CPL</th>
+                <th className="px-4 py-3 font-medium">Created</th>
+                <th className="px-4 py-3 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {campaigns.map((campaign) => (
+                <tr
+                  key={campaign.id}
+                  className="hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/${userType}/campaigns/${campaign.id}`)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-foreground">{campaign.name}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{campaign.objective}</div>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{campaign.developmentName}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant={getStatusVariant(campaign.status)} className="capitalize">
+                      {campaign.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{getLeadsCount(campaign.id)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{getCPL(campaign.id)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {new Date(campaign.createdAt).toLocaleDateString("en-GB")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/${userType}/campaigns/${campaign.id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </DropdownMenuItem>
+                        {(campaign.status === "live" || campaign.status === "paused") && (
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePauseResume(campaign);
+                            }}
+                          >
+                            {campaign.status === "live" ? (
+                              <>
+                                <Pause className="h-4 w-4 mr-2" />
+                                Pause
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-4 w-4 mr-2" />
+                                Resume
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuplicate(campaign);
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {campaigns.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">No campaigns yet</p>
+          <Button onClick={() => navigate(`/${userType}/campaigns/new`)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create your first campaign
+          </Button>
+        </div>
+      )}
+    </DashboardLayout>
+  );
+};
+
+export default CampaignsList;

@@ -2,13 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Onboarding from "./pages/Onboarding";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import Login from "./pages/Login";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import BrokerDashboard from "./pages/BrokerDashboard";
-import CampaignBuilder from "./components/CampaignBuilder";
+import CampaignsList from "./pages/CampaignsList";
+import CampaignWizard from "./pages/CampaignWizard";
+import CampaignDetail from "./pages/CampaignDetail";
 import LeadsManagement from "./components/LeadsManagement";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import Settings from "./pages/Settings";
@@ -17,77 +19,107 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Protected route wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+const AppRoutes = () => {
+  const { isAuthenticated, user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <Login />} />
+      
+      {/* Developer Routes */}
+      <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
+      <Route path="/developer/campaigns" element={<ProtectedRoute><CampaignsList userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/leads" element={
+        <ProtectedRoute>
+          <DashboardLayout title="Leads" userType="developer">
+            <LeadsManagement />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/developer/analytics" element={
+        <ProtectedRoute>
+          <DashboardLayout title="Analytics" userType="developer">
+            <AnalyticsDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/developer/settings" element={<ProtectedRoute><Settings userType="developer" /></ProtectedRoute>} />
+
+      {/* Agent Routes */}
+      <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+      <Route path="/agent/campaigns" element={<ProtectedRoute><CampaignsList userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/leads" element={
+        <ProtectedRoute>
+          <DashboardLayout title="Leads" userType="agent">
+            <LeadsManagement />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/agent/analytics" element={
+        <ProtectedRoute>
+          <DashboardLayout title="Analytics" userType="agent">
+            <AnalyticsDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/agent/settings" element={<ProtectedRoute><Settings userType="agent" /></ProtectedRoute>} />
+
+      {/* Broker Routes */}
+      <Route path="/broker" element={<ProtectedRoute><BrokerDashboard /></ProtectedRoute>} />
+      <Route path="/broker/campaigns" element={<ProtectedRoute><CampaignsList userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/leads" element={
+        <ProtectedRoute>
+          <DashboardLayout title="Leads" userType="broker">
+            <LeadsManagement />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/broker/analytics" element={
+        <ProtectedRoute>
+          <DashboardLayout title="Analytics" userType="broker">
+            <AnalyticsDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/broker/settings" element={<ProtectedRoute><Settings userType="broker" /></ProtectedRoute>} />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          
-          {/* Developer Routes */}
-          <Route path="/developer" element={<DeveloperDashboard />} />
-          <Route path="/developer/campaigns" element={
-            <DashboardLayout title="Campaigns" userType="developer">
-              <CampaignBuilder />
-            </DashboardLayout>
-          } />
-          <Route path="/developer/leads" element={
-            <DashboardLayout title="Leads" userType="developer">
-              <LeadsManagement />
-            </DashboardLayout>
-          } />
-          <Route path="/developer/analytics" element={
-            <DashboardLayout title="Analytics" userType="developer">
-              <AnalyticsDashboard />
-            </DashboardLayout>
-          } />
-          <Route path="/developer/settings" element={<Settings userType="developer" />} />
-
-          {/* Agent Routes */}
-          <Route path="/agent" element={<AgentDashboard />} />
-          <Route path="/agent/campaigns" element={
-            <DashboardLayout title="Campaigns" userType="agent">
-              <CampaignBuilder />
-            </DashboardLayout>
-          } />
-          <Route path="/agent/leads" element={
-            <DashboardLayout title="Leads" userType="agent">
-              <LeadsManagement />
-            </DashboardLayout>
-          } />
-          <Route path="/agent/analytics" element={
-            <DashboardLayout title="Analytics" userType="agent">
-              <AnalyticsDashboard />
-            </DashboardLayout>
-          } />
-          <Route path="/agent/settings" element={<Settings userType="agent" />} />
-
-          {/* Broker/Mortgage Routes */}
-          <Route path="/broker" element={<BrokerDashboard />} />
-          <Route path="/broker/campaigns" element={
-            <DashboardLayout title="Campaigns" userType="broker">
-              <CampaignBuilder />
-            </DashboardLayout>
-          } />
-          <Route path="/broker/leads" element={
-            <DashboardLayout title="Leads" userType="broker">
-              <LeadsManagement />
-            </DashboardLayout>
-          } />
-          <Route path="/broker/analytics" element={
-            <DashboardLayout title="Analytics" userType="broker">
-              <AnalyticsDashboard />
-            </DashboardLayout>
-          } />
-          <Route path="/broker/settings" element={<Settings userType="broker" />} />
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
