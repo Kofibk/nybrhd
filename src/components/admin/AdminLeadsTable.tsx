@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -30,6 +31,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { 
@@ -49,9 +53,14 @@ import {
   XCircle,
   Eye,
   Clock,
-  FileText
+  FileText,
+  MoreHorizontal,
+  CheckSquare,
+  Megaphone,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
-import { demoLeads } from "@/lib/demoData";
+import { demoLeads, demoCampaigns } from "@/lib/demoData";
 import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 
@@ -59,15 +68,22 @@ interface AdminLeadsTableProps {
   searchQuery: string;
 }
 
+type SortDirection = "asc" | "desc" | null;
+
+interface ColumnSort {
+  field: string;
+  direction: SortDirection;
+}
+
 const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const [scoreFilter, setScoreFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<string>("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "createdAt", direction: "desc" });
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadStatuses, setLeadStatuses] = useState<Record<string, string>>({});
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
 
   // Get unique clients/campaigns for filter
   const uniqueClients = [...new Set(demoLeads.map(lead => lead.campaignName))].filter(Boolean);
@@ -94,20 +110,13 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "new":
-        return "New";
-      case "contacted":
-        return "Contacted";
-      case "booked_viewing":
-        return "Viewing Booked";
-      case "offer":
-        return "Offer Made";
-      case "won":
-        return "Won";
-      case "lost":
-        return "Lost";
-      default:
-        return status;
+      case "new": return "New";
+      case "contacted": return "Contacted";
+      case "booked_viewing": return "Viewing Booked";
+      case "offer": return "Offer Made";
+      case "won": return "Won";
+      case "lost": return "Lost";
+      default: return status;
     }
   };
 
@@ -126,7 +135,6 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   };
 
   const totalScore = (lead: Lead) => Math.round((lead.intentScore + lead.qualityScore) / 2);
-
   const getLeadStatus = (lead: Lead) => leadStatuses[lead.id] || lead.status;
 
   const updateLeadStatus = (leadId: string, newStatus: string) => {
@@ -162,10 +170,14 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
       return matchesSearch && matchesStatus && matchesClient && matchesCountry && matchesScore;
     })
     .sort((a, b) => {
+      if (!columnSort.direction) return 0;
       let comparison = 0;
-      switch (sortField) {
+      switch (columnSort.field) {
         case "name":
           comparison = a.name.localeCompare(b.name);
+          break;
+        case "email":
+          comparison = a.email.localeCompare(b.email);
           break;
         case "score":
           comparison = totalScore(a) - totalScore(b);
@@ -176,15 +188,21 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
         case "country":
           comparison = a.country.localeCompare(b.country);
           break;
+        case "campaign":
+          comparison = (a.campaignName || "").localeCompare(b.campaignName || "");
+          break;
+        case "status":
+          comparison = getLeadStatus(a).localeCompare(getLeadStatus(b));
+          break;
         default:
           comparison = 0;
       }
-      return sortDirection === "asc" ? comparison : -comparison;
+      return columnSort.direction === "asc" ? comparison : -comparison;
     });
 
-  const exportToCSV = () => {
+  const exportToCSV = (leads: Lead[]) => {
     const headers = ["Name", "Email", "Phone", "Country", "Campaign", "Intent Score", "Quality Score", "Combined Score", "Status", "Budget", "Bedrooms", "Date", "Notes"];
-    const rows = filteredLeads.map(lead => [
+    const rows = leads.map(lead => [
       lead.name,
       lead.email,
       lead.phone,
@@ -217,18 +235,140 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
 
     toast({
       title: "Export successful",
-      description: `${filteredLeads.length} leads exported to CSV.`,
+      description: `${leads.length} leads exported to CSV.`,
     });
   };
 
   const toggleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    if (columnSort.field === field) {
+      if (columnSort.direction === "desc") {
+        setColumnSort({ field, direction: "asc" });
+      } else if (columnSort.direction === "asc") {
+        setColumnSort({ field: "createdAt", direction: "desc" });
+      }
     } else {
-      setSortField(field);
-      setSortDirection("desc");
+      setColumnSort({ field, direction: "desc" });
     }
   };
+
+  const toggleSelectAll = () => {
+    if (selectedLeads.size === filteredLeads.length) {
+      setSelectedLeads(new Set());
+    } else {
+      setSelectedLeads(new Set(filteredLeads.map(l => l.id)));
+    }
+  };
+
+  const toggleSelectLead = (leadId: string) => {
+    const newSelected = new Set(selectedLeads);
+    if (newSelected.has(leadId)) {
+      newSelected.delete(leadId);
+    } else {
+      newSelected.add(leadId);
+    }
+    setSelectedLeads(newSelected);
+  };
+
+  const bulkUpdateStatus = (newStatus: string) => {
+    const newStatuses = { ...leadStatuses };
+    selectedLeads.forEach(id => {
+      newStatuses[id] = newStatus;
+    });
+    setLeadStatuses(newStatuses);
+    toast({
+      title: "Bulk status update",
+      description: `${selectedLeads.size} leads updated to ${getStatusLabel(newStatus)}.`,
+    });
+    setSelectedLeads(new Set());
+  };
+
+  const bulkExport = () => {
+    const leadsToExport = filteredLeads.filter(l => selectedLeads.has(l.id));
+    exportToCSV(leadsToExport);
+    setSelectedLeads(new Set());
+  };
+
+  const bulkAssignToCampaign = (campaignName: string) => {
+    toast({
+      title: "Leads assigned",
+      description: `${selectedLeads.size} leads assigned to "${campaignName}".`,
+    });
+    setSelectedLeads(new Set());
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (columnSort.field !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    if (columnSort.direction === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
+    return <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const ColumnHeader = ({ field, label, className = "" }: { field: string; label: string; className?: string }) => (
+    <TableHead className={`text-xs ${className}`}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 -ml-3 text-xs font-medium">
+            {label}
+            {renderSortIcon(field)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Column Options</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setColumnSort({ field, direction: "asc" })}>
+            <ArrowUp className="h-3 w-3 mr-2" /> Sort Ascending
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setColumnSort({ field, direction: "desc" })}>
+            <ArrowDown className="h-3 w-3 mr-2" /> Sort Descending
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Filter className="h-3 w-3 mr-2" /> Filter
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {field === "status" && (
+                <>
+                  <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("new")}>New</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("contacted")}>Contacted</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("booked_viewing")}>Viewing Booked</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("won")}>Won</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("lost")}>Lost</DropdownMenuItem>
+                </>
+              )}
+              {field === "country" && (
+                <>
+                  <DropdownMenuItem onClick={() => setCountryFilter("all")}>All Countries</DropdownMenuItem>
+                  {uniqueCountries.map(c => (
+                    <DropdownMenuItem key={c} onClick={() => setCountryFilter(c)}>{c}</DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              {field === "campaign" && (
+                <>
+                  <DropdownMenuItem onClick={() => setClientFilter("all")}>All Campaigns</DropdownMenuItem>
+                  {uniqueClients.map(c => (
+                    <DropdownMenuItem key={c} onClick={() => setClientFilter(c!)}>{c}</DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              {field === "score" && (
+                <>
+                  <DropdownMenuItem onClick={() => setScoreFilter("all")}>All Scores</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setScoreFilter("high")}>High (80+)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setScoreFilter("medium")}>Medium (60-79)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setScoreFilter("low")}>Low (&lt;60)</DropdownMenuItem>
+                </>
+              )}
+              {!["status", "country", "campaign", "score"].includes(field) && (
+                <DropdownMenuItem disabled>No filters available</DropdownMenuItem>
+              )}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableHead>
+  );
 
   return (
     <>
@@ -237,13 +377,62 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
           <div className="flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row justify-between gap-3">
               <CardTitle className="text-base md:text-lg">All Leads ({filteredLeads.length})</CardTitle>
-              <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => exportToCSV(filteredLeads)} variant="outline" size="sm" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export All
+                </Button>
+              </div>
             </div>
             
-            {/* Filters Row */}
+            {/* Bulk Actions Bar */}
+            {selectedLeads.size > 0 && (
+              <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-lg border">
+                <span className="text-sm font-medium">{selectedLeads.size} selected</span>
+                <div className="flex flex-wrap gap-2 ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-1 text-xs">
+                        <CheckSquare className="h-3 w-3" />
+                        Update Status
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => bulkUpdateStatus("new")}>New</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => bulkUpdateStatus("contacted")}>Contacted</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => bulkUpdateStatus("booked_viewing")}>Viewing Booked</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => bulkUpdateStatus("offer")}>Offer Made</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => bulkUpdateStatus("won")}>Won</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => bulkUpdateStatus("lost")}>Lost</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-1 text-xs">
+                        <Megaphone className="h-3 w-3" />
+                        Assign to Campaign
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {demoCampaigns.map(c => (
+                        <DropdownMenuItem key={c.id} onClick={() => bulkAssignToCampaign(c.name)}>
+                          {c.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={bulkExport}>
+                    <Download className="h-3 w-3" />
+                    Export Selected
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedLeads(new Set())}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Filters Row */}
             <div className="flex flex-wrap gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
@@ -295,31 +484,6 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                   <SelectItem value="low">Low (&lt;60)</SelectItem>
                 </SelectContent>
               </Select>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
-                    <ArrowUpDown className="h-3 w-3" />
-                    Sort
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => toggleSort("createdAt")}>
-                    Date {sortField === "createdAt" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleSort("name")}>
-                    Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleSort("score")}>
-                    Score {sortField === "score" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => toggleSort("country")}>
-                    Country {sortField === "country" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -328,21 +492,19 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs cursor-pointer" onClick={() => toggleSort("name")}>
-                    Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={selectedLeads.size === filteredLeads.length && filteredLeads.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
                   </TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Email</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell cursor-pointer" onClick={() => toggleSort("country")}>
-                    Country {sortField === "country" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell">Campaign</TableHead>
-                  <TableHead className="text-xs cursor-pointer" onClick={() => toggleSort("score")}>
-                    Score {sortField === "score" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell cursor-pointer" onClick={() => toggleSort("createdAt")}>
-                    Date {sortField === "createdAt" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </TableHead>
+                  <ColumnHeader field="name" label="Name" />
+                  <ColumnHeader field="email" label="Email" className="hidden md:table-cell" />
+                  <ColumnHeader field="country" label="Country" className="hidden lg:table-cell" />
+                  <ColumnHeader field="campaign" label="Campaign" className="hidden sm:table-cell" />
+                  <ColumnHeader field="score" label="Score" />
+                  <ColumnHeader field="status" label="Status" />
+                  <ColumnHeader field="createdAt" label="Date" className="hidden md:table-cell" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -350,31 +512,36 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                   <TableRow 
                     key={lead.id} 
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedLead(lead)}
                   >
-                    <TableCell className="font-medium text-xs md:text-sm">
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedLeads.has(lead.id)}
+                        onCheckedChange={() => toggleSelectLead(lead.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium text-xs md:text-sm" onClick={() => setSelectedLead(lead)}>
                       {lead.name}
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden md:table-cell">
+                    <TableCell className="text-xs md:text-sm hidden md:table-cell" onClick={() => setSelectedLead(lead)}>
                       {lead.email}
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden lg:table-cell">
+                    <TableCell className="text-xs md:text-sm hidden lg:table-cell" onClick={() => setSelectedLead(lead)}>
                       {lead.country}
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden sm:table-cell max-w-[150px] truncate">
+                    <TableCell className="text-xs md:text-sm hidden sm:table-cell max-w-[150px] truncate" onClick={() => setSelectedLead(lead)}>
                       {lead.campaignName}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={() => setSelectedLead(lead)}>
                       <span className={`font-semibold text-xs md:text-sm ${getScoreColor(totalScore(lead))}`}>
                         {totalScore(lead)}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={() => setSelectedLead(lead)}>
                       <Badge variant="outline" className={`text-[10px] md:text-xs ${getStatusColor(getLeadStatus(lead))}`}>
                         {getStatusLabel(getLeadStatus(lead))}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden md:table-cell">
+                    <TableCell className="text-xs md:text-sm hidden md:table-cell" onClick={() => setSelectedLead(lead)}>
                       {formatDate(lead.createdAt)}
                     </TableCell>
                   </TableRow>
@@ -447,26 +614,26 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                       <Button 
                         variant={getLeadStatus(selectedLead) === "won" ? "default" : "outline"} 
                         size="sm"
-                        className="text-xs text-green-600"
+                        className="text-xs gap-1"
                         onClick={() => updateLeadStatus(selectedLead.id, "won")}
                       >
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                        <CheckCircle className="h-3 w-3" />
                         Won
                       </Button>
                       <Button 
-                        variant={getLeadStatus(selectedLead) === "lost" ? "default" : "outline"} 
+                        variant={getLeadStatus(selectedLead) === "lost" ? "destructive" : "outline"} 
                         size="sm"
-                        className="text-xs text-red-600 col-span-2"
+                        className="text-xs gap-1 col-span-2"
                         onClick={() => updateLeadStatus(selectedLead.id, "lost")}
                       >
-                        <XCircle className="h-3 w-3 mr-1" />
+                        <XCircle className="h-3 w-3" />
                         Mark as Lost
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Scores Section */}
+                {/* Lead Scores */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
@@ -474,32 +641,26 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                       Lead Scores
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-center">
+                  <CardContent className="space-y-3">
+                    <div className="text-center mb-4">
                       <span className={`text-4xl font-bold ${getScoreColor(totalScore(selectedLead))}`}>
                         {totalScore(selectedLead)}
                       </span>
-                      <p className="text-xs text-muted-foreground mt-1">Combined Score</p>
+                      <p className="text-xs text-muted-foreground">Combined Score</p>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Intent Score</span>
-                          <span className={getScoreColor(selectedLead.intentScore)}>
-                            {selectedLead.intentScore}
-                          </span>
-                        </div>
-                        <Progress value={selectedLead.intentScore} className="h-2" />
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Intent Score</span>
+                        <span className="font-medium">{selectedLead.intentScore}</span>
                       </div>
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Quality Score</span>
-                          <span className={getScoreColor(selectedLead.qualityScore)}>
-                            {selectedLead.qualityScore}
-                          </span>
-                        </div>
-                        <Progress value={selectedLead.qualityScore} className="h-2" />
+                      <Progress value={selectedLead.intentScore} className="h-2" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Quality Score</span>
+                        <span className="font-medium">{selectedLead.qualityScore}</span>
                       </div>
+                      <Progress value={selectedLead.qualityScore} className="h-2" />
                     </div>
                   </CardContent>
                 </Card>
@@ -513,21 +674,21 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedLead.email}</span>
+                      <span className="text-sm">{selectedLead.email}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedLead.phone}</span>
+                      <span className="text-sm">{selectedLead.phone}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{selectedLead.country}</span>
+                      <span className="text-sm">{selectedLead.country}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-3">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{formatDate(selectedLead.createdAt)}</span>
+                      <span className="text-sm">{formatDate(selectedLead.createdAt)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -540,46 +701,48 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                       Preferences
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Budget</span>
-                      <span className="font-medium">{selectedLead.budget}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Bedrooms</span>
-                      <span className="font-medium">{selectedLead.bedrooms}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Campaign Source</span>
-                      <span className="font-medium truncate max-w-[180px]">{selectedLead.campaignName}</span>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Budget</p>
+                        <p className="font-medium">{selectedLead.budget}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Bedrooms</p>
+                        <p className="font-medium">{selectedLead.bedrooms}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-muted-foreground">Campaign Source</p>
+                        <p className="font-medium">{selectedLead.campaignName}</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Notes */}
-                {selectedLead.notes && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        Notes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{selectedLead.notes}</p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Notes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedLead.notes || "No notes available for this lead."}
+                    </p>
+                  </CardContent>
+                </Card>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button className="w-full" variant="default">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Email
+                {/* Quick Actions */}
+                <div className="flex gap-2">
+                  <Button className="flex-1 gap-2" variant="outline">
+                    <Mail className="h-4 w-4" />
+                    Email
                   </Button>
-                  <Button className="w-full" variant="outline">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Call Lead
+                  <Button className="flex-1 gap-2" variant="outline">
+                    <Phone className="h-4 w-4" />
+                    Call
                   </Button>
                 </div>
               </div>

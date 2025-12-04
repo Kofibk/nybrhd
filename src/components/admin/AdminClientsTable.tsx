@@ -17,6 +17,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -47,12 +51,24 @@ import {
   Edit, 
   UserX,
   Phone,
-  Globe
+  Globe,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Filter,
+  Download
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface AdminClientsTableProps {
   searchQuery: string;
+}
+
+type SortDirection = "asc" | "desc" | null;
+
+interface ColumnSort {
+  field: string;
+  direction: SortDirection;
 }
 
 // Mock client data with more details
@@ -164,6 +180,10 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
   const navigate = useNavigate();
   const [editingClient, setEditingClient] = useState<typeof mockClients[0] | null>(null);
   const [viewingClient, setViewingClient] = useState<typeof mockClients[0] | null>(null);
+  const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "name", direction: "asc" });
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [planFilter, setPlanFilter] = useState<string>("all");
   const [editFormData, setEditFormData] = useState({
     name: "",
     contactName: "",
@@ -175,12 +195,50 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
     notes: "",
   });
 
-  const filteredClients = mockClients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.contactName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredClients = mockClients
+    .filter((client) => {
+      const matchesSearch =
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.contactName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = typeFilter === "all" || client.type === typeFilter;
+      const matchesStatus = statusFilter === "all" || client.status === statusFilter;
+      const matchesPlan = planFilter === "all" || client.plan === planFilter;
+      return matchesSearch && matchesType && matchesStatus && matchesPlan;
+    })
+    .sort((a, b) => {
+      if (!columnSort.direction) return 0;
+      let comparison = 0;
+      switch (columnSort.field) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "contact":
+          comparison = a.contactName.localeCompare(b.contactName);
+          break;
+        case "type":
+          comparison = a.type.localeCompare(b.type);
+          break;
+        case "plan":
+          comparison = a.plan.localeCompare(b.plan);
+          break;
+        case "campaigns":
+          comparison = a.activeCampaigns - b.activeCampaigns;
+          break;
+        case "leads":
+          comparison = a.totalLeads - b.totalLeads;
+          break;
+        case "spend":
+          comparison = a.totalSpend - b.totalSpend;
+          break;
+        case "status":
+          comparison = a.status.localeCompare(b.status);
+          break;
+        default:
+          comparison = 0;
+      }
+      return columnSort.direction === "asc" ? comparison : -comparison;
+    });
 
   const handleEditClient = (client: typeof mockClients[0]) => {
     setEditingClient(client);
@@ -197,7 +255,6 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
   };
 
   const handleSaveEdit = () => {
-    // In production, this would save to database
     toast({
       title: "Client updated",
       description: `${editFormData.name} has been updated successfully.`,
@@ -205,25 +262,143 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
     setEditingClient(null);
   };
 
+  const exportToCSV = () => {
+    const headers = ["Name", "Contact", "Email", "Phone", "Type", "Plan", "Campaigns", "Leads", "Spend", "Status"];
+    const rows = filteredClients.map(c => [
+      c.name, c.contactName, c.email, c.phone, getTypeLabel(c.type), c.plan, c.activeCampaigns, c.totalLeads, c.totalSpend, c.status
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(row => row.map(cell => `"${cell}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `clients_export_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    toast({ title: "Export successful", description: `${filteredClients.length} clients exported.` });
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (columnSort.field !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    if (columnSort.direction === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
+    return <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const ColumnHeader = ({ field, label, className = "" }: { field: string; label: string; className?: string }) => (
+    <TableHead className={className}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 -ml-3 text-xs font-medium">
+            {label}
+            {renderSortIcon(field)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Column Options</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setColumnSort({ field, direction: "asc" })}>
+            <ArrowUp className="h-3 w-3 mr-2" /> Sort Ascending
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setColumnSort({ field, direction: "desc" })}>
+            <ArrowDown className="h-3 w-3 mr-2" /> Sort Descending
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Filter className="h-3 w-3 mr-2" /> Filter
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {field === "type" && (
+                <>
+                  <DropdownMenuItem onClick={() => setTypeFilter("all")}>All Types</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTypeFilter("developer")}>Developer</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTypeFilter("agent")}>Estate Agent</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTypeFilter("broker")}>Mortgage Broker</DropdownMenuItem>
+                </>
+              )}
+              {field === "status" && (
+                <>
+                  <DropdownMenuItem onClick={() => setStatusFilter("all")}>All Statuses</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("paused")}>Paused</DropdownMenuItem>
+                </>
+              )}
+              {field === "plan" && (
+                <>
+                  <DropdownMenuItem onClick={() => setPlanFilter("all")}>All Plans</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPlanFilter("Starter")}>Starter</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPlanFilter("Professional")}>Professional</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPlanFilter("Enterprise")}>Enterprise</DropdownMenuItem>
+                </>
+              )}
+              {!["type", "status", "plan"].includes(field) && (
+                <DropdownMenuItem disabled>No filters available</DropdownMenuItem>
+              )}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableHead>
+  );
+
   return (
     <>
       <Card>
         <CardHeader className="p-4 md:p-6">
-          <CardTitle className="text-base md:text-lg">All Clients ({filteredClients.length})</CardTitle>
+          <div className="flex flex-col sm:flex-row justify-between gap-3">
+            <CardTitle className="text-base md:text-lg">All Clients ({filteredClients.length})</CardTitle>
+            <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
+          {/* Quick Filters */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="developer">Developer</SelectItem>
+                <SelectItem value="agent">Estate Agent</SelectItem>
+                <SelectItem value="broker">Mortgage Broker</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-32 h-8 text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="paused">Paused</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
+                <SelectValue placeholder="Plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plans</SelectItem>
+                <SelectItem value="Starter">Starter</SelectItem>
+                <SelectItem value="Professional">Professional</SelectItem>
+                <SelectItem value="Enterprise">Enterprise</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6 md:pt-0">
           <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead className="text-center">Campaigns</TableHead>
-                <TableHead className="text-center">Leads</TableHead>
-                <TableHead className="text-right">Spend</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <ColumnHeader field="name" label="Client" />
+                <ColumnHeader field="contact" label="Contact" />
+                <ColumnHeader field="type" label="Type" />
+                <ColumnHeader field="plan" label="Plan" />
+                <ColumnHeader field="campaigns" label="Campaigns" className="text-center" />
+                <ColumnHeader field="leads" label="Leads" className="text-center" />
+                <ColumnHeader field="spend" label="Spend" className="text-right" />
+                <ColumnHeader field="status" label="Status" className="text-center" />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

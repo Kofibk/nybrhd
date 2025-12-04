@@ -15,6 +15,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import {
   Select,
@@ -23,10 +28,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, Eye, Pause, Play, Copy, BarChart3 } from "lucide-react";
+import { 
+  MoreHorizontal, 
+  Eye, 
+  Pause, 
+  Play, 
+  Copy, 
+  BarChart3,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Filter,
+  Download
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface AdminCampaignsTableProps {
   searchQuery: string;
+}
+
+type SortDirection = "asc" | "desc" | null;
+
+interface ColumnSort {
+  field: string;
+  direction: SortDirection;
 }
 
 // Mock campaign data
@@ -121,25 +146,130 @@ const getStatusColor = (status: string) => {
 const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
-
-  const filteredCampaigns = mockCampaigns.filter((campaign) => {
-    const matchesSearch =
-      campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campaign.client.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
-    const matchesClient = clientFilter === "all" || campaign.client === clientFilter;
-    return matchesSearch && matchesStatus && matchesClient;
-  });
+  const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "startDate", direction: "desc" });
 
   const uniqueClients = [...new Set(mockCampaigns.map((c) => c.client))];
+
+  const filteredCampaigns = mockCampaigns
+    .filter((campaign) => {
+      const matchesSearch =
+        campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        campaign.client.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
+      const matchesClient = clientFilter === "all" || campaign.client === clientFilter;
+      return matchesSearch && matchesStatus && matchesClient;
+    })
+    .sort((a, b) => {
+      if (!columnSort.direction) return 0;
+      let comparison = 0;
+      switch (columnSort.field) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "client":
+          comparison = a.client.localeCompare(b.client);
+          break;
+        case "status":
+          comparison = a.status.localeCompare(b.status);
+          break;
+        case "budget":
+          comparison = a.budget - b.budget;
+          break;
+        case "spent":
+          comparison = a.spent - b.spent;
+          break;
+        case "leads":
+          comparison = a.leads - b.leads;
+          break;
+        case "cpl":
+          comparison = a.cpl - b.cpl;
+          break;
+        case "startDate":
+          comparison = new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+          break;
+        default:
+          comparison = 0;
+      }
+      return columnSort.direction === "asc" ? comparison : -comparison;
+    });
+
+  const exportToCSV = () => {
+    const headers = ["Campaign", "Client", "Status", "Budget", "Spent", "Leads", "CPL", "Start Date"];
+    const rows = filteredCampaigns.map(c => [
+      c.name, c.client, c.status, c.budget, c.spent, c.leads, c.cpl, c.startDate
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(row => row.map(cell => `"${cell}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `campaigns_export_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    toast({ title: "Export successful", description: `${filteredCampaigns.length} campaigns exported.` });
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (columnSort.field !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    if (columnSort.direction === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
+    return <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const ColumnHeader = ({ field, label, className = "" }: { field: string; label: string; className?: string }) => (
+    <TableHead className={className}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 -ml-3 text-xs font-medium">
+            {label}
+            {renderSortIcon(field)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Column Options</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setColumnSort({ field, direction: "asc" })}>
+            <ArrowUp className="h-3 w-3 mr-2" /> Sort Ascending
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setColumnSort({ field, direction: "desc" })}>
+            <ArrowDown className="h-3 w-3 mr-2" /> Sort Descending
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Filter className="h-3 w-3 mr-2" /> Filter
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {field === "status" && (
+                <>
+                  <DropdownMenuItem onClick={() => setStatusFilter("all")}>All Status</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("live")}>Live</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("paused")}>Paused</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("draft")}>Draft</DropdownMenuItem>
+                </>
+              )}
+              {field === "client" && (
+                <>
+                  <DropdownMenuItem onClick={() => setClientFilter("all")}>All Clients</DropdownMenuItem>
+                  {uniqueClients.map(c => (
+                    <DropdownMenuItem key={c} onClick={() => setClientFilter(c)}>{c}</DropdownMenuItem>
+                  ))}
+                </>
+              )}
+              {!["status", "client"].includes(field) && (
+                <DropdownMenuItem disabled>No filters available</DropdownMenuItem>
+              )}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableHead>
+  );
 
   return (
     <Card>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 md:p-6">
-        <CardTitle className="text-base md:text-lg">All Campaigns</CardTitle>
+        <CardTitle className="text-base md:text-lg">All Campaigns ({filteredCampaigns.length})</CardTitle>
         <div className="flex gap-2 w-full sm:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm">
+            <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm h-8">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -150,7 +280,7 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="w-full sm:w-40 text-xs md:text-sm">
+            <SelectTrigger className="w-full sm:w-40 text-xs md:text-sm h-8">
               <SelectValue placeholder="Client" />
             </SelectTrigger>
             <SelectContent>
@@ -162,6 +292,10 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
               ))}
             </SelectContent>
           </Select>
+          <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2 h-8">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0 md:p-6 md:pt-0">
@@ -169,13 +303,13 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Campaign</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Budget</TableHead>
-              <TableHead className="text-right">Spent</TableHead>
-              <TableHead className="text-center">Leads</TableHead>
-              <TableHead className="text-right">CPL</TableHead>
+              <ColumnHeader field="name" label="Campaign" />
+              <ColumnHeader field="client" label="Client" />
+              <ColumnHeader field="status" label="Status" className="text-center" />
+              <ColumnHeader field="budget" label="Budget" className="text-right" />
+              <ColumnHeader field="spent" label="Spent" className="text-right" />
+              <ColumnHeader field="leads" label="Leads" className="text-center" />
+              <ColumnHeader field="cpl" label="CPL" className="text-right" />
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
