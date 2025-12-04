@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -160,6 +161,7 @@ const getTypeLabel = (type: string) => {
 };
 
 const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
+  const navigate = useNavigate();
   const [editingClient, setEditingClient] = useState<typeof mockClients[0] | null>(null);
   const [viewingClient, setViewingClient] = useState<typeof mockClients[0] | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -226,7 +228,7 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
             </TableHeader>
             <TableBody>
               {filteredClients.map((client) => (
-                <TableRow key={client.id}>
+                <TableRow key={client.id} className="cursor-pointer" onClick={() => navigate(`/admin/clients/${client.id}`)}>
                   <TableCell>
                     <div>
                       <p className="font-medium">{client.name}</p>
@@ -254,7 +256,7 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
                       {client.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -264,7 +266,7 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem 
                           className="gap-2"
-                          onClick={() => setViewingClient(client)}
+                          onClick={() => navigate(`/admin/clients/${client.id}`)}
                         >
                           <Eye className="h-4 w-4" />
                           View Details
