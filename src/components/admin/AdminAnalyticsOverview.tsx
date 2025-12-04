@@ -52,11 +52,11 @@ const AdminAnalyticsOverview = () => {
   const [dateRange, setDateRange] = useState("30d");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Date Range Selector */}
       <div className="flex justify-end">
         <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-32 md:w-40 text-xs md:text-sm">
             <SelectValue placeholder="Date Range" />
           </SelectTrigger>
           <SelectContent>
@@ -69,23 +69,24 @@ const AdminAnalyticsOverview = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Leads Over Time */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Leads Generated</CardTitle>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-base md:text-lg">Leads Generated</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+            <ResponsiveContainer width="100%" height={250} className="md:h-[300px]">
               <LineChart data={leadsOverTime}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" />
+                <XAxis dataKey="date" className="text-[10px] md:text-xs" tick={{ fontSize: 10 }} />
+                <YAxis className="text-[10px] md:text-xs" tick={{ fontSize: 10 }} width={30} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    fontSize: "12px",
                   }}
                 />
                 <Line
@@ -102,20 +103,21 @@ const AdminAnalyticsOverview = () => {
 
         {/* Spend Over Time */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Ad Spend</CardTitle>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-base md:text-lg">Ad Spend</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+            <ResponsiveContainer width="100%" height={250} className="md:h-[300px]">
               <BarChart data={leadsOverTime}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" tickFormatter={(v) => `£${v}`} />
+                <XAxis dataKey="date" className="text-[10px] md:text-xs" tick={{ fontSize: 10 }} />
+                <YAxis className="text-[10px] md:text-xs" tick={{ fontSize: 10 }} tickFormatter={(v) => `£${v}`} width={40} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    fontSize: "12px",
                   }}
                   formatter={(value: number) => [`£${value}`, "Spend"]}
                 />
@@ -127,18 +129,18 @@ const AdminAnalyticsOverview = () => {
 
         {/* Client Type Distribution */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Leads by Client Type</CardTitle>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-base md:text-lg">Leads by Client Type</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+            <ResponsiveContainer width="100%" height={250} className="md:h-[300px]">
               <PieChart>
                 <Pie
                   data={clientTypeDistribution}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={40}
+                  outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
                 >
@@ -151,10 +153,11 @@ const AdminAnalyticsOverview = () => {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    fontSize: "12px",
                   }}
                   formatter={(value: number) => [`${value}%`, "Share"]}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: "12px" }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -162,20 +165,21 @@ const AdminAnalyticsOverview = () => {
 
         {/* Top Performing Campaigns */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Top Performing Campaigns</CardTitle>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-base md:text-lg">Top Performing Campaigns</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 md:p-6 pt-0 md:pt-0">
+            <ResponsiveContainer width="100%" height={250} className="md:h-[300px]">
               <BarChart data={topPerformingCampaigns} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" className="text-xs" />
-                <YAxis dataKey="name" type="category" className="text-xs" width={100} />
+                <XAxis type="number" className="text-[10px] md:text-xs" tick={{ fontSize: 10 }} />
+                <YAxis dataKey="name" type="category" className="text-[10px] md:text-xs" tick={{ fontSize: 10 }} width={80} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    fontSize: "12px",
                   }}
                   formatter={(value: number, name: string) => [
                     name === "leads" ? value : `£${value.toFixed(2)}`,
