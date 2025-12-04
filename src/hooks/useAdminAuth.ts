@@ -19,17 +19,15 @@ export const useAdminAuth = () => {
 
         setUserEmail(session.user.email);
 
-        // Check if email is in admin whitelist
-        const { data, error } = await supabase
-          .from("admin_emails")
-          .select("email")
-          .eq("email", session.user.email.toLowerCase())
-          .single();
+        // Use secure server-side function to check admin status
+        // This prevents enumeration of admin emails
+        const { data, error } = await supabase.rpc('is_current_user_admin');
 
-        if (error || !data) {
+        if (error) {
+          console.error("Error checking admin status:", error);
           setIsAdmin(false);
         } else {
-          setIsAdmin(true);
+          setIsAdmin(data === true);
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
