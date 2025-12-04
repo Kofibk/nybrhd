@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import Onboarding from "./pages/Onboarding";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import BrokerDashboard from "./pages/BrokerDashboard";
@@ -28,7 +30,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
@@ -39,7 +41,9 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <Login />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <Landing />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <Login />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       
       {/* Developer Routes */}
       <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
