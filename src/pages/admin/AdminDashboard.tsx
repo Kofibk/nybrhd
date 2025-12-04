@@ -21,6 +21,7 @@ import AdminCampaignsTable from "@/components/admin/AdminCampaignsTable";
 import AdminAnalyticsOverview from "@/components/admin/AdminAnalyticsOverview";
 import AdminBillingTable from "@/components/admin/AdminBillingTable";
 import AdminLeadsTable from "@/components/admin/AdminLeadsTable";
+import AdminSettings from "@/components/admin/AdminSettings";
 import AdminHeader from "@/components/admin/AdminHeader";
 import InviteClientDialog from "@/components/admin/InviteClientDialog";
 import CreateClientCampaignDialog from "@/components/admin/CreateClientCampaignDialog";
@@ -121,6 +122,10 @@ const AdminDashboard = () => {
                 <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex flex-col sm:flex-row gap-2">
@@ -174,6 +179,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="analytics">
             <AdminAnalyticsOverview />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <AdminSettings />
           </TabsContent>
         </Tabs>
       </main>
