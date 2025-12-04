@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { campaignsCreate, campaignsPublishMeta, saveCampaign, getDevelopments } from "@/lib/api";
-import { Campaign, UserRole } from "@/lib/types";
+import { Campaign, UserRole, CreativeAsset, CreativeType, TARGET_COUNTRIES, AIRecommendation } from "@/lib/types";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -26,6 +27,11 @@ import {
   Image,
   Settings,
   Send,
+  Globe,
+  Video,
+  Images,
+  X,
+  Lightbulb,
 } from "lucide-react";
 
 interface CampaignWizardProps {
@@ -42,13 +48,14 @@ interface WizardData {
   endDate: string;
   isOngoing: boolean;
   dailyCap: number | null;
-  images: string[];
+  assets: CreativeAsset[];
   selectedHeadline: string;
   selectedPrimaryText: string;
   selectedCta: string;
   generatedHeadlines: string[];
   generatedPrimaryTexts: string[];
   generatedCtas: string[];
+  targetCountries: string[];
 }
 
 const CampaignWizard = ({ userType }: CampaignWizardProps) => {
@@ -57,6 +64,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [uploadType, setUploadType] = useState<CreativeType>("static");
   
   const developments = getDevelopments();
   
@@ -70,21 +78,51 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     endDate: "",
     isOngoing: true,
     dailyCap: null,
-    images: [],
+    assets: [],
     selectedHeadline: "",
     selectedPrimaryText: "",
     selectedCta: "",
     generatedHeadlines: [],
     generatedPrimaryTexts: [],
     generatedCtas: [],
+    targetCountries: ["GB", "NG", "AE"],
   });
+
+  // AI Recommendations for campaigns
+  const [aiRecommendations] = useState<AIRecommendation[]>([
+    {
+      id: "rec_1",
+      type: "targeting",
+      title: "Add Middle East markets",
+      description: "Based on similar campaigns, UAE and Saudi Arabia show strong conversion rates for luxury properties.",
+      confidence: 85,
+      priority: "high",
+    },
+    {
+      id: "rec_2",
+      type: "budget",
+      title: "Increase daily cap",
+      description: "Your CPL suggests room for scale. Consider increasing daily cap by 20% to capture more leads.",
+      confidence: 72,
+      priority: "medium",
+    },
+    {
+      id: "rec_3",
+      type: "creative",
+      title: "Test video content",
+      description: "Video ads typically see 30% higher engagement for property campaigns.",
+      confidence: 78,
+      priority: "medium",
+    },
+  ]);
 
   const steps = [
     { num: 1, label: "Overview", icon: Target },
-    { num: 2, label: "Budget & Dates", icon: Calendar },
-    { num: 3, label: "Creatives", icon: Image },
-    { num: 4, label: "Tracking", icon: Settings },
-    { num: 5, label: "Review", icon: Send },
+    { num: 2, label: "Targeting", icon: Globe },
+    { num: 3, label: "Budget", icon: Calendar },
+    { num: 4, label: "Creatives", icon: Image },
+    { num: 5, label: "Tracking", icon: Settings },
+    { num: 6, label: "Review", icon: Send },
   ];
 
   const getRoleLabel = (role: UserRole) => {
@@ -100,12 +138,14 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
       case 1:
         return !!data.developmentId && !!data.campaignName && !!data.objective;
       case 2:
-        return data.budget > 0 && !!data.startDate;
+        return data.targetCountries.length > 0;
       case 3:
-        return data.images.length > 0 && !!data.selectedHeadline && !!data.selectedPrimaryText && !!data.selectedCta;
+        return data.budget > 0 && !!data.startDate;
       case 4:
-        return true; // Read-only step
+        return data.assets.length > 0 && !!data.selectedHeadline && !!data.selectedPrimaryText && !!data.selectedCta;
       case 5:
+        return true;
+      case 6:
         return true;
       default:
         return false;
@@ -124,12 +164,34 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleImageUpload = () => {
-    // Simulate image upload with placeholder
-    const newImage = `https://picsum.photos/seed/${Date.now()}/400/300`;
-    if (data.images.length < 3) {
-      setData({ ...data, images: [...data.images, newImage] });
-      toast.success("Image uploaded");
+  const handleAssetUpload = () => {
+    const newAsset: CreativeAsset = {
+      id: `asset_${Date.now()}`,
+      type: uploadType,
+      url: uploadType === "video" 
+        ? "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4"
+        : `https://picsum.photos/seed/${Date.now()}/400/300`,
+      thumbnail: uploadType === "video" ? `https://picsum.photos/seed/${Date.now()}/400/300` : undefined,
+    };
+    
+    const maxAssets = uploadType === "carousel" ? 10 : 3;
+    if (data.assets.filter(a => a.type === uploadType).length < maxAssets) {
+      setData({ ...data, assets: [...data.assets, newAsset] });
+      toast.success(`${uploadType.charAt(0).toUpperCase() + uploadType.slice(1)} uploaded`);
+    } else {
+      toast.error(`Maximum ${maxAssets} ${uploadType} assets allowed`);
+    }
+  };
+
+  const removeAsset = (assetId: string) => {
+    setData({ ...data, assets: data.assets.filter(a => a.id !== assetId) });
+  };
+
+  const toggleCountry = (countryCode: string) => {
+    if (data.targetCountries.includes(countryCode)) {
+      setData({ ...data, targetCountries: data.targetCountries.filter(c => c !== countryCode) });
+    } else {
+      setData({ ...data, targetCountries: [...data.targetCountries, countryCode] });
     }
   };
 
@@ -140,7 +202,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
         roleType: data.roleType,
         developmentId: data.developmentId,
         objective: data.objective,
-        assets: data.images,
+        assets: data.assets.map(a => a.url),
       });
       
       setData({
@@ -180,8 +242,20 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
         roleType: data.roleType,
         channel: "meta",
         createdAt: new Date().toISOString(),
+        targeting: {
+          countries: data.targetCountries,
+        },
+        formFields: {
+          fullName: true,
+          email: true,
+          phone: true,
+          budgetRange: true,
+          paymentMethod: true,
+          buyerStatus: true,
+          purchaseTimeline: true,
+        },
         creatives: {
-          images: data.images,
+          assets: data.assets,
           selectedHeadline: data.selectedHeadline,
           selectedPrimaryText: data.selectedPrimaryText,
           selectedCta: data.selectedCta,
@@ -189,11 +263,10 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
           generatedPrimaryTexts: data.generatedPrimaryTexts,
           generatedCtas: data.generatedCtas,
         },
+        aiRecommendations: aiRecommendations,
       };
 
       saveCampaign(campaign);
-      
-      // Publish to Meta
       await campaignsPublishMeta(campaign.id);
       
       toast.success("Campaign published to Meta");
@@ -207,15 +280,23 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
 
   const selectedDevelopment = developments.find((d) => d.id === data.developmentId);
 
+  const getCreativeTypeIcon = (type: CreativeType) => {
+    switch (type) {
+      case "static": return <Image className="h-4 w-4" />;
+      case "carousel": return <Images className="h-4 w-4" />;
+      case "video": return <Video className="h-4 w-4" />;
+    }
+  };
+
   return (
     <DashboardLayout title="New Campaign" userType={userType}>
       {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
+      <div className="mb-6 md:mb-8 overflow-x-auto pb-2">
+        <div className="flex items-center justify-between min-w-[500px] max-w-4xl mx-auto px-2">
           {steps.map((s, index) => (
             <div key={s.num} className="flex items-center">
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
+                className={`flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-colors ${
                   step === s.num
                     ? "bg-primary border-primary text-primary-foreground"
                     : step > s.num
@@ -223,11 +304,11 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                     : "border-border text-muted-foreground"
                 }`}
               >
-                {step > s.num ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
+                {step > s.num ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : <s.icon className="h-4 w-4 md:h-5 md:w-5" />}
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-16 md:w-24 h-0.5 mx-2 ${
+                  className={`w-8 md:w-16 lg:w-20 h-0.5 mx-1 md:mx-2 ${
                     step > s.num ? "bg-success" : "bg-border"
                   }`}
                 />
@@ -235,11 +316,11 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
             </div>
           ))}
         </div>
-        <div className="flex justify-between max-w-3xl mx-auto mt-2 px-2">
+        <div className="flex justify-between min-w-[500px] max-w-4xl mx-auto mt-2 px-2">
           {steps.map((s) => (
             <span
               key={s.num}
-              className={`text-xs ${step === s.num ? "text-primary font-medium" : "text-muted-foreground"}`}
+              className={`text-[10px] md:text-xs text-center w-12 md:w-16 ${step === s.num ? "text-primary font-medium" : "text-muted-foreground"}`}
             >
               {s.label}
             </span>
@@ -247,12 +328,12 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
         </div>
       </div>
 
-      <Card className="max-w-3xl mx-auto p-6 shadow-card">
+      <Card className="max-w-4xl mx-auto p-4 md:p-6 shadow-card">
         {/* Step 1: Overview */}
         {step === 1 && (
-          <div className="space-y-6">
+          <div className="space-y-5 md:space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-1">Campaign Overview</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-1">Campaign Overview</h2>
               <p className="text-sm text-muted-foreground">Define your campaign basics</p>
             </div>
 
@@ -301,7 +382,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <RadioGroup
                 value={data.objective}
                 onValueChange={(v) => setData({ ...data, objective: v as typeof data.objective })}
-                className="mt-2 grid grid-cols-3 gap-4"
+                className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4"
               >
                 {[
                   { value: "leads", label: "Leads", desc: "Generate enquiries" },
@@ -310,14 +391,14 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                 ].map((obj) => (
                   <label
                     key={obj.value}
-                    className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    className={`flex flex-col items-center p-3 md:p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                       data.objective === obj.value
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     }`}
                   >
                     <RadioGroupItem value={obj.value} className="sr-only" />
-                    <span className="font-medium">{obj.label}</span>
+                    <span className="font-medium text-sm md:text-base">{obj.label}</span>
                     <span className="text-xs text-muted-foreground">{obj.desc}</span>
                   </label>
                 ))}
@@ -326,11 +407,66 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
           </div>
         )}
 
-        {/* Step 2: Budget & Dates */}
+        {/* Step 2: Audience Targeting */}
         {step === 2 && (
-          <div className="space-y-6">
+          <div className="space-y-5 md:space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-1">Budget & Schedule</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-1">Audience Targeting</h2>
+              <p className="text-sm text-muted-foreground">Select target countries for your campaign</p>
+            </div>
+
+            {/* AI Recommendations */}
+            <div className="bg-accent/10 border border-accent/30 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="h-5 w-5 text-accent" />
+                <h3 className="font-medium">AI Recommendations</h3>
+              </div>
+              <div className="space-y-2">
+                {aiRecommendations.filter(r => r.type === "targeting").map(rec => (
+                  <div key={rec.id} className="flex items-start gap-2 text-sm">
+                    <Sparkles className="h-4 w-4 text-accent mt-0.5" />
+                    <div>
+                      <span className="font-medium">{rec.title}:</span>{" "}
+                      <span className="text-muted-foreground">{rec.description}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label>Target Countries *</Label>
+              <p className="text-xs text-muted-foreground mb-3">Select one or more countries to target</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {TARGET_COUNTRIES.map((country) => (
+                  <label
+                    key={country.code}
+                    className={`flex items-center gap-2 p-2 md:p-3 border rounded-lg cursor-pointer transition-colors text-sm ${
+                      data.targetCountries.includes(country.code)
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={data.targetCountries.includes(country.code)}
+                      onCheckedChange={() => toggleCountry(country.code)}
+                    />
+                    <span className="truncate">{country.name}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {data.targetCountries.length} countries selected
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Budget & Dates */}
+        {step === 3 && (
+          <div className="space-y-5 md:space-y-6">
+            <div>
+              <h2 className="text-lg md:text-xl font-semibold mb-1">Budget & Schedule</h2>
               <p className="text-sm text-muted-foreground">Set your campaign budget and timeline</p>
             </div>
 
@@ -358,7 +494,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               />
             </div>
 
-            <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+            <div className="flex items-center justify-between p-3 md:p-4 border border-border rounded-lg">
               <div>
                 <Label htmlFor="ongoing">Ongoing Campaign</Label>
                 <p className="text-xs text-muted-foreground">Run until manually paused</p>
@@ -398,38 +534,78 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
           </div>
         )}
 
-        {/* Step 3: Creatives */}
-        {step === 3 && (
-          <div className="space-y-6">
+        {/* Step 4: Creatives */}
+        {step === 4 && (
+          <div className="space-y-5 md:space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-1">Creative Assets</h2>
-              <p className="text-sm text-muted-foreground">Upload images and generate ad copy</p>
+              <h2 className="text-lg md:text-xl font-semibold mb-1">Creative Assets</h2>
+              <p className="text-sm text-muted-foreground">Upload images, carousels, or videos and generate ad copy</p>
             </div>
 
+            {/* Creative Type Selection */}
             <div>
-              <Label>Images (1-3 required)</Label>
-              <div className="mt-2 grid grid-cols-3 gap-4">
-                {data.images.map((img, i) => (
-                  <div key={i} className="aspect-video bg-muted rounded-lg overflow-hidden">
-                    <img src={img} alt={`Creative ${i + 1}`} className="w-full h-full object-cover" />
+              <Label>Asset Type</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[
+                  { type: "static" as CreativeType, label: "Static Image", icon: Image },
+                  { type: "carousel" as CreativeType, label: "Carousel", icon: Images },
+                  { type: "video" as CreativeType, label: "Video", icon: Video },
+                ].map((item) => (
+                  <Button
+                    key={item.type}
+                    variant={uploadType === item.type ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setUploadType(item.type)}
+                    className="flex items-center gap-2"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Asset Upload */}
+            <div>
+              <Label>
+                {uploadType === "carousel" ? "Carousel Images (up to 10)" : 
+                 uploadType === "video" ? "Videos (up to 3)" : "Images (up to 3)"}
+              </Label>
+              <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {data.assets.map((asset) => (
+                  <div key={asset.id} className="relative aspect-video bg-muted rounded-lg overflow-hidden group">
+                    {asset.type === "video" ? (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Video className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <img src={asset.url} alt="Creative" className="w-full h-full object-cover" />
+                    )}
+                    <Badge className="absolute top-1 left-1 text-xs" variant="secondary">
+                      {asset.type}
+                    </Badge>
+                    <button
+                      onClick={() => removeAsset(asset.id)}
+                      className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
                 ))}
-                {data.images.length < 3 && (
-                  <button
-                    onClick={handleImageUpload}
-                    className="aspect-video border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary/50 transition-colors"
-                  >
-                    <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                    <span className="text-xs text-muted-foreground">Upload</span>
-                  </button>
-                )}
+                <button
+                  onClick={handleAssetUpload}
+                  className="aspect-video border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary/50 transition-colors"
+                >
+                  {getCreativeTypeIcon(uploadType)}
+                  <span className="text-xs text-muted-foreground mt-1">Upload {uploadType}</span>
+                </button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {data.images.length}/3 images uploaded
+                {data.assets.length} assets uploaded
               </p>
             </div>
 
-            {data.images.length > 0 && (
+            {data.assets.length > 0 && (
               <Button
                 onClick={handleGenerateCopy}
                 disabled={isLoading}
@@ -444,7 +620,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Copy
+                    Generate Copy with AI
                   </>
                 )}
               </Button>
@@ -499,23 +675,23 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                 </div>
 
                 <div>
-                  <Label>Call-to-Action *</Label>
+                  <Label>Call to Action *</Label>
                   <RadioGroup
                     value={data.selectedCta}
                     onValueChange={(v) => setData({ ...data, selectedCta: v })}
-                    className="mt-2 grid grid-cols-3 gap-4"
+                    className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2"
                   >
-                    {data.generatedCtas.map((c, i) => (
+                    {data.generatedCtas.map((cta, i) => (
                       <label
                         key={i}
-                        className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          data.selectedCta === c
+                        className={`flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                          data.selectedCta === cta
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
-                        <RadioGroupItem value={c} className="sr-only" />
-                        <span className="text-sm font-medium">{c}</span>
+                        <RadioGroupItem value={cta} className="sr-only" />
+                        <span className="text-sm font-medium">{cta}</span>
                       </label>
                     ))}
                   </RadioGroup>
@@ -525,130 +701,156 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
           </div>
         )}
 
-        {/* Step 4: Tracking & Conversions */}
-        {step === 4 && (
-          <div className="space-y-6">
+        {/* Step 5: Tracking & Form Fields */}
+        {step === 5 && (
+          <div className="space-y-5 md:space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-1">Tracking & Conversions</h2>
-              <p className="text-sm text-muted-foreground">Meta tracking configuration (read-only)</p>
+              <h2 className="text-lg md:text-xl font-semibold mb-1">Tracking & Lead Form</h2>
+              <p className="text-sm text-muted-foreground">Configure UTM tracking and lead form fields</p>
             </div>
 
             <div>
-              <Label>UTM Template</Label>
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg font-mono text-xs break-all">
-                utm_source=meta&utm_medium=paid_social&utm_campaign={"{campaign_id}"}&utm_content={"{ad_id}"}
+              <Label>UTM Template (Auto-generated)</Label>
+              <div className="mt-2 p-3 md:p-4 bg-muted/50 rounded-lg font-mono text-xs md:text-sm overflow-x-auto">
+                <code className="whitespace-pre-wrap break-all">
+                  utm_source=meta&utm_medium=paid_social&utm_campaign={"{campaign_id}"}&utm_content={"{ad_id}"}
+                </code>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Auto-generated for tracking</p>
             </div>
 
             <div>
-              <Label>Meta Instant Form Fields</Label>
-              <div className="mt-2 space-y-2">
-                {["full_name", "email", "phone"].map((field) => (
-                  <div key={field} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                    <Check className="h-4 w-4 text-success" />
-                    <span className="text-sm">{field}</span>
+              <Label>Lead Form Fields</Label>
+              <p className="text-xs text-muted-foreground mb-3">Questions collected from leads via Meta Instant Form</p>
+              <div className="space-y-2">
+                {[
+                  { field: "Full Name", required: true },
+                  { field: "Email Address", required: true },
+                  { field: "Phone Number", required: true },
+                  { field: "Budget Range", required: true },
+                  { field: "Payment Method (Cash / Mortgage)", required: true },
+                  { field: "Current Status (Browsing / Actively Looking)", required: true },
+                  { field: "Timeline to Purchase", required: true },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 md:p-3 border rounded-lg">
+                    <span className="text-sm">{item.field}</span>
+                    <Badge variant={item.required ? "default" : "secondary"}>
+                      {item.required ? "Required" : "Optional"}
+                    </Badge>
                   </div>
                 ))}
-                <p className="text-xs text-muted-foreground">Hidden: UTM parameters</p>
               </div>
             </div>
 
             <div>
-              <Label>Conversion Events</Label>
-              <div className="mt-2 space-y-2">
-                {["Lead", "ViewContent", "SubmitForm"].map((event) => (
-                  <div key={event} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
-                    <Check className="h-4 w-4 text-success" />
-                    <span className="text-sm">{event}</span>
-                  </div>
+              <Label>Timeline Options</Label>
+              <p className="text-xs text-muted-foreground mb-2">Options shown to leads for purchase timeline</p>
+              <div className="flex flex-wrap gap-2">
+                {["Within 28 days", "0-3 months", "3-6 months", "6-9 months", "9-12 months", "12+ months"].map((opt) => (
+                  <Badge key={opt} variant="outline">{opt}</Badge>
                 ))}
               </div>
             </div>
 
             <div>
-              <Label>Meta Pixel ID</Label>
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                Configure in Settings → Meta Credentials
+              <Label>Conversion Events (Meta Pixel)</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Badge variant="secondary">Lead</Badge>
+                <Badge variant="secondary">ViewContent</Badge>
+                <Badge variant="secondary">SubmitForm</Badge>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 5: Review & Publish */}
-        {step === 5 && (
-          <div className="space-y-6">
+        {/* Step 6: Review & Publish */}
+        {step === 6 && (
+          <div className="space-y-5 md:space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-1">Review & Publish</h2>
-              <p className="text-sm text-muted-foreground">Confirm your campaign details</p>
+              <h2 className="text-lg md:text-xl font-semibold mb-1">Review & Publish</h2>
+              <p className="text-sm text-muted-foreground">Review your campaign before publishing to Meta</p>
             </div>
 
             <div className="grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border border-border rounded-lg">
-                  <Label className="text-muted-foreground">Objective</Label>
-                  <p className="font-medium capitalize">{data.objective}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Campaign Name</div>
+                  <div className="font-medium">{data.campaignName}</div>
                 </div>
-                <div className="p-4 border border-border rounded-lg">
-                  <Label className="text-muted-foreground">Channel</Label>
-                  <p className="font-medium">Meta</p>
+                <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Objective</div>
+                  <div className="font-medium capitalize">{data.objective}</div>
                 </div>
-              </div>
-
-              <div className="p-4 border border-border rounded-lg">
-                <Label className="text-muted-foreground">Development</Label>
-                <p className="font-medium">{selectedDevelopment?.name}</p>
-                <p className="text-sm text-muted-foreground">{selectedDevelopment?.location}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border border-border rounded-lg">
-                  <Label className="text-muted-foreground">Budget</Label>
-                  <p className="font-medium">£{data.budget.toLocaleString()}</p>
+                <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Development</div>
+                  <div className="font-medium">{selectedDevelopment?.name}</div>
                 </div>
-                <div className="p-4 border border-border rounded-lg">
-                  <Label className="text-muted-foreground">Schedule</Label>
-                  <p className="font-medium">
-                    {data.isOngoing ? "Ongoing" : `${data.startDate} - ${data.endDate}`}
-                  </p>
+                <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Budget</div>
+                  <div className="font-medium">£{data.budget.toLocaleString()}</div>
                 </div>
-              </div>
-
-              <div className="p-4 border border-border rounded-lg">
-                <Label className="text-muted-foreground">Selected Creative</Label>
-                <div className="mt-2 space-y-2">
-                  <p className="font-medium">{data.selectedHeadline}</p>
-                  <p className="text-sm text-muted-foreground">{data.selectedPrimaryText}</p>
-                  <Badge variant="outline">{data.selectedCta}</Badge>
+                <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Target Countries</div>
+                  <div className="font-medium">{data.targetCountries.length} countries</div>
+                </div>
+                <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Schedule</div>
+                  <div className="font-medium">
+                    {data.startDate} {data.isOngoing ? "(Ongoing)" : `- ${data.endDate}`}
+                  </div>
                 </div>
               </div>
 
-              <div className="p-4 border border-border rounded-lg bg-muted/30">
-                <Label className="text-muted-foreground">Predicted CPL</Label>
-                <p className="text-2xl font-bold text-primary">£18 - £25</p>
-                <p className="text-xs text-muted-foreground">Based on similar campaigns</p>
+              <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-2">Creative Assets</div>
+                <div className="flex flex-wrap gap-2">
+                  {data.assets.map((asset) => (
+                    <Badge key={asset.id} variant="outline">
+                      {asset.type}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-1">Selected Headline</div>
+                <div className="font-medium text-sm">{data.selectedHeadline}</div>
+              </div>
+
+              <div className="p-3 md:p-4 bg-accent/10 border border-accent/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye className="h-4 w-4 text-accent" />
+                  <span className="text-sm font-medium">Predicted CPL</span>
+                </div>
+                <div className="text-xl md:text-2xl font-bold">£12 - £18</div>
+                <p className="text-xs text-muted-foreground mt-1">Based on similar campaigns</p>
+              </div>
+
+              <div className="flex items-center gap-2 p-3 border rounded-lg">
+                <Badge>Meta</Badge>
+                <span className="text-sm text-muted-foreground">Publishing to Meta Ads Manager</span>
               </div>
             </div>
           </div>
         )}
 
         {/* Navigation */}
-        <div className="flex justify-between mt-8 pt-6 border-t border-border">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6 md:mt-8 pt-6 border-t">
           <Button
             variant="outline"
-            onClick={step === 1 ? () => navigate(`/${userType}/campaigns`) : handleBack}
+            onClick={() => step === 1 ? navigate(`/${userType}/campaigns`) : handleBack()}
+            className="order-2 sm:order-1"
           >
             <ChevronLeft className="mr-2 h-4 w-4" />
             {step === 1 ? "Cancel" : "Back"}
           </Button>
-
-          {step < 5 ? (
-            <Button onClick={handleNext} disabled={!validateStep(step)}>
+          
+          {step < 6 ? (
+            <Button onClick={handleNext} className="order-1 sm:order-2">
               Next
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={handlePublish} disabled={isPublishing}>
+            <Button onClick={handlePublish} disabled={isPublishing} className="order-1 sm:order-2">
               {isPublishing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

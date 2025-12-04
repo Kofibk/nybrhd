@@ -101,6 +101,10 @@ export const demoCampaigns: Campaign[] = [
     channel: "meta",
     createdAt: "2024-09-28T10:00:00Z",
     creatives: {
+      assets: [
+        { id: "asset_1", type: "static", url: "https://picsum.photos/seed/marina1/400/300" },
+        { id: "asset_2", type: "static", url: "https://picsum.photos/seed/marina2/400/300" },
+      ],
       images: [],
       selectedHeadline: "Invest in London's Premier Waterfront Living",
       selectedPrimaryText: "Discover Marina Heights - Luxury apartments with guaranteed rental yields. Perfect for international investors seeking stable UK property returns.",
