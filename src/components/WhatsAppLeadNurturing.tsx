@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WhatsAppChat from "./WhatsAppChat";
-import { MessageCircle, Clock, CheckCircle, Calendar, TrendingUp, Settings } from "lucide-react";
+import WhatsAppAutomation from "./WhatsAppAutomation";
+import { MessageCircle, Clock, CheckCircle, Calendar, TrendingUp, Settings, Zap } from "lucide-react";
 import { useState } from "react";
 
 interface Conversation {
@@ -183,24 +184,37 @@ const WhatsAppLeadNurturing = () => {
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid md:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className={`${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <Tabs defaultValue="conversations" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="conversations" className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" />
+            Conversations
+          </TabsTrigger>
+          <TabsTrigger value="automation" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Automation
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Main Interface */}
+        <TabsContent value="conversations" className="space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {stats.map((stat) => (
+              <Card key={stat.label} className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`${stat.color}`}>
+                    <stat.icon className="h-5 w-5 md:h-6 md:w-6" />
+                  </div>
+                  <div>
+                    <div className="text-xl md:text-2xl font-bold">{stat.value}</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">{stat.label}</div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Main Interface */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* Conversations List */}
         <Card className="p-4">
@@ -342,6 +356,12 @@ const WhatsAppLeadNurturing = () => {
           </div>
         </div>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="automation">
+          <WhatsAppAutomation />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
