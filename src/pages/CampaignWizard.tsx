@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import {
   AIRecommendation, CampaignObjective, AgentFocusSegment, BrokerProduct,
   BROKER_PRODUCTS, AGENT_FOCUS_SEGMENTS 
 } from "@/lib/types";
+import { useAICityRecommendations } from "@/hooks/useAICityRecommendations";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -36,6 +37,7 @@ import {
   Images,
   X,
   Lightbulb,
+  Wand2,
 } from "lucide-react";
 
 interface CampaignWizardProps {
@@ -80,6 +82,14 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
   const [uploadType, setUploadType] = useState<CreativeType>("static");
   
   const developments = getDevelopments();
+  const selectedDevelopment = developments.find((d) => d.id === data.developmentId);
+  
+  // AI City Recommendations hook
+  const { 
+    recommendations: aiCityRecommendations, 
+    isLoading: isLoadingCityRecs, 
+    fetchRecommendations: fetchCityRecommendations 
+  } = useAICityRecommendations();
   
   const [data, setData] = useState<WizardData>({
     roleType: userType,
@@ -108,6 +118,20 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     propertyValue: "",
     borrowAmount: "",
   });
+
+  // Fetch AI city recommendations when entering Step 2
+  useEffect(() => {
+    if (step === 2 && data.targetCountries.length > 0) {
+      fetchCityRecommendations({
+        userType,
+        product: data.product,
+        propertyDetails: data.propertyDetails,
+        focusSegment: data.focusSegment,
+        developmentName: selectedDevelopment?.name,
+        targetCountries: data.targetCountries,
+      });
+    }
+  }, [step, data.targetCountries.join(",")]);
 
   // AI Recommendations for campaigns
   const [aiRecommendations] = useState<AIRecommendation[]>([
@@ -363,8 +387,6 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     }
   };
 
-  const selectedDevelopment = developments.find((d) => d.id === data.developmentId);
-
   const getCreativeTypeIcon = (type: CreativeType) => {
     switch (type) {
       case "static": return <Image className="h-4 w-4" />;
@@ -565,30 +587,92 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <p className="text-sm text-muted-foreground">Select target countries and cities for your campaign</p>
             </div>
 
-            {/* AI Recommendations */}
+            {/* AI City Recommendations */}
             <div className="bg-accent/10 border border-accent/30 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="h-5 w-5 text-accent" />
-                <h3 className="font-medium">AI Recommendations</h3>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-accent" />
+                  <h3 className="font-medium">AI-Powered City Recommendations</h3>
+                </div>
+                {isLoadingCityRecs && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
-                {aiRecommendations.filter(r => r.type === "targeting").map(rec => (
-                  <div key={rec.id} className="flex items-start gap-2 text-sm">
+              
+              {aiCityRecommendations.length > 0 ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Based on your {userType === "broker" ? "product" : userType === "agent" ? "property" : "development"}, 
+                    we recommend targeting these cities:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {aiCityRecommendations.map((rec, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`flex items-start gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${
+                          data.targetCities.includes(rec.cityCode)
+                            ? "border-primary bg-primary/10"
+                            : "border-border/50 hover:border-primary/50"
+                        }`}
+                        onClick={() => toggleCity(rec.cityCode)}
+                      >
+                        <Checkbox
+                          checked={data.targetCities.includes(rec.cityCode)}
+                          onCheckedChange={() => toggleCity(rec.cityCode)}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">{rec.cityName}</span>
+                            <Badge 
+                              variant={rec.priority === "high" ? "default" : "secondary"} 
+                              className="text-xs"
+                            >
+                              {rec.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{rec.reason}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const recCities = aiCityRecommendations.map(r => r.cityCode);
+                      setData({ ...data, targetCities: [...new Set([...data.targetCities, ...recCities])] });
+                      toast.success("Added all AI-recommended cities");
+                    }}
+                    className="w-full"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Add All Recommended Cities
+                  </Button>
+                </div>
+              ) : !isLoadingCityRecs ? (
+                <div className="space-y-2">
+                  {aiRecommendations.filter(r => r.type === "targeting").map(rec => (
+                    <div key={rec.id} className="flex items-start gap-2 text-sm">
+                      <Sparkles className="h-4 w-4 text-accent mt-0.5" />
+                      <div>
+                        <span className="font-medium">{rec.title}:</span>{" "}
+                        <span className="text-muted-foreground">{rec.description}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-start gap-2 text-sm">
                     <Sparkles className="h-4 w-4 text-accent mt-0.5" />
                     <div>
-                      <span className="font-medium">{rec.title}:</span>{" "}
-                      <span className="text-muted-foreground">{rec.description}</span>
+                      <span className="font-medium">Popular cities pre-selected:</span>{" "}
+                      <span className="text-muted-foreground">London, Lagos, and Dubai show strong engagement.</span>
                     </div>
                   </div>
-                ))}
-                <div className="flex items-start gap-2 text-sm">
-                  <Sparkles className="h-4 w-4 text-accent mt-0.5" />
-                  <div>
-                    <span className="font-medium">Popular cities pre-selected:</span>{" "}
-                    <span className="text-muted-foreground">London, Lagos, and Dubai show strong engagement for property campaigns.</span>
-                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
             <div>
