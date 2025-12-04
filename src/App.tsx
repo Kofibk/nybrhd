@@ -26,29 +26,18 @@ import AdminRoute from "./components/admin/AdminRoute";
 
 const queryClient = new QueryClient();
 
-// Protected route wrapper
+// Demo mode - no authentication required
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
-  const { isAuthenticated, user } = useAuth();
-
   return (
     <Routes>
-      <Route path="/" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <Landing />} />
+      {/* Demo mode - direct access to landing, login still available if needed */}
+      <Route path="/" element={<Landing />} />
       <Route path="/landing" element={<Landing />} />
-      <Route path="/login" element={isAuthenticated ? <Navigate to={`/${user?.role}`} replace /> : <Login />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/onboarding" element={<Onboarding />} />
       
       {/* Developer Routes */}
