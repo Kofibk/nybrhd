@@ -85,8 +85,21 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
         </ul>
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-sidebar-border">
+      {/* User Profile & Logout */}
+      <div className="p-3 border-t border-sidebar-border space-y-3">
+        {/* User Profile */}
+        <div className="flex items-center gap-3 px-2 py-2 rounded-md bg-sidebar-accent/50">
+          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-sm font-medium text-primary">
+              {userName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{userName}</p>
+            <p className="text-xs text-sidebar-foreground/60 capitalize">{userType}</p>
+          </div>
+        </div>
+        
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button 
