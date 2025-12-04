@@ -12,7 +12,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { campaignsCreate, campaignsPublishMeta, saveCampaign, getDevelopments } from "@/lib/api";
-import { Campaign, UserRole, CreativeAsset, CreativeType, TARGET_COUNTRIES, AIRecommendation } from "@/lib/types";
+import { 
+  Campaign, UserRole, CreativeAsset, CreativeType, TARGET_COUNTRIES, TARGET_CITIES, 
+  AIRecommendation, CampaignObjective, AgentFocusSegment, BrokerProduct,
+  BROKER_PRODUCTS, AGENT_FOCUS_SEGMENTS 
+} from "@/lib/types";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -42,7 +46,7 @@ interface WizardData {
   roleType: UserRole;
   developmentId: string;
   campaignName: string;
-  objective: "leads" | "viewings" | "awareness";
+  objective: CampaignObjective;
   budget: number;
   startDate: string;
   endDate: string;
@@ -56,6 +60,15 @@ interface WizardData {
   generatedPrimaryTexts: string[];
   generatedCtas: string[];
   targetCountries: string[];
+  targetCities: string[];
+  // Agent-specific
+  propertyDetails: string;
+  focusSegment: AgentFocusSegment | "";
+  // Broker-specific
+  product: BrokerProduct | "";
+  // Broker lead form fields
+  propertyValue: string;
+  borrowAmount: string;
 }
 
 const CampaignWizard = ({ userType }: CampaignWizardProps) => {
@@ -72,7 +85,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     roleType: userType,
     developmentId: "",
     campaignName: "",
-    objective: "leads",
+    objective: userType === "broker" ? "leads" : userType === "agent" ? "valuations" : "leads",
     budget: 0,
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
@@ -86,6 +99,14 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     generatedPrimaryTexts: [],
     generatedCtas: [],
     targetCountries: ["GB", "NG", "AE"],
+    targetCities: ["london", "lagos", "dubai"],
+    // Agent-specific
+    propertyDetails: "",
+    focusSegment: "",
+    // Broker-specific
+    product: "",
+    propertyValue: "",
+    borrowAmount: "",
   });
 
   // AI Recommendations for campaigns
@@ -136,7 +157,14 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
   const validateStep = (stepNum: number): boolean => {
     switch (stepNum) {
       case 1:
-        return !!data.developmentId && !!data.campaignName && !!data.objective;
+        if (userType === "developer") {
+          return !!data.developmentId && !!data.campaignName && !!data.objective;
+        } else if (userType === "agent") {
+          return !!data.propertyDetails && !!data.campaignName && !!data.objective && !!data.focusSegment;
+        } else if (userType === "broker") {
+          return !!data.product && !!data.campaignName && !!data.objective;
+        }
+        return false;
       case 2:
         return data.targetCountries.length > 0;
       case 3:
@@ -195,6 +223,45 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     }
   };
 
+  const toggleCity = (cityCode: string) => {
+    if (data.targetCities.includes(cityCode)) {
+      setData({ ...data, targetCities: data.targetCities.filter(c => c !== cityCode) });
+    } else {
+      setData({ ...data, targetCities: [...data.targetCities, cityCode] });
+    }
+  };
+
+  // Get objectives based on user type
+  const getObjectives = () => {
+    if (userType === "agent") {
+      return [
+        { value: "valuations", label: "Valuations", desc: "Get property valuations" },
+        { value: "offers", label: "Offers", desc: "Receive property offers" },
+        { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
+      ];
+    } else if (userType === "broker") {
+      return [
+        { value: "leads", label: "Leads", desc: "Generate enquiries" },
+        { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
+      ];
+    }
+    return [
+      { value: "leads", label: "Leads", desc: "Generate enquiries" },
+      { value: "viewings", label: "Viewings", desc: "Book property viewings" },
+      { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
+    ];
+  };
+
+  // Get CTAs based on user type
+  const getDefaultCtas = () => {
+    if (userType === "agent") {
+      return ["Learn More", "Book a Viewing", "Submit an Offer"];
+    } else if (userType === "broker") {
+      return ["Learn More", "Book a Free Consultation", "Request a Call Back"];
+    }
+    return ["Learn More", "Book a Viewing", "Get Details"];
+  };
+
   const handleGenerateCopy = async () => {
     setIsLoading(true);
     try {
@@ -227,11 +294,19 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
     try {
       const development = developments.find((d) => d.id === data.developmentId);
       
+      // Get the display name based on user type
+      const getDisplayName = () => {
+        if (userType === "developer") return development?.name || "";
+        if (userType === "agent") return data.propertyDetails;
+        if (userType === "broker") return BROKER_PRODUCTS.find(p => p.value === data.product)?.label || "";
+        return "";
+      };
+      
       const campaign: Campaign = {
         id: `camp_${Date.now()}`,
         name: data.campaignName,
-        developmentId: data.developmentId,
-        developmentName: development?.name || "",
+        developmentId: userType === "developer" ? data.developmentId : "",
+        developmentName: getDisplayName(),
         objective: data.objective,
         status: "draft",
         budget: data.budget,
@@ -244,6 +319,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
         createdAt: new Date().toISOString(),
         targeting: {
           countries: data.targetCountries,
+          cities: data.targetCities,
         },
         formFields: {
           fullName: true,
@@ -264,6 +340,15 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
           generatedCtas: data.generatedCtas,
         },
         aiRecommendations: aiRecommendations,
+        // Agent-specific fields
+        ...(userType === "agent" && {
+          focusSegment: data.focusSegment as AgentFocusSegment,
+          propertyDetails: data.propertyDetails,
+        }),
+        // Broker-specific fields
+        ...(userType === "broker" && {
+          product: data.product as BrokerProduct,
+        }),
       };
 
       saveCampaign(campaign);
@@ -345,25 +430,88 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <p className="text-xs text-muted-foreground mt-1">Based on your account type</p>
             </div>
 
-            <div>
-              <Label htmlFor="development">Development *</Label>
-              <Select
-                value={data.developmentId}
-                onValueChange={(v) => setData({ ...data, developmentId: v })}
-              >
-                <SelectTrigger id="development" className="mt-2">
-                  <SelectValue placeholder="Select development" />
-                </SelectTrigger>
-                <SelectContent>
-                  {developments.map((dev) => (
-                    <SelectItem key={dev.id} value={dev.id}>
-                      {dev.name} - {dev.location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">The property development to promote</p>
-            </div>
+            {/* Developer: Development selection */}
+            {userType === "developer" && (
+              <div>
+                <Label htmlFor="development">Development *</Label>
+                <Select
+                  value={data.developmentId}
+                  onValueChange={(v) => setData({ ...data, developmentId: v })}
+                >
+                  <SelectTrigger id="development" className="mt-2">
+                    <SelectValue placeholder="Select development" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {developments.map((dev) => (
+                      <SelectItem key={dev.id} value={dev.id}>
+                        {dev.name} - {dev.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">The property development to promote</p>
+              </div>
+            )}
+
+            {/* Agent: Property Details & Focus Segment */}
+            {userType === "agent" && (
+              <>
+                <div>
+                  <Label htmlFor="propertyDetails">Property Details *</Label>
+                  <Input
+                    id="propertyDetails"
+                    value={data.propertyDetails}
+                    onChange={(e) => setData({ ...data, propertyDetails: e.target.value })}
+                    placeholder="e.g., 3 Bed Semi-Detached, Kensington"
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Brief description of the property</p>
+                </div>
+
+                <div>
+                  <Label>Focus Segment *</Label>
+                  <Select
+                    value={data.focusSegment}
+                    onValueChange={(v) => setData({ ...data, focusSegment: v as AgentFocusSegment })}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select focus segment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AGENT_FOCUS_SEGMENTS.map((segment) => (
+                        <SelectItem key={segment.value} value={segment.value}>
+                          {segment.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">The type of property listing</p>
+                </div>
+              </>
+            )}
+
+            {/* Broker: Product selection */}
+            {userType === "broker" && (
+              <div>
+                <Label htmlFor="product">Product *</Label>
+                <Select
+                  value={data.product}
+                  onValueChange={(v) => setData({ ...data, product: v as BrokerProduct })}
+                >
+                  <SelectTrigger id="product" className="mt-2">
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BROKER_PRODUCTS.map((product) => (
+                      <SelectItem key={product.value} value={product.value}>
+                        {product.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">The financial product to promote</p>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="campaignName">Campaign Name *</Label>
@@ -371,7 +519,13 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                 id="campaignName"
                 value={data.campaignName}
                 onChange={(e) => setData({ ...data, campaignName: e.target.value })}
-                placeholder="e.g., Marina Heights - Lagos HNWI"
+                placeholder={
+                  userType === "agent" 
+                    ? "e.g., Kensington Properties - Valuations" 
+                    : userType === "broker"
+                    ? "e.g., BTL Mortgages - Q1 Campaign"
+                    : "e.g., Marina Heights - Lagos HNWI"
+                }
                 className="mt-2"
               />
               <p className="text-xs text-muted-foreground mt-1">A descriptive name for this campaign</p>
@@ -381,14 +535,10 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <Label>Objective *</Label>
               <RadioGroup
                 value={data.objective}
-                onValueChange={(v) => setData({ ...data, objective: v as typeof data.objective })}
-                className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4"
+                onValueChange={(v) => setData({ ...data, objective: v as CampaignObjective })}
+                className={`mt-2 grid grid-cols-1 gap-3 md:gap-4 ${getObjectives().length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
               >
-                {[
-                  { value: "leads", label: "Leads", desc: "Generate enquiries" },
-                  { value: "viewings", label: "Viewings", desc: "Book property viewings" },
-                  { value: "awareness", label: "Awareness", desc: "Build brand visibility" },
-                ].map((obj) => (
+                {getObjectives().map((obj) => (
                   <label
                     key={obj.value}
                     className={`flex flex-col items-center p-3 md:p-4 border-2 rounded-lg cursor-pointer transition-colors ${
@@ -412,7 +562,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
           <div className="space-y-5 md:space-y-6">
             <div>
               <h2 className="text-lg md:text-xl font-semibold mb-1">Audience Targeting</h2>
-              <p className="text-sm text-muted-foreground">Select target countries for your campaign</p>
+              <p className="text-sm text-muted-foreground">Select target countries and cities for your campaign</p>
             </div>
 
             {/* AI Recommendations */}
@@ -431,6 +581,13 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                     </div>
                   </div>
                 ))}
+                <div className="flex items-start gap-2 text-sm">
+                  <Sparkles className="h-4 w-4 text-accent mt-0.5" />
+                  <div>
+                    <span className="font-medium">Popular cities pre-selected:</span>{" "}
+                    <span className="text-muted-foreground">London, Lagos, and Dubai show strong engagement for property campaigns.</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -458,6 +615,39 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <p className="text-xs text-muted-foreground mt-2">
                 {data.targetCountries.length} countries selected
               </p>
+            </div>
+
+            <div>
+              <Label>Target Cities (Optional)</Label>
+              <p className="text-xs text-muted-foreground mb-3">Narrow your targeting to specific cities</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {TARGET_CITIES.filter(city => data.targetCountries.includes(city.country)).map((city) => (
+                  <label
+                    key={city.code}
+                    className={`flex items-center gap-2 p-2 md:p-3 border rounded-lg cursor-pointer transition-colors text-sm ${
+                      data.targetCities.includes(city.code)
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={data.targetCities.includes(city.code)}
+                      onCheckedChange={() => toggleCity(city.code)}
+                    />
+                    <span className="truncate">{city.name}</span>
+                  </label>
+                ))}
+              </div>
+              {data.targetCities.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {data.targetCities.length} cities selected
+                </p>
+              )}
+              {TARGET_CITIES.filter(city => data.targetCountries.includes(city.country)).length === 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Select countries above to see available cities
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -722,28 +912,51 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <Label>Lead Form Fields</Label>
               <p className="text-xs text-muted-foreground mb-3">Questions collected from leads via Meta Instant Form</p>
               <div className="space-y-2">
-                {[
-                  { field: "Full Name", required: true },
-                  { field: "Email Address", required: true },
-                  { field: "Phone Number", required: true },
-                  { field: "Budget Range", required: true },
-                  { field: "Payment Method (Cash / Mortgage)", required: true },
-                  { field: "Current Status (Browsing / Actively Looking)", required: true },
-                  { field: "Timeline to Purchase", required: true },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 md:p-3 border rounded-lg">
-                    <span className="text-sm">{item.field}</span>
-                    <Badge variant={item.required ? "default" : "secondary"}>
-                      {item.required ? "Required" : "Optional"}
-                    </Badge>
-                  </div>
-                ))}
+                {userType === "broker" ? (
+                  // Broker-specific lead form fields
+                  [
+                    { field: "Full Name", required: true },
+                    { field: "Email Address", required: true },
+                    { field: "Phone Number", required: true },
+                    { field: "Property Value", required: true },
+                    { field: "How much are you looking to borrow?", required: true },
+                    { field: "Current Status (Browsing / Actively Looking)", required: true },
+                    { field: "Timeline to Borrow", required: true },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 md:p-3 border rounded-lg">
+                      <span className="text-sm">{item.field}</span>
+                      <Badge variant={item.required ? "default" : "secondary"}>
+                        {item.required ? "Required" : "Optional"}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  // Developer/Agent lead form fields
+                  [
+                    { field: "Full Name", required: true },
+                    { field: "Email Address", required: true },
+                    { field: "Phone Number", required: true },
+                    { field: "Budget Range", required: true },
+                    { field: "Payment Method (Cash / Mortgage)", required: true },
+                    { field: "Current Status (Browsing / Actively Looking)", required: true },
+                    { field: "Timeline to Purchase", required: true },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 md:p-3 border rounded-lg">
+                      <span className="text-sm">{item.field}</span>
+                      <Badge variant={item.required ? "default" : "secondary"}>
+                        {item.required ? "Required" : "Optional"}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
             <div>
               <Label>Timeline Options</Label>
-              <p className="text-xs text-muted-foreground mb-2">Options shown to leads for purchase timeline</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Options shown to leads for {userType === "broker" ? "borrowing" : "purchase"} timeline
+              </p>
               <div className="flex flex-wrap gap-2">
                 {["Within 28 days", "0-3 months", "3-6 months", "6-9 months", "9-12 months", "12+ months"].map((opt) => (
                   <Badge key={opt} variant="outline">{opt}</Badge>
@@ -781,16 +994,32 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                   <div className="font-medium capitalize">{data.objective}</div>
                 </div>
                 <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
-                  <div className="text-sm text-muted-foreground">Development</div>
-                  <div className="font-medium">{selectedDevelopment?.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {userType === "developer" ? "Development" : userType === "agent" ? "Property Details" : "Product"}
+                  </div>
+                  <div className="font-medium">
+                    {userType === "developer" 
+                      ? selectedDevelopment?.name 
+                      : userType === "agent" 
+                      ? data.propertyDetails 
+                      : BROKER_PRODUCTS.find(p => p.value === data.product)?.label}
+                  </div>
                 </div>
+                {userType === "agent" && (
+                  <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
+                    <div className="text-sm text-muted-foreground">Focus Segment</div>
+                    <div className="font-medium">
+                      {AGENT_FOCUS_SEGMENTS.find(s => s.value === data.focusSegment)?.label}
+                    </div>
+                  </div>
+                )}
                 <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
                   <div className="text-sm text-muted-foreground">Budget</div>
                   <div className="font-medium">£{data.budget.toLocaleString()}</div>
                 </div>
                 <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
                   <div className="text-sm text-muted-foreground">Target Countries</div>
-                  <div className="font-medium">{data.targetCountries.length} countries</div>
+                  <div className="font-medium">{data.targetCountries.length} countries{data.targetCities.length > 0 && `, ${data.targetCities.length} cities`}</div>
                 </div>
                 <div className="p-3 md:p-4 bg-muted/50 rounded-lg">
                   <div className="text-sm text-muted-foreground">Schedule</div>
