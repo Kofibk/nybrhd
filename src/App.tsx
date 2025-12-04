@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import ClientDetail from "./pages/admin/ClientDetail";
 import AdminRoute from "./components/admin/AdminRoute";
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ const AppRoutes = () => {
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/clients/:clientId" element={<AdminRoute><ClientDetail /></AdminRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
