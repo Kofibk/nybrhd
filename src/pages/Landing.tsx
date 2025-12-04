@@ -78,7 +78,7 @@ const Landing = () => {
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
                 Log In
               </Button>
               <Button size="sm" onClick={() => navigate('/onboarding')}>
