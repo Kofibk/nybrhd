@@ -69,8 +69,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <LogoWithTransparency className="h-8 w-auto" />
-              <span className="font-semibold text-foreground">Naybourhood.ai</span>
+              <LogoWithTransparency className="h-10 w-auto" />
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>

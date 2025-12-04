@@ -65,9 +65,8 @@ const Login = () => {
       <Card className="w-full max-w-md p-8 shadow-card">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <LogoWithTransparency className="h-12 w-auto" />
+            <LogoWithTransparency className="h-16 w-auto" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Naybourhood.ai</h1>
           <p className="text-muted-foreground mt-1">AI-Powered Property Sales Platform</p>
         </div>
 
