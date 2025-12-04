@@ -14,11 +14,13 @@ import {
   Search,
   CreditCard,
   Settings,
+  Contact,
 } from "lucide-react";
 import AdminClientsTable from "@/components/admin/AdminClientsTable";
 import AdminCampaignsTable from "@/components/admin/AdminCampaignsTable";
 import AdminAnalyticsOverview from "@/components/admin/AdminAnalyticsOverview";
 import AdminBillingTable from "@/components/admin/AdminBillingTable";
+import AdminLeadsTable from "@/components/admin/AdminLeadsTable";
 import AdminHeader from "@/components/admin/AdminHeader";
 import InviteClientDialog from "@/components/admin/InviteClientDialog";
 import CreateClientCampaignDialog from "@/components/admin/CreateClientCampaignDialog";
@@ -107,6 +109,10 @@ const AdminDashboard = () => {
                 <Megaphone className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Campaigns</span>
               </TabsTrigger>
+              <TabsTrigger value="leads" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Contact className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Leads</span>
+              </TabsTrigger>
               <TabsTrigger value="billing" className="gap-1 md:gap-2 text-xs md:text-sm">
                 <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
                 <span className="hidden sm:inline">Billing</span>
@@ -156,6 +162,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="campaigns">
             <AdminCampaignsTable searchQuery={searchQuery} />
+          </TabsContent>
+
+          <TabsContent value="leads">
+            <AdminLeadsTable searchQuery={searchQuery} />
           </TabsContent>
 
           <TabsContent value="billing">
