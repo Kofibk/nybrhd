@@ -93,13 +93,13 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
   return (
     <DashboardLayout title="Campaigns" userType={userType}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 md:mb-4">
         <div>
-          <h2 className="text-lg md:text-xl font-semibold">All Campaigns</h2>
-          <p className="text-xs md:text-sm text-muted-foreground">Manage your Meta advertising campaigns</p>
+          <h2 className="text-base md:text-lg font-semibold">All Campaigns</h2>
+          <p className="text-xs text-muted-foreground">Manage your Meta advertising campaigns</p>
         </div>
-        <Button onClick={() => navigate(`/${userType}/campaigns/new`)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => navigate(`/${userType}/campaigns/new`)} size="sm" className="w-full sm:w-auto">
+          <Plus className="h-4 w-4 mr-1.5" />
           New Campaign
         </Button>
       </div>
@@ -107,16 +107,16 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
       {/* Campaigns Table */}
       <Card className="shadow-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[550px]">
             <thead className="bg-muted/50">
-              <tr className="text-left text-xs md:text-sm text-muted-foreground">
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Name</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden sm:table-cell">Development</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Status</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Leads</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden sm:table-cell">CPL</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden md:table-cell">Created</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium"></th>
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="px-2.5 md:px-3 py-2 font-medium">Name</th>
+                <th className="px-2.5 md:px-3 py-2 font-medium hidden sm:table-cell">Development</th>
+                <th className="px-2.5 md:px-3 py-2 font-medium">Status</th>
+                <th className="px-2.5 md:px-3 py-2 font-medium">Leads</th>
+                <th className="px-2.5 md:px-3 py-2 font-medium hidden sm:table-cell">CPL</th>
+                <th className="px-2.5 md:px-3 py-2 font-medium hidden md:table-cell">Created</th>
+                <th className="px-2.5 md:px-3 py-2 font-medium w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -126,22 +126,22 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                   className="hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => navigate(`/${userType}/campaigns/${campaign.id}`)}
                 >
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <div className="font-medium text-foreground text-sm">{campaign.name}</div>
-                    <div className="text-[10px] md:text-xs text-muted-foreground capitalize">{campaign.objective}</div>
+                  <td className="px-2.5 md:px-3 py-2">
+                    <div className="font-medium text-foreground text-xs md:text-sm">{campaign.name}</div>
+                    <div className="text-[10px] text-muted-foreground capitalize">{campaign.objective}</div>
                   </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-sm hidden sm:table-cell">{campaign.developmentName}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <Badge variant={getStatusVariant(campaign.status)} className="capitalize text-[10px] md:text-xs">
+                  <td className="px-2.5 md:px-3 py-2 text-muted-foreground text-xs md:text-sm hidden sm:table-cell truncate max-w-[120px]">{campaign.developmentName}</td>
+                  <td className="px-2.5 md:px-3 py-2">
+                    <Badge variant={getStatusVariant(campaign.status)} className="capitalize text-[10px]">
                       {campaign.status}
                     </Badge>
                   </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-sm">{getLeadsCount(campaign.id)}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-sm hidden sm:table-cell">{getCPL(campaign.id)}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-sm hidden md:table-cell">
+                  <td className="px-2.5 md:px-3 py-2 text-muted-foreground text-xs md:text-sm">{getLeadsCount(campaign.id)}</td>
+                  <td className="px-2.5 md:px-3 py-2 text-muted-foreground text-xs md:text-sm hidden sm:table-cell">{getCPL(campaign.id)}</td>
+                  <td className="px-2.5 md:px-3 py-2 text-muted-foreground text-xs md:text-sm hidden md:table-cell">
                     {new Date(campaign.createdAt).toLocaleDateString("en-GB")}
                   </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
+                  <td className="px-2.5 md:px-3 py-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
