@@ -1,11 +1,8 @@
-import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useMemo, Fragment } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -43,37 +40,30 @@ import {
 } from "@/components/ui/sheet";
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Play,
   Pause,
   Copy,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   Eye,
   BarChart3,
   DollarSign,
   Users,
   MousePointer,
   Target,
-  Percent,
   ChevronDown,
   ChevronUp,
-  Calendar,
   Globe,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import MetaCampaignBuilder from "./MetaCampaignBuilder";
+// import MetaCampaignBuilder from "./MetaCampaignBuilder";
 import {
   MOCK_META_CAMPAIGNS,
   EVALUATION_METRICS,
   COUNTRIES,
   MetaCampaign,
-  MetaAdset,
 } from "@/lib/metaCampaignData";
 
 interface AdminMetaCampaignsProps {
@@ -89,7 +79,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
 
-  // Filter campaigns
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(c => {
       const matchesSearch = 
@@ -102,7 +91,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
     });
   }, [campaigns, searchQuery, statusFilter, phaseFilter, regionFilter]);
 
-  // Aggregate stats
   const stats = useMemo(() => {
     const active = campaigns.filter(c => c.status === "active");
     return {
@@ -110,21 +98,26 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
       activeCampaigns: active.length,
       totalSpend: campaigns.reduce((sum, c) => sum + c.metrics.spend, 0),
       totalLeads: campaigns.reduce((sum, c) => sum + c.metrics.leads, 0),
-      avgCPL: campaigns.reduce((sum, c) => sum + c.metrics.cpl, 0) / campaigns.length,
-      avgCTR: campaigns.reduce((sum, c) => sum + c.metrics.ctr, 0) / campaigns.length,
+      avgCPL: campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.metrics.cpl, 0) / campaigns.length : 0,
+      avgCTR: campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.metrics.ctr, 0) / campaigns.length : 0,
     };
   }, [campaigns]);
 
-  // Check metric health
-  const getMetricStatus = (metric: keyof typeof EVALUATION_METRICS, value: number) => {
-    const threshold = EVALUATION_METRICS[metric];
-    if (!threshold) return "neutral";
+  const getMetricHealth = (metricKey: string, value: number): "good" | "bad" | "neutral" => {
+    const thresholds: Record<string, { threshold: number; comparison: string }> = {
+      cpc: { threshold: 1.5, comparison: "less_than" },
+      ctr: { threshold: 2, comparison: "greater_than" },
+      cpm: { threshold: 10, comparison: "less_than" },
+      highIntent: { threshold: 60, comparison: "greater_than" },
+    };
     
-    if (threshold.comparison === "less_than") {
-      return value <= threshold.threshold ? "good" : "bad";
-    } else {
-      return value >= threshold.threshold ? "good" : "bad";
+    const config = thresholds[metricKey];
+    if (!config) return "neutral";
+    
+    if (config.comparison === "less_than") {
+      return value <= config.threshold ? "good" : "bad";
     }
+    return value >= config.threshold ? "good" : "bad";
   };
 
   const getStatusColor = (status: string) => {
@@ -149,10 +142,10 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   };
 
   const handleDuplicate = (campaign: MetaCampaign) => {
-    const newCampaign = {
+    const newCampaign: MetaCampaign = {
       ...campaign,
       id: `mc-${Date.now()}`,
-      status: "draft" as const,
+      status: "draft",
       createdAt: new Date().toISOString(),
       developmentName: `${campaign.developmentName} (Copy)`,
     };
@@ -179,10 +172,8 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
     }));
   };
 
-  const renderMetricBadge = (metric: keyof typeof EVALUATION_METRICS, value: number, unit: string) => {
-    const status = getMetricStatus(metric, value);
-    const threshold = EVALUATION_METRICS[metric];
-    
+  const MetricDisplay = ({ value, unit, metricKey }: { value: number; unit: string; metricKey: string }) => {
+    const status = getMetricHealth(metricKey, value);
     return (
       <div className="flex items-center gap-1">
         <span className={`text-sm font-medium ${
@@ -255,17 +246,11 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                   New Campaign
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh]">
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create Meta Campaign</DialogTitle>
                 </DialogHeader>
-                <MetaCampaignBuilder
-                  onCampaignCreated={(campaign) => {
-                    setCampaigns(prev => [{ ...campaign, ...MOCK_META_CAMPAIGNS[0], id: campaign.id }, ...prev]);
-                    setIsBuilderOpen(false);
-                  }}
-                  onClose={() => setIsBuilderOpen(false)}
-                />
+                <p className="text-muted-foreground">Campaign builder coming soon...</p>
               </DialogContent>
             </Dialog>
           </CardContent>
@@ -309,7 +294,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
         </Select>
       </div>
 
-      {/* KPI Thresholds Reference */}
+      {/* KPI Thresholds */}
       <Card className="bg-muted/50">
         <CardContent className="p-3">
           <div className="flex items-center gap-2 mb-2">
@@ -346,9 +331,8 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
             </TableHeader>
             <TableBody>
               {filteredCampaigns.map((campaign) => (
-                <>
+                <Fragment key={campaign.id}>
                   <TableRow 
-                    key={campaign.id}
                     className="cursor-pointer hover:bg-accent/50"
                     onClick={() => setExpandedCampaign(expandedCampaign === campaign.id ? null : campaign.id)}
                   >
@@ -389,20 +373,23 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                     </TableCell>
                     <TableCell className="text-right font-medium">{campaign.metrics.leads}</TableCell>
                     <TableCell className="text-right">
-                      {renderMetricBadge("cpc", campaign.metrics.cpl, "£")}
+                      <MetricDisplay value={campaign.metrics.cpl} unit="£" metricKey="cpc" />
                     </TableCell>
                     <TableCell className="text-right">
-                      {renderMetricBadge("cpc", campaign.metrics.cpc, "£")}
+                      <MetricDisplay value={campaign.metrics.cpc} unit="£" metricKey="cpc" />
                     </TableCell>
                     <TableCell className="text-right">
-                      {renderMetricBadge("ctr", campaign.metrics.ctr, "%")}
+                      <MetricDisplay value={campaign.metrics.ctr} unit="%" metricKey="ctr" />
                     </TableCell>
                     <TableCell className="text-right">
-                      {renderMetricBadge("cpm", campaign.metrics.cpm, "£")}
+                      <MetricDisplay value={campaign.metrics.cpm} unit="£" metricKey="cpm" />
                     </TableCell>
                     <TableCell className="text-right">
-                      {renderMetricBadge("highIntentLeadRatio", 
-                        (campaign.metrics.highIntentLeads / campaign.metrics.leads) * 100, "%")}
+                      <MetricDisplay 
+                        value={(campaign.metrics.highIntentLeads / campaign.metrics.leads) * 100} 
+                        unit="%" 
+                        metricKey="highIntent" 
+                      />
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -478,15 +465,15 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                                   </div>
                                   <div>
                                     <span className="text-muted-foreground text-xs">CPL</span>
-                                    {renderMetricBadge("cpc", adset.metrics.cpl, "£")}
+                                    <MetricDisplay value={adset.metrics.cpl} unit="£" metricKey="cpc" />
                                   </div>
                                   <div>
                                     <span className="text-muted-foreground text-xs">CPC</span>
-                                    {renderMetricBadge("cpc", adset.metrics.cpc, "£")}
+                                    <MetricDisplay value={adset.metrics.cpc} unit="£" metricKey="cpc" />
                                   </div>
                                   <div>
                                     <span className="text-muted-foreground text-xs">CTR</span>
-                                    {renderMetricBadge("ctr", adset.metrics.ctr, "%")}
+                                    <MetricDisplay value={adset.metrics.ctr} unit="%" metricKey="ctr" />
                                   </div>
                                   <Button
                                     variant="ghost"
@@ -507,7 +494,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               ))}
             </TableBody>
           </Table>
