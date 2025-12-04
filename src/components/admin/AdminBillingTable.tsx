@@ -163,40 +163,40 @@ const AdminBillingTable = ({ searchQuery }: AdminBillingTableProps) => {
   return (
     <div className="space-y-4">
       {/* Billing Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Monthly Revenue</p>
-            <p className="text-2xl font-bold text-green-600">£{totalMonthlyRevenue.toLocaleString()}</p>
+          <CardContent className="p-3 md:p-4">
+            <p className="text-[10px] md:text-sm text-muted-foreground">Monthly Revenue</p>
+            <p className="text-lg md:text-2xl font-bold text-green-600">£{totalMonthlyRevenue.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Ad Spend Managed</p>
-            <p className="text-2xl font-bold">£{totalAdSpendManaged.toLocaleString()}</p>
+          <CardContent className="p-3 md:p-4">
+            <p className="text-[10px] md:text-sm text-muted-foreground">Ad Spend Managed</p>
+            <p className="text-lg md:text-2xl font-bold">£{totalAdSpendManaged.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Active Subscriptions</p>
-            <p className="text-2xl font-bold">{mockBillingData.filter(b => b.status === "active").length}</p>
+          <CardContent className="p-3 md:p-4">
+            <p className="text-[10px] md:text-sm text-muted-foreground">Active Subscriptions</p>
+            <p className="text-lg md:text-2xl font-bold">{mockBillingData.filter(b => b.status === "active").length}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Overdue Payments</p>
-            <p className="text-2xl font-bold text-red-600">{mockBillingData.filter(b => b.status === "overdue").length}</p>
+          <CardContent className="p-3 md:p-4">
+            <p className="text-[10px] md:text-sm text-muted-foreground">Overdue Payments</p>
+            <p className="text-lg md:text-2xl font-bold text-red-600">{mockBillingData.filter(b => b.status === "overdue").length}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Billing Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Client Billing</CardTitle>
-          <div className="flex gap-2">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 md:p-6">
+          <CardTitle className="text-base md:text-lg">Client Billing</CardTitle>
+          <div className="flex gap-2 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +208,7 @@ const AdminBillingTable = ({ searchQuery }: AdminBillingTableProps) => {
               </SelectContent>
             </Select>
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm">
                 <SelectValue placeholder="Plan" />
               </SelectTrigger>
               <SelectContent>
@@ -220,7 +220,8 @@ const AdminBillingTable = ({ searchQuery }: AdminBillingTableProps) => {
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6 md:pt-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -307,6 +308,7 @@ const AdminBillingTable = ({ searchQuery }: AdminBillingTableProps) => {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

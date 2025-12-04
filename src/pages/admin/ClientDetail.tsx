@@ -234,22 +234,22 @@ export default function ClientDetail() {
   return (
     <div className="min-h-screen bg-background">
       <AdminHeader />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/admin")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="w-fit">
+              <ArrowLeft className="mr-1 md:mr-2 h-4 w-4" />
               Back
             </Button>
             <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-foreground">{client.companyName}</h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                <h1 className="text-lg md:text-2xl font-bold text-foreground">{client.companyName}</h1>
                 <Badge variant={client.status === "active" ? "default" : "secondary"}>
                   {client.status}
                 </Badge>
               </div>
-              <p className="text-muted-foreground flex items-center gap-2 mt-1">
+              <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-2 mt-1">
                 {getTypeIcon(client.type)}
                 {getTypeLabel(client.type)} • {client.plan} Plan
               </p>
@@ -258,74 +258,74 @@ export default function ClientDetail() {
           <div className="flex gap-2">
             {isEditing ? (
               <>
-                <Button variant="outline" onClick={handleCancel}>
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel
+                <Button variant="outline" size="sm" onClick={handleCancel}>
+                  <X className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Cancel</span>
                 </Button>
-                <Button onClick={handleSave}>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                <Button size="sm" onClick={handleSave}>
+                  <Save className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">Save</span>
                 </Button>
               </>
             ) : (
-              <Button onClick={() => setIsEditing(true)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Client
+              <Button size="sm" onClick={() => setIsEditing(true)}>
+                <Edit className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Edit Client</span>
               </Button>
             )}
           </div>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-8">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Target className="h-6 w-6 text-primary" />
+            <CardContent className="p-3 md:pt-6 md:p-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="p-2 md:p-3 bg-primary/10 rounded-lg">
+                  <Target className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Campaigns</p>
-                  <p className="text-2xl font-bold">{client.totalCampaigns}</p>
+                  <p className="text-[10px] md:text-sm text-muted-foreground">Total Campaigns</p>
+                  <p className="text-lg md:text-2xl font-bold">{client.totalCampaigns}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-accent/10 rounded-lg">
-                  <Users className="h-6 w-6 text-accent" />
+            <CardContent className="p-3 md:pt-6 md:p-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="p-2 md:p-3 bg-accent/10 rounded-lg">
+                  <Users className="h-4 w-4 md:h-6 md:w-6 text-accent" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Leads</p>
-                  <p className="text-2xl font-bold">{client.activeLeads}</p>
+                  <p className="text-[10px] md:text-sm text-muted-foreground">Active Leads</p>
+                  <p className="text-lg md:text-2xl font-bold">{client.activeLeads}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-500/10 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-500" />
+            <CardContent className="p-3 md:pt-6 md:p-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="p-2 md:p-3 bg-green-500/10 rounded-lg">
+                  <DollarSign className="h-4 w-4 md:h-6 md:w-6 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Spend</p>
-                  <p className="text-2xl font-bold">£{client.totalSpend.toLocaleString()}</p>
+                  <p className="text-[10px] md:text-sm text-muted-foreground">Total Spend</p>
+                  <p className="text-lg md:text-2xl font-bold">£{client.totalSpend.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-500/10 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-blue-500" />
+            <CardContent className="p-3 md:pt-6 md:p-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div className="p-2 md:p-3 bg-blue-500/10 rounded-lg">
+                  <TrendingUp className="h-4 w-4 md:h-6 md:w-6 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                  <p className="text-2xl font-bold">{client.conversionRate}%</p>
+                  <p className="text-[10px] md:text-sm text-muted-foreground">Conversion Rate</p>
+                  <p className="text-lg md:text-2xl font-bold">{client.conversionRate}%</p>
                 </div>
               </div>
             </CardContent>
@@ -333,18 +333,18 @@ export default function ClientDetail() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+        <Tabs defaultValue="profile" className="space-y-4 md:space-y-6">
+          <TabsList className="w-full md:w-auto overflow-x-auto">
+            <TabsTrigger value="profile" className="text-xs md:text-sm">Profile</TabsTrigger>
+            <TabsTrigger value="campaigns" className="text-xs md:text-sm">Campaigns</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs md:text-sm">Activity</TabsTrigger>
             {client.type === "developer" && (
-              <TabsTrigger value="developments">Developments</TabsTrigger>
+              <TabsTrigger value="developments" className="text-xs md:text-sm">Developments</TabsTrigger>
             )}
           </TabsList>
 
           <TabsContent value="profile">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Company Information</CardTitle>

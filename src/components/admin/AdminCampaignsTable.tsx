@@ -135,11 +135,11 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>All Campaigns</CardTitle>
-        <div className="flex gap-2">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 md:p-6">
+        <CardTitle className="text-base md:text-lg">All Campaigns</CardTitle>
+        <div className="flex gap-2 w-full sm:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -150,7 +150,7 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={setClientFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40 text-xs md:text-sm">
               <SelectValue placeholder="Client" />
             </SelectTrigger>
             <SelectContent>
@@ -164,7 +164,8 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
           </Select>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 md:p-6 md:pt-0">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -243,7 +244,8 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

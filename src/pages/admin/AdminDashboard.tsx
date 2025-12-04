@@ -42,100 +42,100 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-background">
       <AdminHeader />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4 mb-4 md:mb-8">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Users className="h-4 w-4" />
-                <span className="text-xs">Total Clients</span>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-[10px] md:text-xs">Total Clients</span>
               </div>
-              <p className="text-2xl font-bold">{stats.totalClients}</p>
+              <p className="text-lg md:text-2xl font-bold">{stats.totalClients}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Megaphone className="h-4 w-4" />
-                <span className="text-xs">Active Campaigns</span>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
+                <Megaphone className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-[10px] md:text-xs">Active Campaigns</span>
               </div>
-              <p className="text-2xl font-bold">{stats.activeCampaigns}</p>
+              <p className="text-lg md:text-2xl font-bold">{stats.activeCampaigns}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-xs">Total Leads</span>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
+                <TrendingUp className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-[10px] md:text-xs">Total Leads</span>
               </div>
-              <p className="text-2xl font-bold">{stats.totalLeads.toLocaleString()}</p>
+              <p className="text-lg md:text-2xl font-bold">{stats.totalLeads.toLocaleString()}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <DollarSign className="h-4 w-4" />
-                <span className="text-xs">Ad Spend</span>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
+                <DollarSign className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-[10px] md:text-xs">Ad Spend</span>
               </div>
-              <p className="text-2xl font-bold">£{stats.totalSpend.toLocaleString()}</p>
+              <p className="text-lg md:text-2xl font-bold">£{stats.totalSpend.toLocaleString()}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <BarChart3 className="h-4 w-4" />
-                <span className="text-xs">Avg CPL</span>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
+                <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-[10px] md:text-xs">Avg CPL</span>
               </div>
-              <p className="text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</p>
+              <p className="text-lg md:text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <CreditCard className="h-4 w-4" />
-                <span className="text-xs">Monthly Revenue</span>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-1.5 md:gap-2 text-muted-foreground mb-1">
+                <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-[10px] md:text-xs">Monthly Revenue</span>
               </div>
-              <p className="text-2xl font-bold text-green-600">£{stats.monthlyRevenue.toLocaleString()}</p>
+              <p className="text-lg md:text-2xl font-bold text-green-600">£{stats.monthlyRevenue.toLocaleString()}</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <TabsList>
-              <TabsTrigger value="clients" className="gap-2">
-                <Users className="h-4 w-4" />
-                Clients
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <TabsList className="w-full md:w-auto overflow-x-auto">
+              <TabsTrigger value="clients" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Clients</span>
               </TabsTrigger>
-              <TabsTrigger value="campaigns" className="gap-2">
-                <Megaphone className="h-4 w-4" />
-                Campaigns
+              <TabsTrigger value="campaigns" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Megaphone className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Campaigns</span>
               </TabsTrigger>
-              <TabsTrigger value="billing" className="gap-2">
-                <CreditCard className="h-4 w-4" />
-                Billing
+              <TabsTrigger value="billing" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Billing</span>
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Analytics
+              <TabsTrigger value="analytics" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex gap-2">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1 sm:flex-none">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-64"
+                  className="pl-9 w-full sm:w-64"
                 />
               </div>
               {activeTab === "clients" && (
