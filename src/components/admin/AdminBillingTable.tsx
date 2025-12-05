@@ -225,79 +225,88 @@ const AdminBillingTable = ({ searchQuery }: AdminBillingTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead className="text-right">Monthly Fee</TableHead>
-                <TableHead className="text-right">Ad Budget</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead>Next Billing</TableHead>
-                <TableHead>Payment Method</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-xs">Client</TableHead>
+                <TableHead className="text-xs hidden sm:table-cell">Plan</TableHead>
+                <TableHead className="text-right text-xs">Fee</TableHead>
+                <TableHead className="text-right text-xs hidden md:table-cell">Ad Budget</TableHead>
+                <TableHead className="text-center text-xs">Status</TableHead>
+                <TableHead className="text-xs hidden lg:table-cell">Next Billing</TableHead>
+                <TableHead className="text-xs hidden xl:table-cell">Payment</TableHead>
+                <TableHead className="text-right text-xs w-10">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredBilling.map((billing) => (
                 <TableRow key={billing.id}>
-                  <TableCell className="font-medium">{billing.clientName}</TableCell>
                   <TableCell>
+                    <div>
+                      <p className="font-medium text-xs sm:text-sm">{billing.clientName}</p>
+                      <div className="sm:hidden">
+                        <Badge className={`${getPlanColor(billing.plan)} text-[10px] mt-0.5`} variant="outline">
+                          {billing.plan}
+                        </Badge>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge className={getPlanColor(billing.plan)} variant="outline">
                       {billing.plan}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right font-medium">
+                  <TableCell className="text-right font-medium text-xs sm:text-sm">
                     £{billing.monthlyFee.toLocaleString()}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right text-xs sm:text-sm hidden md:table-cell">
                     £{billing.adSpendBudget.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1">
                       {getStatusIcon(billing.status)}
-                      <Badge variant={getStatusColor(billing.status) as any}>
+                      <Badge variant={getStatusColor(billing.status) as any} className="text-[10px] sm:text-xs">
                         {billing.status}
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell>{billing.nextBilling}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-xs hidden lg:table-cell">{billing.nextBilling}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">
                     {billing.paymentMethod}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="h-7 w-7">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="gap-2">
-                          <Eye className="h-4 w-4" />
+                        <DropdownMenuItem className="gap-2 text-xs">
+                          <Eye className="h-3.5 w-3.5" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2">
-                          <FileText className="h-4 w-4" />
+                        <DropdownMenuItem className="gap-2 text-xs">
+                          <FileText className="h-3.5 w-3.5" />
                           View Invoices
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2">
-                          <CreditCard className="h-4 w-4" />
+                        <DropdownMenuItem className="gap-2 text-xs">
+                          <CreditCard className="h-3.5 w-3.5" />
                           Update Payment
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {billing.status === "active" && (
-                          <DropdownMenuItem className="gap-2 text-yellow-600">
-                            <Clock className="h-4 w-4" />
+                          <DropdownMenuItem className="gap-2 text-xs text-yellow-600">
+                            <Clock className="h-3.5 w-3.5" />
                             Pause Subscription
                           </DropdownMenuItem>
                         )}
                         {billing.status === "paused" && (
-                          <DropdownMenuItem className="gap-2 text-green-600">
-                            <CheckCircle className="h-4 w-4" />
+                          <DropdownMenuItem className="gap-2 text-xs text-green-600">
+                            <CheckCircle className="h-3.5 w-3.5" />
                             Reactivate
                           </DropdownMenuItem>
                         )}
                         {billing.status === "overdue" && (
-                          <DropdownMenuItem className="gap-2 text-blue-600">
-                            <AlertCircle className="h-4 w-4" />
+                          <DropdownMenuItem className="gap-2 text-xs text-blue-600">
+                            <AlertCircle className="h-3.5 w-3.5" />
                             Send Reminder
                           </DropdownMenuItem>
                         )}
