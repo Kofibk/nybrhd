@@ -32,6 +32,83 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          industry: string | null
+          name: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          name: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          industry?: string | null
+          name?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company_id: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_id?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          user_type?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
