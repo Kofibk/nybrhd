@@ -215,112 +215,119 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Header with New Campaign Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold">Meta Campaigns</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {stats.activeCampaigns} active of {stats.totalCampaigns} campaigns
+          </p>
+        </div>
+        <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              New Campaign
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle>Create Meta Campaign</DialogTitle>
+            </DialogHeader>
+            <MetaCampaignBuilder 
+              onCampaignCreated={handleCampaignCreated}
+              onClose={() => setIsBuilderOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Card>
-          <CardContent className="p-2 sm:p-3">
-            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
-              <Target className="h-3 w-3" />
-              <span className="text-[10px] sm:text-xs">Campaigns</span>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Target className="h-4 w-4" />
+              <span className="text-xs">Campaigns</span>
             </div>
-            <p className="text-base sm:text-lg font-bold">{stats.totalCampaigns}</p>
-            <p className="text-[10px] text-muted-foreground">{stats.activeCampaigns} active</p>
+            <p className="text-xl sm:text-2xl font-bold">{stats.totalCampaigns}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-2 sm:p-3">
-            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
-              <DollarSign className="h-3 w-3" />
-              <span className="text-[10px] sm:text-xs">Spend</span>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <DollarSign className="h-4 w-4" />
+              <span className="text-xs">Total Spend</span>
             </div>
-            <p className="text-base sm:text-lg font-bold">£{stats.totalSpend.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold">£{stats.totalSpend.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-2 sm:p-3">
-            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
-              <Users className="h-3 w-3" />
-              <span className="text-[10px] sm:text-xs">Leads</span>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Users className="h-4 w-4" />
+              <span className="text-xs">Total Leads</span>
             </div>
-            <p className="text-base sm:text-lg font-bold">{stats.totalLeads}</p>
+            <p className="text-xl sm:text-2xl font-bold">{stats.totalLeads}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-2 sm:p-3">
-            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
-              <BarChart3 className="h-3 w-3" />
-              <span className="text-[10px] sm:text-xs">Avg CPL</span>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-xs">Avg CPL</span>
             </div>
-            <p className="text-base sm:text-lg font-bold">£{stats.avgCPL.toFixed(2)}</p>
+            <p className="text-xl sm:text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-2 sm:p-3">
-            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
-              <MousePointer className="h-3 w-3" />
-              <span className="text-[10px] sm:text-xs">Avg CTR</span>
+        <Card className="col-span-2 sm:col-span-1">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <MousePointer className="h-4 w-4" />
+              <span className="text-xs">Avg CTR</span>
             </div>
-            <p className="text-base sm:text-lg font-bold">{stats.avgCTR.toFixed(1)}%</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-2 sm:p-3 h-full">
-            <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="w-full h-full min-h-[60px]">
-                  <Plus className="h-4 w-4 mr-1" />
-                  <span className="text-xs sm:text-sm">New Campaign</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-hidden">
-                <DialogHeader>
-                  <DialogTitle>Create Meta Campaign</DialogTitle>
-                </DialogHeader>
-                <MetaCampaignBuilder 
-                  onCampaignCreated={handleCampaignCreated}
-                  onClose={() => setIsBuilderOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <p className="text-xl sm:text-2xl font-bold">{stats.avgCTR.toFixed(1)}%</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[100px] sm:w-[130px] text-xs sm:text-sm">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={phaseFilter} onValueChange={setPhaseFilter}>
-          <SelectTrigger className="w-[100px] sm:w-[130px] text-xs sm:text-sm">
-            <SelectValue placeholder="Phase" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Phases</SelectItem>
-            <SelectItem value="testing">Testing</SelectItem>
-            <SelectItem value="scaling">Scaling</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={regionFilter} onValueChange={setRegionFilter}>
-          <SelectTrigger className="w-[100px] sm:w-[130px] text-xs sm:text-sm">
-            <SelectValue placeholder="Region" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Regions</SelectItem>
-            <SelectItem value="uk">UK</SelectItem>
-            <SelectItem value="middle east">Middle East</SelectItem>
-            <SelectItem value="africa">Africa</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Filters Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[120px] h-9 text-sm">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+            <SelectTrigger className="w-[120px] h-9 text-sm">
+              <SelectValue placeholder="Phase" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Phases</SelectItem>
+              <SelectItem value="testing">Testing</SelectItem>
+              <SelectItem value="scaling">Scaling</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={regionFilter} onValueChange={setRegionFilter}>
+            <SelectTrigger className="w-[130px] h-9 text-sm">
+              <SelectValue placeholder="Region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Regions</SelectItem>
+              <SelectItem value="uk">UK</SelectItem>
+              <SelectItem value="middle east">Middle East</SelectItem>
+              <SelectItem value="africa">Africa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* KPI Thresholds */}
