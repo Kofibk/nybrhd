@@ -162,23 +162,23 @@ const AdminSettings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Tabs defaultValue="integrations" className="space-y-4">
         <TabsList className="w-full md:w-auto overflow-x-auto">
-          <TabsTrigger value="integrations" className="gap-2">
-            <Plug className="h-4 w-4" />
+          <TabsTrigger value="integrations" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <Plug className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Integrations</span>
           </TabsTrigger>
-          <TabsTrigger value="general" className="gap-2">
-            <Settings className="h-4 w-4" />
+          <TabsTrigger value="general" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">General</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="h-4 w-4" />
+          <TabsTrigger value="notifications" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <Bell className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-2">
-            <Users className="h-4 w-4" />
+          <TabsTrigger value="team" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <Users className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Team</span>
           </TabsTrigger>
         </TabsList>
