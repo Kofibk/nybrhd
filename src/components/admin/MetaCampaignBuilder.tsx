@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,12 @@ import {
   Wand2,
   Lightbulb,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Upload,
+  X,
+  Play,
+  ImageIcon,
+  Film
 } from "lucide-react";
 import {
   REGIONS,
@@ -44,6 +49,14 @@ import {
 interface MetaCampaignBuilderProps {
   onCampaignCreated?: (campaign: any) => void;
   onClose?: () => void;
+}
+
+interface CreativeAsset {
+  id: string;
+  file: File;
+  preview: string;
+  type: "image" | "video";
+  name: string;
 }
 
 const STEPS = [
@@ -75,8 +88,14 @@ const CONVERSION_EVENTS = [
   { id: "CompleteRegistration", label: "CompleteRegistration", description: "Sign up complete" },
 ];
 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilderProps) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   // Step 1: Overview
   const [developmentName, setDevelopmentName] = useState("");
@@ -105,6 +124,7 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
   const [selectedMessagingAngles, setSelectedMessagingAngles] = useState<string[]>(["investment"]);
   const [adCopies, setAdCopies] = useState<string[]>(["", "", ""]);
   const [isGeneratingCopy, setIsGeneratingCopy] = useState(false);
+  const [creativeAssets, setCreativeAssets] = useState<CreativeAsset[]>([]);
   
   // Step 6: Tracking
   const [pixelId, setPixelId] = useState("");
@@ -120,9 +140,71 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
     2: ["UK and Middle East show highest property investment intent", "Consider targeting Finance and Property Investing interests together for HNWI audiences"],
     3: ["£5,000-£8,000 lifetime budget recommended for testing phase", "WhatsApp Add-On increases lead response rates by 35%"],
     4: ["Include 5-7 form fields max for optimal conversion", "Mobile-first landing pages convert 25% higher"],
-    5: ["Carousel ads perform 30% better for property showcases", "Mix Investment and Family messaging angles for broader appeal"],
+    5: ["Carousel ads perform 30% better for property showcases", "Mix Investment and Family messaging angles for broader appeal", "Upload at least 4 creative assets for optimal ad variations"],
     6: ["ViewContent + Lead events provide complete funnel tracking", "Consistent UTM naming enables better attribution"],
   });
+
+  // File upload handlers
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+    
+    const newAssets: CreativeAsset[] = [];
+    
+    Array.from(files).forEach(file => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} exceeds 50MB limit`);
+        return;
+      }
+      
+      const isImage = ACCEPTED_IMAGE_TYPES.includes(file.type);
+      const isVideo = ACCEPTED_VIDEO_TYPES.includes(file.type);
+      
+      if (!isImage && !isVideo) {
+        toast.error(`${file.name} is not a supported format`);
+        return;
+      }
+      
+      const preview = URL.createObjectURL(file);
+      newAssets.push({
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        file,
+        preview,
+        type: isImage ? "image" : "video",
+        name: file.name
+      });
+    });
+    
+    if (newAssets.length > 0) {
+      setCreativeAssets(prev => [...prev, ...newAssets]);
+      toast.success(`${newAssets.length} file(s) added`);
+    }
+  };
+
+  const removeAsset = (assetId: string) => {
+    setCreativeAssets(prev => {
+      const asset = prev.find(a => a.id === assetId);
+      if (asset) {
+        URL.revokeObjectURL(asset.preview);
+      }
+      return prev.filter(a => a.id !== assetId);
+    });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
 
   const toggleRegion = (regionId: string) => {
     const region = REGIONS.find(r => r.id === regionId);
@@ -288,6 +370,11 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
       contentTypes: selectedContentTypes,
       messagingAngles: selectedMessagingAngles,
       adCopies: adCopies.filter(c => c.trim() !== ""),
+      creativeAssets: creativeAssets.map(a => ({
+        name: a.name,
+        type: a.type,
+        preview: a.preview
+      })),
       pixelId,
       conversionEvents: selectedEvents,
       utmSource: customUtmSource,
@@ -720,6 +807,107 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
               </div>
             </div>
 
+            {/* Creative Assets Upload */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-base sm:text-lg font-semibold">Creative Assets</h3>
+                <Badge variant="outline" className="text-xs">
+                  {creativeAssets.length} uploaded
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">Upload images and videos for your ad creatives (max 50MB each)</p>
+              
+              {/* Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors cursor-pointer ${
+                  isDragging 
+                    ? "border-primary bg-primary/5" 
+                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={[...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES].join(",")}
+                  className="hidden"
+                  onChange={(e) => handleFileSelect(e.target.files)}
+                />
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm font-medium">Drop files here or click to upload</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  JPG, PNG, WebP, GIF, MP4, MOV, WebM
+                </p>
+              </div>
+
+              {/* Preview Grid */}
+              {creativeAssets.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-3">
+                  {creativeAssets.map((asset) => (
+                    <div 
+                      key={asset.id} 
+                      className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
+                    >
+                      {asset.type === "image" ? (
+                        <img 
+                          src={asset.preview} 
+                          alt={asset.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <video 
+                            src={asset.preview}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="h-8 w-8 text-white" />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Overlay with info and delete */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2">
+                        <Badge variant="secondary" className="text-[10px] mb-1">
+                          {asset.type === "image" ? (
+                            <><ImageIcon className="h-2.5 w-2.5 mr-1" />Image</>
+                          ) : (
+                            <><Film className="h-2.5 w-2.5 mr-1" />Video</>
+                          )}
+                        </Badge>
+                        <p className="text-[10px] text-white text-center truncate w-full px-1">
+                          {asset.name}
+                        </p>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="mt-2 h-6 text-xs px-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeAsset(asset.id);
+                          }}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                      
+                      {/* Type indicator */}
+                      <div className="absolute top-1 left-1">
+                        <Badge variant="secondary" className="text-[8px] px-1 py-0 bg-black/50 text-white border-0">
+                          {asset.type === "image" ? <ImageIcon className="h-2.5 w-2.5" /> : <Film className="h-2.5 w-2.5" />}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div>
               <h3 className="text-base sm:text-lg font-semibold mb-3">Messaging Angles</h3>
               <div className="space-y-2">
@@ -957,8 +1145,8 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
               </Card>
 
               <Card className="p-3">
-                <h4 className="font-medium text-sm mb-2">Content</h4>
-                <div className="space-y-1 text-xs">
+                <h4 className="font-medium text-sm mb-2">Content & Creatives</h4>
+                <div className="space-y-2 text-xs">
                   <div>
                     <span className="text-muted-foreground">Types:</span>
                     <div className="flex flex-wrap gap-1 mt-0.5">
@@ -970,6 +1158,30 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
                     </div>
                   </div>
                   <p><span className="text-muted-foreground">Ad Copies:</span> {adCopies.filter(c => c.trim()).length}</p>
+                  <p><span className="text-muted-foreground">Assets:</span> {creativeAssets.length} files ({creativeAssets.filter(a => a.type === "image").length} images, {creativeAssets.filter(a => a.type === "video").length} videos)</p>
+                  {creativeAssets.length > 0 && (
+                    <div className="flex gap-1 mt-1 overflow-x-auto pb-1">
+                      {creativeAssets.slice(0, 6).map((asset) => (
+                        <div 
+                          key={asset.id} 
+                          className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden border bg-muted"
+                        >
+                          {asset.type === "image" ? (
+                            <img src={asset.preview} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-black/20">
+                              <Play className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {creativeAssets.length > 6 && (
+                        <div className="w-10 h-10 flex-shrink-0 rounded border bg-muted flex items-center justify-center text-[10px] text-muted-foreground">
+                          +{creativeAssets.length - 6}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Card>
 
