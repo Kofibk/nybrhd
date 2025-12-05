@@ -16,6 +16,9 @@ import {
   Settings,
   Contact,
   Target,
+  Brain,
+  Building2,
+  UserCircle,
 } from "lucide-react";
 import AdminClientsTable from "@/components/admin/AdminClientsTable";
 import AdminAnalyticsOverview from "@/components/admin/AdminAnalyticsOverview";
@@ -25,11 +28,14 @@ import AdminSettings from "@/components/admin/AdminSettings";
 import AdminHeader from "@/components/admin/AdminHeader";
 import InviteClientDialog from "@/components/admin/InviteClientDialog";
 import AdminMetaCampaigns from "@/components/admin/AdminMetaCampaigns";
+import AdminAIOverview from "@/components/admin/AdminAIOverview";
+import AdminUsersTable from "@/components/admin/AdminUsersTable";
+import AdminCompaniesTable from "@/components/admin/AdminCompaniesTable";
 import { toast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("clients");
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Mock stats - in production these would come from the database
   const stats = {
@@ -102,9 +108,17 @@ const AdminDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <div className="flex flex-col gap-3 md:gap-4">
             <TabsList className="w-full md:w-auto overflow-x-auto">
-              <TabsTrigger value="clients" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Users className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Clients</span>
+              <TabsTrigger value="overview" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Brain className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">AI Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <UserCircle className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="companies" className="gap-1 md:gap-2 text-xs md:text-sm">
+                <Building2 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Companies</span>
               </TabsTrigger>
               <TabsTrigger value="campaigns" className="gap-1 md:gap-2 text-xs md:text-sm">
                 <Target className="h-3 w-3 md:h-4 md:w-4" />
@@ -128,31 +142,31 @@ const AdminDashboard = () => {
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-full sm:w-64"
-                />
+            {activeTab !== "overview" && (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1 sm:flex-none">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 w-full sm:w-64"
+                  />
+                </div>
               </div>
-              {activeTab === "clients" && (
-                <InviteClientDialog 
-                  onClientInvited={(client) => {
-                    toast({
-                      title: "Client invited",
-                      description: `${client.company} has been added to the pending invitations.`,
-                    });
-                  }}
-                />
-              )}
-            </div>
+            )}
           </div>
 
-          <TabsContent value="clients">
-            <AdminClientsTable searchQuery={searchQuery} />
+          <TabsContent value="overview">
+            <AdminAIOverview />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <AdminUsersTable searchQuery={searchQuery} />
+          </TabsContent>
+
+          <TabsContent value="companies">
+            <AdminCompaniesTable searchQuery={searchQuery} />
           </TabsContent>
 
           <TabsContent value="campaigns">
