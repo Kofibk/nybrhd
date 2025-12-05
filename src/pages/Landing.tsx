@@ -1,11 +1,21 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, Users, TrendingUp, Sparkles, Target, BarChart3, MessageSquare, CheckCircle2, ArrowRight } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Building2, Users, TrendingUp, Sparkles, Target, BarChart3, MessageSquare, CheckCircle2, ArrowRight, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { label: "Features", href: "#features" },
+    { label: "Solutions", href: "#solutions" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "Admin", onClick: () => navigate('/admin') },
+  ];
 
   const pillars = [
     {
@@ -71,17 +81,64 @@ const Landing = () => {
             <div className="flex items-center gap-3">
               <LogoWithTransparency className="h-10 w-auto" />
             </div>
+            
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#solutions" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Solutions</a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-              <button onClick={() => navigate('/admin')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</button>
+              {navLinks.map((link) => (
+                link.href ? (
+                  <a key={link.label} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </a>
+                ) : (
+                  <button key={link.label} onClick={link.onClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {link.label}
+                  </button>
+                )
+              ))}
             </div>
+            
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/admin')} className="md:hidden text-xs px-2">
-                Admin
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="text-xs sm:text-sm px-2 sm:px-3">
+              {/* Mobile Hamburger Menu */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild className="md:hidden">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px] bg-background">
+                  <nav className="flex flex-col gap-4 mt-8">
+                    {navLinks.map((link) => (
+                      link.href ? (
+                        <a 
+                          key={link.label} 
+                          href={link.href} 
+                          className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <button 
+                          key={link.label} 
+                          onClick={() => { link.onClick?.(); setMobileMenuOpen(false); }} 
+                          className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2 text-left"
+                        >
+                          {link.label}
+                        </button>
+                      )
+                    ))}
+                    <hr className="my-4 border-border" />
+                    <Button variant="ghost" onClick={() => { navigate('/login'); setMobileMenuOpen(false); }} className="justify-start">
+                      Log In
+                    </Button>
+                    <Button onClick={() => { navigate('/onboarding'); setMobileMenuOpen(false); }}>
+                      Get Started
+                    </Button>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+
+              <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hidden sm:inline-flex text-xs sm:text-sm px-2 sm:px-3">
                 Log In
               </Button>
               <Button size="sm" onClick={() => navigate('/onboarding')} className="text-xs sm:text-sm px-2 sm:px-3">
