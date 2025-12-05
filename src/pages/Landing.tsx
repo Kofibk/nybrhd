@@ -77,11 +77,14 @@ const Landing = () => {
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
               <button onClick={() => navigate('/admin')} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Admin</button>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/admin')} className="md:hidden text-xs px-2">
+                Admin
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="text-xs sm:text-sm px-2 sm:px-3">
                 Log In
               </Button>
-              <Button size="sm" onClick={() => navigate('/onboarding')}>
+              <Button size="sm" onClick={() => navigate('/onboarding')} className="text-xs sm:text-sm px-2 sm:px-3">
                 Get Started
               </Button>
             </div>
