@@ -372,127 +372,143 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row justify-between gap-3">
-              <CardTitle className="text-base md:text-lg">All Leads ({filteredLeads.length})</CardTitle>
-              <div className="flex gap-2">
-                <Button onClick={() => exportToCSV(filteredLeads)} variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export All
+      <Card className="border-border/50">
+        <CardHeader className="px-4 py-4 sm:px-6">
+          {/* Header Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="text-lg font-semibold">
+              All Leads
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                ({filteredLeads.length})
+              </span>
+            </CardTitle>
+            <Button 
+              onClick={() => exportToCSV(filteredLeads)} 
+              variant="outline" 
+              size="sm" 
+              className="h-9 gap-2 w-fit"
+            >
+              <Download className="h-4 w-4" />
+              Export All
+            </Button>
+          </div>
+
+          {/* Bulk Actions Bar */}
+          {selectedLeads.size > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <span className="text-sm font-medium text-primary">
+                {selectedLeads.size} selected
+              </span>
+              <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                      <CheckSquare className="h-3.5 w-3.5" />
+                      Update Status
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => bulkUpdateStatus("new")}>New</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => bulkUpdateStatus("contacted")}>Contacted</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => bulkUpdateStatus("booked_viewing")}>Viewing Booked</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => bulkUpdateStatus("offer")}>Offer Made</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => bulkUpdateStatus("won")}>Won</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => bulkUpdateStatus("lost")}>Lost</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                      <Megaphone className="h-3.5 w-3.5" />
+                      Assign Campaign
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {demoCampaigns.map(c => (
+                      <DropdownMenuItem key={c.id} onClick={() => bulkAssignToCampaign(c.name)}>
+                        {c.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={bulkExport}>
+                  <Download className="h-3.5 w-3.5" />
+                  Export
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 text-xs text-muted-foreground hover:text-foreground" 
+                  onClick={() => setSelectedLeads(new Set())}
+                >
+                  Clear
                 </Button>
               </div>
             </div>
-            
-            {/* Bulk Actions Bar */}
-            {selectedLeads.size > 0 && (
-              <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/50 rounded-lg border">
-                <span className="text-sm font-medium">{selectedLeads.size} selected</span>
-                <div className="flex flex-wrap gap-2 ml-auto">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1 text-xs">
-                        <CheckSquare className="h-3 w-3" />
-                        Update Status
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => bulkUpdateStatus("new")}>New</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => bulkUpdateStatus("contacted")}>Contacted</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => bulkUpdateStatus("booked_viewing")}>Viewing Booked</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => bulkUpdateStatus("offer")}>Offer Made</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => bulkUpdateStatus("won")}>Won</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => bulkUpdateStatus("lost")}>Lost</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1 text-xs">
-                        <Megaphone className="h-3 w-3" />
-                        Assign to Campaign
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {demoCampaigns.map(c => (
-                        <DropdownMenuItem key={c.id} onClick={() => bulkAssignToCampaign(c.name)}>
-                          {c.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={bulkExport}>
-                    <Download className="h-3 w-3" />
-                    Export Selected
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedLeads(new Set())}>
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            {/* Quick Filters Row */}
-            <div className="flex flex-wrap gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="booked_viewing">Viewing Booked</SelectItem>
-                  <SelectItem value="offer">Offer Made</SelectItem>
-                  <SelectItem value="won">Won</SelectItem>
-                  <SelectItem value="lost">Lost</SelectItem>
-                </SelectContent>
-              </Select>
+          )}
 
-              <Select value={clientFilter} onValueChange={setClientFilter}>
-                <SelectTrigger className="w-full sm:w-44 h-8 text-xs">
-                  <SelectValue placeholder="Client/Campaign" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
-                  {uniqueClients.map(client => (
-                    <SelectItem key={client} value={client!}>{client}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Quick Filters Row */}
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px] h-9 text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="booked_viewing">Viewing Booked</SelectItem>
+                <SelectItem value="offer">Offer Made</SelectItem>
+                <SelectItem value="won">Won</SelectItem>
+                <SelectItem value="lost">Lost</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <Select value={countryFilter} onValueChange={setCountryFilter}>
-                <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
-                  <SelectValue placeholder="Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Countries</SelectItem>
-                  {uniqueCountries.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Select value={clientFilter} onValueChange={setClientFilter}>
+              <SelectTrigger className="w-[160px] h-9 text-xs">
+                <SelectValue placeholder="Campaign" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Campaigns</SelectItem>
+                {uniqueClients.map(client => (
+                  <SelectItem key={client} value={client!}>{client}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <Select value={scoreFilter} onValueChange={setScoreFilter}>
-                <SelectTrigger className="w-full sm:w-36 h-8 text-xs">
-                  <SelectValue placeholder="Score" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Scores</SelectItem>
-                  <SelectItem value="high">High (80+)</SelectItem>
-                  <SelectItem value="medium">Medium (60-79)</SelectItem>
-                  <SelectItem value="low">Low (&lt;60)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={countryFilter} onValueChange={setCountryFilter}>
+              <SelectTrigger className="w-[130px] h-9 text-xs">
+                <SelectValue placeholder="Country" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Countries</SelectItem>
+                {uniqueCountries.map(country => (
+                  <SelectItem key={country} value={country}>{country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={scoreFilter} onValueChange={setScoreFilter}>
+              <SelectTrigger className="w-[130px] h-9 text-xs">
+                <SelectValue placeholder="Score" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Scores</SelectItem>
+                <SelectItem value="high">High (80+)</SelectItem>
+                <SelectItem value="medium">Medium (60-79)</SelectItem>
+                <SelectItem value="low">Low (&lt;60)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
+
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="w-12 pl-4">
                     <Checkbox
                       checked={selectedLeads.size === filteredLeads.length && filteredLeads.length > 0}
                       onCheckedChange={toggleSelectAll}
@@ -511,37 +527,55 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                 {filteredLeads.map((lead) => (
                   <TableRow 
                     key={lead.id} 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer transition-colors hover:bg-muted/40"
                   >
-                    <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedLeads.has(lead.id)}
                         onCheckedChange={() => toggleSelectLead(lead.id)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium text-xs md:text-sm" onClick={() => setSelectedLead(lead)}>
+                    <TableCell 
+                      className="font-medium text-sm" 
+                      onClick={() => setSelectedLead(lead)}
+                    >
                       {lead.name}
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden md:table-cell" onClick={() => setSelectedLead(lead)}>
+                    <TableCell 
+                      className="text-sm text-muted-foreground hidden md:table-cell" 
+                      onClick={() => setSelectedLead(lead)}
+                    >
                       {lead.email}
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden lg:table-cell" onClick={() => setSelectedLead(lead)}>
+                    <TableCell 
+                      className="text-sm hidden lg:table-cell" 
+                      onClick={() => setSelectedLead(lead)}
+                    >
                       {lead.country}
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden sm:table-cell max-w-[150px] truncate" onClick={() => setSelectedLead(lead)}>
+                    <TableCell 
+                      className="text-sm hidden sm:table-cell max-w-[150px] truncate" 
+                      onClick={() => setSelectedLead(lead)}
+                    >
                       {lead.campaignName}
                     </TableCell>
                     <TableCell onClick={() => setSelectedLead(lead)}>
-                      <span className={`font-semibold text-xs md:text-sm ${getScoreColor(totalScore(lead))}`}>
+                      <span className={`font-semibold text-sm ${getScoreColor(totalScore(lead))}`}>
                         {totalScore(lead)}
                       </span>
                     </TableCell>
                     <TableCell onClick={() => setSelectedLead(lead)}>
-                      <Badge variant="outline" className={`text-[10px] md:text-xs ${getStatusColor(getLeadStatus(lead))}`}>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs whitespace-nowrap ${getStatusColor(getLeadStatus(lead))}`}
+                      >
                         {getStatusLabel(getLeadStatus(lead))}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs md:text-sm hidden md:table-cell" onClick={() => setSelectedLead(lead)}>
+                    <TableCell 
+                      className="text-sm text-muted-foreground hidden md:table-cell" 
+                      onClick={() => setSelectedLead(lead)}
+                    >
                       {formatDate(lead.createdAt)}
                     </TableCell>
                   </TableRow>
@@ -550,7 +584,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
             </Table>
           </div>
           {filteredLeads.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground">
               No leads found matching your criteria.
             </div>
           )}
