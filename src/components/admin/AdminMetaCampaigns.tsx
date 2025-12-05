@@ -58,11 +58,12 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-// import MetaCampaignBuilder from "./MetaCampaignBuilder";
+import MetaCampaignBuilder from "./MetaCampaignBuilder";
 import {
   MOCK_META_CAMPAIGNS,
   EVALUATION_METRICS,
   COUNTRIES,
+  REGIONS,
   MetaCampaign,
 } from "@/lib/metaCampaignData";
 
@@ -246,11 +247,33 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                   New Campaign
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
                 <DialogHeader>
                   <DialogTitle>Create Meta Campaign</DialogTitle>
                 </DialogHeader>
-                <p className="text-muted-foreground">Campaign builder coming soon...</p>
+                <MetaCampaignBuilder 
+                  onCampaignCreated={(campaign) => {
+                    setCampaigns(prev => [{
+                      ...campaign,
+                      region: campaign.regions?.[0] ? 
+                        REGIONS.find(r => r.id === campaign.regions[0])?.name || "UK" : "UK",
+                      metrics: {
+                        spend: 0,
+                        leads: 0,
+                        cpl: 0,
+                        cpc: 0,
+                        ctr: 0,
+                        cpm: 0,
+                        impressions: 0,
+                        clicks: 0,
+                        highIntentLeads: 0,
+                        lpViewRate: 0,
+                      },
+                      adsets: []
+                    } as MetaCampaign, ...prev]);
+                  }}
+                  onClose={() => setIsBuilderOpen(false)}
+                />
               </DialogContent>
             </Dialog>
           </CardContent>

@@ -18,14 +18,12 @@ import {
   Target,
 } from "lucide-react";
 import AdminClientsTable from "@/components/admin/AdminClientsTable";
-import AdminCampaignsTable from "@/components/admin/AdminCampaignsTable";
 import AdminAnalyticsOverview from "@/components/admin/AdminAnalyticsOverview";
 import AdminBillingTable from "@/components/admin/AdminBillingTable";
 import AdminLeadsTable from "@/components/admin/AdminLeadsTable";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminHeader from "@/components/admin/AdminHeader";
 import InviteClientDialog from "@/components/admin/InviteClientDialog";
-import CreateClientCampaignDialog from "@/components/admin/CreateClientCampaignDialog";
 import AdminMetaCampaigns from "@/components/admin/AdminMetaCampaigns";
 import { toast } from "@/hooks/use-toast";
 
@@ -109,12 +107,8 @@ const AdminDashboard = () => {
                 <span className="hidden sm:inline">Clients</span>
               </TabsTrigger>
               <TabsTrigger value="campaigns" className="gap-1 md:gap-2 text-xs md:text-sm">
-                <Megaphone className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Campaigns</span>
-              </TabsTrigger>
-              <TabsTrigger value="meta" className="gap-1 md:gap-2 text-xs md:text-sm">
                 <Target className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden sm:inline">Meta Ads</span>
+                <span className="hidden sm:inline">Campaigns</span>
               </TabsTrigger>
               <TabsTrigger value="leads" className="gap-1 md:gap-2 text-xs md:text-sm">
                 <Contact className="h-3 w-3 md:h-4 md:w-4" />
@@ -154,16 +148,6 @@ const AdminDashboard = () => {
                   }}
                 />
               )}
-              {activeTab === "campaigns" && (
-                <CreateClientCampaignDialog
-                  onCampaignCreated={(campaign) => {
-                    toast({
-                      title: "Campaign created",
-                      description: `${campaign.name} has been created for ${campaign.clientName}.`,
-                    });
-                  }}
-                />
-              )}
             </div>
           </div>
 
@@ -172,10 +156,6 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="campaigns">
-            <AdminCampaignsTable searchQuery={searchQuery} />
-          </TabsContent>
-
-          <TabsContent value="meta">
             <AdminMetaCampaigns searchQuery={searchQuery} />
           </TabsContent>
 
