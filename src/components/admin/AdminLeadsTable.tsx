@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -24,6 +27,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +70,9 @@ import {
   CheckSquare,
   Megaphone,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Plus,
+  Upload
 } from "lucide-react";
 import { demoLeads, demoCampaigns } from "@/lib/demoData";
 import { Lead } from "@/lib/types";
@@ -84,6 +98,21 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadStatuses, setLeadStatuses] = useState<Record<string, string>>({});
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+  const [addLeadOpen, setAddLeadOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // New lead form state
+  const [newLead, setNewLead] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    country: "United Kingdom",
+    budget: "",
+    bedrooms: "",
+    notes: "",
+    campaignName: "",
+  });
 
   // Get unique clients/campaigns for filter
   const uniqueClients = [...new Set(demoLeads.map(lead => lead.campaignName))].filter(Boolean);
@@ -296,6 +325,76 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
     setSelectedLeads(new Set());
   };
 
+  const handleAddLead = () => {
+    if (!newLead.name || !newLead.email) {
+      toast({
+        title: "Validation error",
+        description: "Name and email are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Lead added",
+      description: `${newLead.name} has been added successfully.`,
+    });
+    
+    setNewLead({
+      name: "",
+      email: "",
+      phone: "",
+      country: "United Kingdom",
+      budget: "",
+      bedrooms: "",
+      notes: "",
+      campaignName: "",
+    });
+    setAddLeadOpen(false);
+  };
+
+  const handleCSVUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.csv')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a CSV file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      const headers = lines[0]?.split(',').map(h => h.trim().toLowerCase());
+      
+      if (!headers?.includes('name') || !headers?.includes('email')) {
+        toast({
+          title: "Invalid CSV format",
+          description: "CSV must include 'name' and 'email' columns.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const dataRows = lines.slice(1);
+      toast({
+        title: "Upload successful",
+        description: `${dataRows.length} leads imported from CSV.`,
+      });
+      setUploadOpen(false);
+    };
+    reader.readAsText(file);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const renderSortIcon = (field: string) => {
     if (columnSort.field !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
     if (columnSort.direction === "asc") return <ArrowUp className="h-3 w-3 ml-1" />;
@@ -382,15 +481,189 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                 ({filteredLeads.length})
               </span>
             </CardTitle>
-            <Button 
-              onClick={() => exportToCSV(filteredLeads)} 
-              variant="outline" 
-              size="sm" 
-              className="h-9 gap-2 w-fit"
-            >
-              <Download className="h-4 w-4" />
-              Export All
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Add Lead Dialog */}
+              <Dialog open={addLeadOpen} onOpenChange={setAddLeadOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="h-9 gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Lead
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Lead</DialogTitle>
+                    <DialogDescription>
+                      Manually add a new lead to the system.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="name">Name *</Label>
+                      <Input
+                        id="name"
+                        value={newLead.name}
+                        onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                        placeholder="John Smith"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newLead.email}
+                        onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                        placeholder="john@example.com"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={newLead.phone}
+                        onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                        placeholder="+44 7700 900000"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="country">Country</Label>
+                        <Select
+                          value={newLead.country}
+                          onValueChange={(value) => setNewLead({ ...newLead, country: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                            <SelectItem value="United Arab Emirates">UAE</SelectItem>
+                            <SelectItem value="Saudi Arabia">Saudi Arabia</SelectItem>
+                            <SelectItem value="Qatar">Qatar</SelectItem>
+                            <SelectItem value="Nigeria">Nigeria</SelectItem>
+                            <SelectItem value="Ghana">Ghana</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="budget">Budget (£)</Label>
+                        <Input
+                          id="budget"
+                          value={newLead.budget}
+                          onChange={(e) => setNewLead({ ...newLead, budget: e.target.value })}
+                          placeholder="500,000"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="bedrooms">Bedrooms</Label>
+                        <Select
+                          value={newLead.bedrooms}
+                          onValueChange={(value) => setNewLead({ ...newLead, bedrooms: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1</SelectItem>
+                            <SelectItem value="2">2</SelectItem>
+                            <SelectItem value="3">3</SelectItem>
+                            <SelectItem value="4+">4+</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="campaign">Campaign</Label>
+                        <Select
+                          value={newLead.campaignName}
+                          onValueChange={(value) => setNewLead({ ...newLead, campaignName: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {demoCampaigns.map(c => (
+                              <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={newLead.notes}
+                        onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
+                        placeholder="Additional notes..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAddLeadOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddLead}>Add Lead</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Upload CSV Dialog */}
+              <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-2">
+                    <Upload className="h-4 w-4" />
+                    Upload CSV
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Upload Leads CSV</DialogTitle>
+                    <DialogDescription>
+                      Import leads from a CSV file. Required columns: name, email.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                      <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Drag and drop your CSV file here, or click to browse
+                      </p>
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCSVUpload}
+                        className="max-w-[200px] mx-auto"
+                      />
+                    </div>
+                    <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground">
+                        <strong>CSV Format:</strong> name, email, phone, country, budget, bedrooms, notes
+                      </p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setUploadOpen(false)}>
+                      Cancel
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              <Button 
+                onClick={() => exportToCSV(filteredLeads)} 
+                variant="outline" 
+                size="sm" 
+                className="h-9 gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export All
+              </Button>
+            </div>
           </div>
 
           {/* Bulk Actions Bar */}
