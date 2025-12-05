@@ -2,7 +2,6 @@ import { useState, useMemo, Fragment } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -22,7 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -32,12 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import {
   Plus,
   MoreHorizontal,
@@ -61,7 +53,6 @@ import { toast } from "sonner";
 import MetaCampaignBuilder from "./MetaCampaignBuilder";
 import {
   MOCK_META_CAMPAIGNS,
-  EVALUATION_METRICS,
   COUNTRIES,
   REGIONS,
   MetaCampaign,
@@ -76,7 +67,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [phaseFilter, setPhaseFilter] = useState<string>("all");
   const [regionFilter, setRegionFilter] = useState<string>("all");
-  const [selectedCampaign, setSelectedCampaign] = useState<MetaCampaign | null>(null);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
 
@@ -177,7 +167,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
     const status = getMetricHealth(metricKey, value);
     return (
       <div className="flex items-center gap-1">
-        <span className={`text-sm font-medium ${
+        <span className={`text-xs sm:text-sm font-medium ${
           status === "good" ? "text-green-600" : status === "bad" ? "text-red-500" : ""
         }`}>
           {unit === "£" ? `${unit}${value.toFixed(2)}` : `${value.toFixed(1)}${unit}`}
@@ -188,90 +178,106 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
     );
   };
 
+  const handleCampaignCreated = (campaign: any) => {
+    const newCampaign: MetaCampaign = {
+      id: campaign.id,
+      developmentName: campaign.developmentName,
+      region: campaign.regions?.[0] ? 
+        REGIONS.find(r => r.id === campaign.regions[0])?.name || "UK" : "UK",
+      objective: campaign.objective,
+      phase: campaign.phase,
+      status: "draft",
+      budget: campaign.budget,
+      budgetType: "lifetime",
+      startDate: campaign.startDate,
+      endDate: campaign.endDate,
+      createdAt: campaign.createdAt,
+      targetCountries: campaign.countries || [],
+      targetCities: campaign.cities || [],
+      whatsappEnabled: campaign.whatsappEnabled,
+      metrics: {
+        spend: 0,
+        leads: 0,
+        cpl: 0,
+        cpc: 0,
+        ctr: 0,
+        cpm: 0,
+        impressions: 0,
+        clicks: 0,
+        landingPageViews: 0,
+        highIntentLeads: 0,
+      },
+      adsets: []
+    };
+    setCampaigns(prev => [newCampaign, ...prev]);
+    setIsBuilderOpen(false);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <CardContent className="p-2 sm:p-3">
+            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
               <Target className="h-3 w-3" />
-              <span className="text-[10px]">Campaigns</span>
+              <span className="text-[10px] sm:text-xs">Campaigns</span>
             </div>
-            <p className="text-lg font-bold">{stats.totalCampaigns}</p>
+            <p className="text-base sm:text-lg font-bold">{stats.totalCampaigns}</p>
             <p className="text-[10px] text-muted-foreground">{stats.activeCampaigns} active</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <CardContent className="p-2 sm:p-3">
+            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
               <DollarSign className="h-3 w-3" />
-              <span className="text-[10px]">Total Spend</span>
+              <span className="text-[10px] sm:text-xs">Spend</span>
             </div>
-            <p className="text-lg font-bold">£{stats.totalSpend.toLocaleString()}</p>
+            <p className="text-base sm:text-lg font-bold">£{stats.totalSpend.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <CardContent className="p-2 sm:p-3">
+            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
               <Users className="h-3 w-3" />
-              <span className="text-[10px]">Total Leads</span>
+              <span className="text-[10px] sm:text-xs">Leads</span>
             </div>
-            <p className="text-lg font-bold">{stats.totalLeads}</p>
+            <p className="text-base sm:text-lg font-bold">{stats.totalLeads}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <CardContent className="p-2 sm:p-3">
+            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
               <BarChart3 className="h-3 w-3" />
-              <span className="text-[10px]">Avg CPL</span>
+              <span className="text-[10px] sm:text-xs">Avg CPL</span>
             </div>
-            <p className="text-lg font-bold">£{stats.avgCPL.toFixed(2)}</p>
+            <p className="text-base sm:text-lg font-bold">£{stats.avgCPL.toFixed(2)}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <CardContent className="p-2 sm:p-3">
+            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
               <MousePointer className="h-3 w-3" />
-              <span className="text-[10px]">Avg CTR</span>
+              <span className="text-[10px] sm:text-xs">Avg CTR</span>
             </div>
-            <p className="text-lg font-bold">{stats.avgCTR.toFixed(1)}%</p>
+            <p className="text-base sm:text-lg font-bold">{stats.avgCTR.toFixed(1)}%</p>
           </CardContent>
         </Card>
         <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-3">
+          <CardContent className="p-2 sm:p-3 h-full">
             <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="w-full h-full">
+                <Button size="sm" className="w-full h-full min-h-[60px]">
                   <Plus className="h-4 w-4 mr-1" />
-                  New Campaign
+                  <span className="text-xs sm:text-sm">New Campaign</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+              <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-hidden">
                 <DialogHeader>
                   <DialogTitle>Create Meta Campaign</DialogTitle>
                 </DialogHeader>
                 <MetaCampaignBuilder 
-                  onCampaignCreated={(campaign) => {
-                    setCampaigns(prev => [{
-                      ...campaign,
-                      region: campaign.regions?.[0] ? 
-                        REGIONS.find(r => r.id === campaign.regions[0])?.name || "UK" : "UK",
-                      metrics: {
-                        spend: 0,
-                        leads: 0,
-                        cpl: 0,
-                        cpc: 0,
-                        ctr: 0,
-                        cpm: 0,
-                        impressions: 0,
-                        clicks: 0,
-                        highIntentLeads: 0,
-                        lpViewRate: 0,
-                      },
-                      adsets: []
-                    } as MetaCampaign, ...prev]);
-                  }}
+                  onCampaignCreated={handleCampaignCreated}
                   onClose={() => setIsBuilderOpen(false)}
                 />
               </DialogContent>
@@ -283,7 +289,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[100px] sm:w-[130px] text-xs sm:text-sm">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -295,7 +301,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
           </SelectContent>
         </Select>
         <Select value={phaseFilter} onValueChange={setPhaseFilter}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[100px] sm:w-[130px] text-xs sm:text-sm">
             <SelectValue placeholder="Phase" />
           </SelectTrigger>
           <SelectContent>
@@ -305,7 +311,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
           </SelectContent>
         </Select>
         <Select value={regionFilter} onValueChange={setRegionFilter}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[100px] sm:w-[130px] text-xs sm:text-sm">
             <SelectValue placeholder="Region" />
           </SelectTrigger>
           <SelectContent>
@@ -319,16 +325,15 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
 
       {/* KPI Thresholds */}
       <Card className="bg-muted/50">
-        <CardContent className="p-3">
+        <CardContent className="p-2 sm:p-3">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Evaluation Thresholds</span>
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium">Evaluation Thresholds</span>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs">
             <span>CPC &lt; £1.50</span>
             <span>CTR &gt; 2%</span>
             <span>CPM &lt; £10</span>
-            <span>LP View Rate &gt; 75%</span>
             <span>High-Intent &gt; 60%</span>
           </div>
         </CardContent>
@@ -340,16 +345,14 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[250px]">Campaign</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="w-[150px] sm:w-[250px]">Campaign</TableHead>
+                <TableHead className="hidden sm:table-cell">Status</TableHead>
                 <TableHead className="text-right">Spend</TableHead>
-                <TableHead className="text-right">Leads</TableHead>
-                <TableHead className="text-right">CPL</TableHead>
-                <TableHead className="text-right">CPC</TableHead>
-                <TableHead className="text-right">CTR</TableHead>
-                <TableHead className="text-right">CPM</TableHead>
-                <TableHead className="text-right">Hi-Intent</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="text-right hidden md:table-cell">Leads</TableHead>
+                <TableHead className="text-right hidden lg:table-cell">CPL</TableHead>
+                <TableHead className="text-right hidden lg:table-cell">CPC</TableHead>
+                <TableHead className="text-right hidden xl:table-cell">CTR</TableHead>
+                <TableHead className="w-[40px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -360,86 +363,76 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                     onClick={() => setExpandedCampaign(expandedCampaign === campaign.id ? null : campaign.id)}
                   >
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="p-0 h-6 w-6">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <Button variant="ghost" size="sm" className="p-0 h-5 w-5 sm:h-6 sm:w-6 shrink-0">
                           {expandedCampaign === campaign.id ? (
-                            <ChevronUp className="h-4 w-4" />
+                            <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" />
                           ) : (
-                            <ChevronDown className="h-4 w-4" />
+                            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
                           )}
                         </Button>
-                        <div>
-                          <p className="font-medium text-sm">{campaign.developmentName}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Globe className="h-3 w-3" />
-                            <span>{campaign.region}</span>
-                            <Badge variant="outline" className="text-[10px]">
+                        <div className="min-w-0">
+                          <p className="font-medium text-xs sm:text-sm truncate">{campaign.developmentName}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <Globe className="h-2 w-2 sm:h-3 sm:w-3" />
+                            <span className="truncate">{campaign.region}</span>
+                            <Badge variant="outline" className="text-[8px] sm:text-[10px] hidden sm:inline-flex">
                               {campaign.phase}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px]">
-                              {campaign.objective}
+                          </div>
+                          {/* Mobile-only status */}
+                          <div className="sm:hidden mt-1">
+                            <Badge className={`${getStatusColor(campaign.status)} text-[10px]`}>
+                              {campaign.status}
                             </Badge>
                           </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge className={getStatusColor(campaign.status)}>
                         {campaign.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div>
-                        <p className="font-medium">£{campaign.metrics.spend.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">/ £{campaign.budget.toLocaleString()}</p>
+                        <p className="font-medium text-xs sm:text-sm">£{campaign.metrics.spend.toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground hidden sm:block">/ £{campaign.budget.toLocaleString()}</p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-medium">{campaign.metrics.leads}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-medium text-xs sm:text-sm hidden md:table-cell">
+                      {campaign.metrics.leads}
+                    </TableCell>
+                    <TableCell className="text-right hidden lg:table-cell">
                       <MetricDisplay value={campaign.metrics.cpl} unit="£" metricKey="cpc" />
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right hidden lg:table-cell">
                       <MetricDisplay value={campaign.metrics.cpc} unit="£" metricKey="cpc" />
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right hidden xl:table-cell">
                       <MetricDisplay value={campaign.metrics.ctr} unit="%" metricKey="ctr" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <MetricDisplay value={campaign.metrics.cpm} unit="£" metricKey="cpm" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <MetricDisplay 
-                        value={(campaign.metrics.highIntentLeads / campaign.metrics.leads) * 100} 
-                        unit="%" 
-                        metricKey="highIntent" 
-                      />
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedCampaign(campaign)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="bg-background">
                           <DropdownMenuItem onClick={() => handleToggleStatus(campaign.id)}>
                             {campaign.status === "active" ? (
                               <>
                                 <Pause className="h-4 w-4 mr-2" />
-                                Pause Campaign
+                                Pause
                               </>
                             ) : (
                               <>
                                 <Play className="h-4 w-4 mr-2" />
-                                Resume Campaign
+                                Resume
                               </>
                             )}
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleDuplicate(campaign)}>
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicate
@@ -449,64 +442,41 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                     </TableCell>
                   </TableRow>
                   
-                  {/* Expanded Adsets */}
-                  {expandedCampaign === campaign.id && (
+                  {/* Expanded Adsets Row */}
+                  {expandedCampaign === campaign.id && campaign.adsets.length > 0 && (
                     <TableRow>
-                      <TableCell colSpan={10} className="bg-muted/30 p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Adsets ({campaign.adsets.length})</h4>
-                            <p className="text-xs text-muted-foreground">
-                              Pause underperforming adsets after 3-5 consecutive days
-                            </p>
-                          </div>
+                      <TableCell colSpan={8} className="bg-muted/30 p-2 sm:p-4">
+                        <div className="space-y-2">
+                          <p className="text-xs sm:text-sm font-medium mb-2">Adsets ({campaign.adsets.length})</p>
                           <div className="grid gap-2">
-                            {campaign.adsets.map((adset) => (
-                              <div
+                            {campaign.adsets.map(adset => (
+                              <div 
                                 key={adset.id}
-                                className={`flex items-center justify-between p-3 rounded-lg border ${
-                                  adset.status === "paused" ? "opacity-60" : ""
-                                }`}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 sm:p-3 bg-background rounded-lg border"
                               >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                   <Badge 
-                                    variant={adset.status === "active" ? "default" : "secondary"}
-                                    className="text-[10px]"
+                                    variant="outline" 
+                                    className={adset.status === "active" ? "border-green-500 text-green-600" : "border-yellow-500 text-yellow-600"}
                                   >
                                     {adset.status}
                                   </Badge>
-                                  <span className="font-mono text-sm">{adset.name}</span>
+                                  <span className="text-xs sm:text-sm truncate">{adset.name}</span>
                                 </div>
-                                <div className="flex items-center gap-6 text-sm">
-                                  <div>
-                                    <span className="text-muted-foreground text-xs">Spend</span>
-                                    <p className="font-medium">£{adset.metrics.spend}</p>
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground text-xs">Leads</span>
-                                    <p className="font-medium">{adset.metrics.leads}</p>
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground text-xs">CPL</span>
-                                    <MetricDisplay value={adset.metrics.cpl} unit="£" metricKey="cpc" />
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground text-xs">CPC</span>
-                                    <MetricDisplay value={adset.metrics.cpc} unit="£" metricKey="cpc" />
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground text-xs">CTR</span>
-                                    <MetricDisplay value={adset.metrics.ctr} unit="%" metricKey="ctr" />
-                                  </div>
-                                  <Button
-                                    variant="ghost"
+                                <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-wrap">
+                                  <span>£{adset.metrics.spend.toFixed(0)} spent</span>
+                                  <span>{adset.metrics.leads} leads</span>
+                                  <span>£{adset.metrics.cpl.toFixed(2)} CPL</span>
+                                  <Button 
+                                    variant="ghost" 
                                     size="sm"
+                                    className="h-6 px-2"
                                     onClick={() => handleToggleAdset(campaign.id, adset.id)}
                                   >
                                     {adset.status === "active" ? (
-                                      <Pause className="h-4 w-4" />
+                                      <Pause className="h-3 w-3" />
                                     ) : (
-                                      <Play className="h-4 w-4" />
+                                      <Play className="h-3 w-3" />
                                     )}
                                   </Button>
                                 </div>
@@ -523,124 +493,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
           </Table>
         </div>
       </Card>
-
-      {/* Campaign Detail Sheet */}
-      <Sheet open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          {selectedCampaign && (
-            <>
-              <SheetHeader>
-                <SheetTitle>{selectedCampaign.developmentName}</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-6 mt-6">
-                <div className="flex gap-2">
-                  <Badge className={getStatusColor(selectedCampaign.status)}>
-                    {selectedCampaign.status}
-                  </Badge>
-                  <Badge variant="outline">{selectedCampaign.phase}</Badge>
-                  <Badge variant="outline">{selectedCampaign.objective}</Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Card>
-                    <CardContent className="p-3">
-                      <p className="text-xs text-muted-foreground">Budget</p>
-                      <p className="text-xl font-bold">£{selectedCampaign.budget.toLocaleString()}</p>
-                      <Progress 
-                        value={(selectedCampaign.metrics.spend / selectedCampaign.budget) * 100} 
-                        className="mt-2 h-2"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        £{selectedCampaign.metrics.spend.toLocaleString()} spent
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-3">
-                      <p className="text-xs text-muted-foreground">Performance</p>
-                      <p className="text-xl font-bold">{selectedCampaign.metrics.leads} Leads</p>
-                      <p className="text-sm text-green-600">
-                        £{selectedCampaign.metrics.cpl.toFixed(2)} CPL
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Targeting</h4>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Countries</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedCampaign.targetCountries.map(code => (
-                          <Badge key={code} variant="secondary" className="text-[10px]">
-                            {COUNTRIES.find(c => c.code === code)?.name || code}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Cities</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedCampaign.targetCities.map(city => (
-                          <Badge key={city} variant="outline" className="text-[10px]">
-                            {city}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Metrics</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-2 bg-muted rounded">
-                      <p className="text-xs text-muted-foreground">Impressions</p>
-                      <p className="font-medium">{selectedCampaign.metrics.impressions.toLocaleString()}</p>
-                    </div>
-                    <div className="p-2 bg-muted rounded">
-                      <p className="text-xs text-muted-foreground">Clicks</p>
-                      <p className="font-medium">{selectedCampaign.metrics.clicks.toLocaleString()}</p>
-                    </div>
-                    <div className="p-2 bg-muted rounded">
-                      <p className="text-xs text-muted-foreground">Landing Page Views</p>
-                      <p className="font-medium">{selectedCampaign.metrics.landingPageViews.toLocaleString()}</p>
-                    </div>
-                    <div className="p-2 bg-muted rounded">
-                      <p className="text-xs text-muted-foreground">High-Intent Leads</p>
-                      <p className="font-medium">{selectedCampaign.metrics.highIntentLeads}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    className="flex-1"
-                    onClick={() => handleToggleStatus(selectedCampaign.id)}
-                  >
-                    {selectedCampaign.status === "active" ? (
-                      <>
-                        <Pause className="h-4 w-4 mr-2" />
-                        Pause
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4 mr-2" />
-                        Resume
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => handleDuplicate(selectedCampaign)}>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Duplicate
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 };
