@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Building2, Users, TrendingUp, Sparkles, Target, BarChart3, MessageSquare, CheckCircle2, ArrowRight, Menu } from "lucide-react";
+import { ArrowRight, Menu, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -12,107 +10,143 @@ const Landing = () => {
 
   const navLinks = [
     { label: "Features", href: "#features" },
-    { label: "Solutions", href: "#solutions" },
+    { label: "Case Studies", href: "#case-studies" },
     { label: "Pricing", href: "#pricing" },
     { label: "Admin", onClick: () => navigate('/admin') },
   ];
 
   const pillars = [
     {
-      icon: Target,
       title: "Attract",
-      description: "AI-powered campaign builder targets buyers globally across all channels with intelligent budget allocation and creative optimisation"
+      description: "Run smart digital campaigns to reach real buyers"
     },
     {
-      icon: Sparkles,
       title: "Qualify",
-      description: "Automated lead scoring and enrichment identifies high-intent buyers with profile and engagement scoring"
+      description: "Instantly score and prioritise high-intent leads"
     },
     {
-      icon: MessageSquare,
       title: "Nurture",
-      description: "AI concierge handles buyer queries 24/7 via WhatsApp, email, and chat, guiding them through their journey"
+      description: "Automate email and WhatsApp follow-up"
     },
     {
-      icon: TrendingUp,
       title: "Convert",
-      description: "AI-driven recommendations, smart booking systems, and journey tracking turn prospects into buyers"
+      description: "Track and close sales with full visibility"
     }
   ];
 
-  const userTypes = [
+  const trustedLogos = [
+    "Mount Anvil",
+    "Berkeley Group", 
+    "London Square",
+    "Hadley",
+    "Excel Winner",
+    "Synergy Properties"
+  ];
+
+  const whoItsFor = [
     {
-      icon: Building2,
-      title: "Property Developers",
-      description: "Launch multi-property campaigns, track buyer journeys, and convert leads at scale",
-      features: ["Multi-development management", "White-label buyer portals", "Campaign analytics", "Lead scoring"],
-      path: "/developer"
+      title: "Housebuilders",
+      description: "Launching or scaling new developments"
     },
     {
-      icon: Users,
       title: "Estate Agents",
-      description: "List properties, run targeted campaigns, and manage buyer relationships efficiently",
-      features: ["Property listings", "AI buyer matching", "Viewing scheduling", "Agent assignment"],
-      path: "/agent"
+      description: "Needing better buyer reach or listing support"
     },
     {
-      icon: BarChart3,
-      title: "Mortgage Brokers",
-      description: "Connect products to buyers, automate prequalification, and track applications",
-      features: ["Product recommendations", "Document management", "Application tracking", "CRM integration"],
-      path: "/broker"
+      title: "Financial Services",
+      description: "Mortgage brokers, wealth managers"
+    },
+    {
+      title: "Banks & Funds",
+      description: "Needing direct enquiries"
     }
   ];
 
-  const pricing = [
-    { name: "Free", price: "£0", features: ["Up to 5 buyers", "Basic campaigns", "Email support"], limit: "Perfect for testing" },
-    { name: "Starter", price: "£599", features: ["Up to 50 buyers", "AI campaign builder", "Lead scoring", "WhatsApp support"], popular: false },
-    { name: "Growth", price: "£999", features: ["Up to 200 buyers", "Advanced analytics", "AI concierge", "Priority support"], popular: true },
-    { name: "Pro", price: "£1,499", features: ["Up to 500 buyers", "White-label portal", "API access", "Dedicated success manager"], popular: false },
-    { name: "Enterprise", price: "Custom", features: ["Unlimited buyers", "Custom integrations", "SLA guarantee", "Enterprise support"], limit: "Contact sales" }
+  const caseStudies = [
+    {
+      property: "Chelsea Island",
+      result: "£5M in reservations in 7 days",
+      buyer: "Egyptian investor"
+    },
+    {
+      property: "The Lucan",
+      result: "£1.7M apartment sale agreed",
+      buyer: "Nigerian investor"
+    },
+    {
+      property: "Parkwood",
+      result: "£5M home sold in 3 days",
+      buyer: "UK residential family"
+    },
+    {
+      property: "One Clapham",
+      result: "£550K reservation secured",
+      buyer: "UAE investor"
+    }
+  ];
+
+  const workflowSteps = [
+    "Campaign",
+    "Lead Capture",
+    "Qualification",
+    "Nurture",
+    "Reporting",
+    "Handover"
   ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <LogoWithTransparency className="h-10 w-auto" />
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/d25e1cc7-31c1-40f2-bd7a-1780a29e9f44.png" 
+                alt="Naybourhood" 
+                className="h-8 w-auto invert"
+              />
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-10">
               {navLinks.map((link) => (
                 link.href ? (
-                  <a key={link.label} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <a 
+                    key={link.label} 
+                    href={link.href} 
+                    className="text-sm font-body font-medium text-muted-foreground hover:text-foreground transition-colors tracking-wide"
+                  >
                     {link.label}
                   </a>
                 ) : (
-                  <button key={link.label} onClick={link.onClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <button 
+                    key={link.label} 
+                    onClick={link.onClick} 
+                    className="text-sm font-body font-medium text-muted-foreground hover:text-foreground transition-colors tracking-wide"
+                  >
                     {link.label}
                   </button>
                 )
               ))}
             </div>
             
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-4">
               {/* Mobile Hamburger Menu */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild className="md:hidden">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Button variant="ghost" size="icon" className="h-10 w-10">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[280px] bg-background">
-                  <nav className="flex flex-col gap-4 mt-8">
+                <SheetContent side="right" className="w-[300px] bg-background border-l border-border">
+                  <nav className="flex flex-col gap-6 mt-12">
                     {navLinks.map((link) => (
                       link.href ? (
                         <a 
                           key={link.label} 
                           href={link.href} 
-                          className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
+                          className="text-lg font-body font-medium text-foreground hover:text-muted-foreground transition-colors"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           {link.label}
@@ -121,27 +155,43 @@ const Landing = () => {
                         <button 
                           key={link.label} 
                           onClick={() => { link.onClick?.(); setMobileMenuOpen(false); }} 
-                          className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2 text-left"
+                          className="text-lg font-body font-medium text-foreground hover:text-muted-foreground transition-colors text-left"
                         >
                           {link.label}
                         </button>
                       )
                     ))}
                     <hr className="my-4 border-border" />
-                    <Button variant="ghost" onClick={() => { navigate('/login'); setMobileMenuOpen(false); }} className="justify-start">
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => { navigate('/login'); setMobileMenuOpen(false); }} 
+                      className="justify-start font-body"
+                    >
                       Log In
                     </Button>
-                    <Button onClick={() => { navigate('/onboarding'); setMobileMenuOpen(false); }}>
+                    <Button 
+                      onClick={() => { navigate('/onboarding'); setMobileMenuOpen(false); }}
+                      className="font-body"
+                    >
                       Get Started
                     </Button>
                   </nav>
                 </SheetContent>
               </Sheet>
 
-              <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hidden sm:inline-flex text-xs sm:text-sm px-2 sm:px-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/login')} 
+                className="hidden sm:inline-flex font-body text-sm tracking-wide"
+              >
                 Log In
               </Button>
-              <Button size="sm" onClick={() => navigate('/onboarding')} className="text-xs sm:text-sm px-2 sm:px-3">
+              <Button 
+                size="sm" 
+                onClick={() => navigate('/onboarding')} 
+                className="font-body text-sm tracking-wide"
+              >
                 Get Started
               </Button>
             </div>
@@ -150,181 +200,218 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <section className="relative pt-32 pb-24 lg:pt-40 lg:pb-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-transparent" />
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium border border-accent/20">
-              <Sparkles className="h-4 w-4" />
-              AI-Powered Property Sales Platform
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">
-              Close More Deals with
-              <span className="block text-primary mt-2">
-                AI-Powered Sales
-              </span>
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-display tracking-tight text-foreground mb-8 leading-[1.1]">
+              The AI Property Sales
+              <br />
+              & Marketing Platform
             </h1>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Help property developers, estate agents, and mortgage brokers attract, qualify, nurture, and convert buyers globally—all on autopilot.
+            <p className="text-lg lg:text-xl font-body text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+              Attract high-intent buyers, qualify leads instantly, and convert faster — all from one platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg" 
-                className="text-base h-12 px-8"
+                className="font-body text-base h-14 px-10 tracking-wide"
                 onClick={() => navigate('/onboarding')}
               >
-                Get Started Free
+                Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="text-base h-12 px-8"
+                className="font-body text-base h-14 px-10 tracking-wide border-foreground/20 hover:bg-muted"
               >
-                Watch Demo
+                <Play className="mr-2 h-4 w-4" />
+                Tour Platform
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Four Pillars */}
-      <section id="features" className="py-24 bg-secondary/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">The Complete Sales Solution</h2>
-            <p className="text-lg text-muted-foreground">Four pillars working together to maximise conversions</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {pillars.map((pillar) => (
-              <Card key={pillar.title} className="p-6 hover:shadow-lg transition-all border-border hover:border-primary/30">
-                <div className="p-3 rounded-lg bg-primary/10 w-fit mb-4">
-                  <pillar.icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{pillar.title}</h3>
-                <p className="text-sm text-muted-foreground">{pillar.description}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* User Types */}
-      <section id="solutions" className="py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Built for Property Professionals</h2>
-            <p className="text-lg text-muted-foreground">Tailored solutions for every role in the property ecosystem</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {userTypes.map((type) => (
-              <Card key={type.title} className="p-8 hover:shadow-xl transition-all border-2 border-border hover:border-primary/50">
-                <div className="p-4 rounded-xl bg-primary/10 w-fit mb-6">
-                  <type.icon className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold text-foreground mb-3">{type.title}</h3>
-                <p className="text-muted-foreground mb-6">{type.description}</p>
-                <ul className="space-y-3 mb-6">
-                  {type.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
-                      <span className="text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate(type.path)}
-                >
-                  View Demo
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="py-16 md:py-24 bg-secondary/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 md:mb-16">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 md:mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-base md:text-lg text-muted-foreground">Choose the plan that fits your business</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
-            {pricing.map((plan) => (
-              <Card 
-                key={plan.name} 
-                className={`p-6 relative ${plan.popular ? 'border-2 border-primary shadow-xl ring-2 ring-primary/20' : 'border-border'}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
-                    Most Popular
-                  </div>
-                )}
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{plan.name}</h3>
-                  <div className="mb-2">
-                    <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                    {plan.price !== "Custom" && <span className="text-muted-foreground text-sm">/mo</span>}
-                  </div>
-                  {plan.limit && <p className="text-xs text-muted-foreground">{plan.limit}</p>}
-                </div>
-                <ul className="space-y-2 mb-6">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
-                      <span className="text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  className="w-full"
-                  variant={plan.popular ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => navigate('/onboarding')}
-                >
-                  {plan.name === "Enterprise" ? "Contact Sales" : "Get Started"}
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-24 bg-primary">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-primary-foreground mb-6">Ready to Transform Your Property Sales?</h2>
-          <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
-            Join leading property professionals using AI to close more deals, faster.
+      {/* Trusted By */}
+      <section className="py-16 border-y border-border">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <p className="text-center text-sm font-body text-muted-foreground mb-10 tracking-widest uppercase">
+            Trusted by leading developers
           </p>
-          <Button 
-            size="lg" 
-            variant="secondary" 
-            className="text-base h-12 px-8"
-            onClick={() => navigate('/onboarding')}
-          >
-            Start Free Trial
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-6">
+            {trustedLogos.map((logo) => (
+              <span 
+                key={logo} 
+                className="text-lg font-body font-medium text-muted-foreground/60"
+              >
+                {logo}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pillars Section */}
+      <section id="features" className="py-24 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+            {pillars.map((pillar, index) => (
+              <div 
+                key={pillar.title} 
+                className="bg-background p-10 lg:p-12 group hover:bg-muted/50 transition-colors"
+              >
+                <span className="text-sm font-body text-muted-foreground mb-4 block tracking-widest">
+                  0{index + 1}
+                </span>
+                <h3 className="text-2xl font-display text-foreground mb-4">
+                  {pillar.title}
+                </h3>
+                <p className="text-base font-body text-muted-foreground leading-relaxed">
+                  {pillar.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Product Overview */}
+      <section className="py-24 lg:py-32 bg-muted/30">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl font-display text-foreground mb-8">
+            Built for Modern Property Sales
+          </h2>
+          <p className="text-lg font-body text-muted-foreground leading-relaxed">
+            Naybourhood combines AI, automation and first-party data to help housebuilders, agents and developers sell homes faster. Launch better campaigns. Capture better leads. Close with confidence.
+          </p>
+        </div>
+      </section>
+
+      {/* Who It's For */}
+      <section className="py-24 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <h2 className="text-3xl lg:text-4xl font-display text-foreground mb-16 text-center">
+            Who It's For
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {whoItsFor.map((item) => (
+              <div 
+                key={item.title} 
+                className="p-8 border border-border hover:border-foreground/20 transition-colors"
+              >
+                <h3 className="text-xl font-display text-foreground mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-base font-body text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Case Studies */}
+      <section id="case-studies" className="py-24 lg:py-32 bg-foreground text-background">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <h2 className="text-3xl lg:text-4xl font-display mb-16 text-center">
+            Case Studies
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {caseStudies.map((study) => (
+              <div 
+                key={study.property} 
+                className="p-8 border border-background/20 hover:border-background/40 transition-colors"
+              >
+                <h3 className="text-xl font-display mb-4">
+                  {study.property}
+                </h3>
+                <p className="text-lg font-body font-medium mb-2">
+                  {study.result}
+                </p>
+                <p className="text-sm font-body text-background/60">
+                  Buyer: {study.buyer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Visual Workflow */}
+      <section className="py-24 lg:py-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <h2 className="text-3xl lg:text-4xl font-display text-foreground mb-16 text-center">
+            How It Works
+          </h2>
+          <div className="flex flex-wrap justify-center items-center gap-4">
+            {workflowSteps.map((step, index) => (
+              <div key={step} className="flex items-center gap-4">
+                <div className="px-6 py-3 border border-border text-sm font-body font-medium text-foreground">
+                  {step}
+                </div>
+                {index < workflowSteps.length - 1 && (
+                  <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Footer */}
+      <section className="py-24 lg:py-32 bg-muted/30">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-5xl font-display text-foreground mb-8">
+            Ready to convert more buyers?
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              className="font-body text-base h-14 px-10 tracking-wide"
+              onClick={() => navigate('/onboarding')}
+            >
+              Get Started
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="font-body text-base h-14 px-10 tracking-wide border-foreground/20 hover:bg-muted"
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Tour Platform
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="py-12 border-t border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <LogoWithTransparency className="h-6 w-auto" />
-              <span className="text-sm text-muted-foreground">© 2024 Naybourhood.ai. All rights reserved.</span>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <img 
+                src="/lovable-uploads/d25e1cc7-31c1-40f2-bd7a-1780a29e9f44.png" 
+                alt="Naybourhood" 
+                className="h-6 w-auto invert"
+              />
+              <span className="text-sm font-body text-muted-foreground">
+                © 2024 Naybourhood.ai. All rights reserved.
+              </span>
             </div>
-            <div className="flex items-center gap-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+            <div className="flex items-center gap-8">
+              <a href="#" className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors">
+                Privacy
+              </a>
+              <a href="#" className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors">
+                Terms
+              </a>
+              <a href="#" className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors">
+                Contact
+              </a>
             </div>
           </div>
         </div>
