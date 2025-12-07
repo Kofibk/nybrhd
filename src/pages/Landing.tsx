@@ -14,6 +14,7 @@ import {
   Landmark,
   PiggyBank,
   CheckCircle2,
+  Globe,
   Sparkles
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ const Landing = () => {
 
   const navLinks = [
     { label: "Features", href: "#features" },
+    { label: "Case Studies", href: "#case-studies" },
     { label: "Pricing", href: "#pricing" },
     { label: "Admin", onClick: () => navigate('/admin') },
   ];
@@ -88,6 +90,36 @@ const Landing = () => {
     }
   ];
 
+  const caseStudies = [
+    {
+      property: "Chelsea Island",
+      result: "£5M in reservations",
+      timeline: "7 days",
+      buyer: "Egyptian investor",
+      flag: "🇪🇬"
+    },
+    {
+      property: "The Lucan",
+      result: "£1.7M sale agreed",
+      timeline: "Direct enquiry",
+      buyer: "Nigerian investor",
+      flag: "🇳🇬"
+    },
+    {
+      property: "Parkwood",
+      result: "£5M home sold",
+      timeline: "3 days",
+      buyer: "UK residential family",
+      flag: "🇬🇧"
+    },
+    {
+      property: "One Clapham",
+      result: "£550K reservation",
+      timeline: "Secured",
+      buyer: "UAE investor",
+      flag: "🇦🇪"
+    }
+  ];
 
   const workflowSteps = [
     { label: "Campaign", step: "01", icon: Target },
@@ -210,8 +242,18 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section with Animated Gradient */}
       <section className="relative pt-24 pb-16 lg:pt-32 lg:pb-24 min-h-[90vh] flex items-center">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-violet-500/10 via-transparent to-transparent rounded-full blur-3xl animate-pulse [animation-delay:1s]" />
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full blur-3xl animate-pulse [animation-delay:2s]" />
+          
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50 mb-6 lg:mb-8">
@@ -439,6 +481,48 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Case Studies */}
+      <section id="case-studies" className="py-16 lg:py-24 border-t border-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-10 lg:mb-12">
+            <div>
+              <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
+                Results
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground">
+                Case Studies
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 mt-4 lg:mt-0">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-body text-muted-foreground">Global Reach, Local Results</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            {caseStudies.map((study) => (
+              <div 
+                key={study.property} 
+                className="group p-6 lg:p-8 bg-card border border-border/50 hover:border-border transition-all duration-300"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-body text-muted-foreground">{study.timeline}</p>
+                  <span className="text-lg">{study.flag}</span>
+                </div>
+                <h3 className="text-lg font-display text-foreground mb-3">
+                  {study.property}
+                </h3>
+                <p className="text-xl lg:text-2xl font-display text-foreground mb-3 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                  {study.result}
+                </p>
+                <p className="text-xs font-body text-muted-foreground">
+                  {study.buyer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Visual Workflow */}
       <section className="py-16 lg:py-24 bg-card/30 border-t border-border/50">
