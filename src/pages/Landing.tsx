@@ -318,32 +318,11 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Property Gallery Section */}
-      <section className="py-12 lg:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-            {propertyImages.map((image, index) => (
-              <div 
-                key={index} 
-                className="relative aspect-[4/3] overflow-hidden group"
-              >
-                <img 
-                  src={image} 
-                  alt={`Luxury property ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Trusted By */}
       <section className="py-12 lg:py-16 border-t border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-6 lg:mb-8 text-center lg:text-left">
-            Trusted by leading developers
+            Trusted by leading brands
           </p>
           <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 sm:gap-x-10 lg:gap-x-12 gap-y-4">
             {trustedLogos.map((logo) => (
