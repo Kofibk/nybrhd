@@ -37,7 +37,7 @@ const AgentDashboard = () => {
       action: "Create Campaign"
     },
     {
-      title: "Optimize Google Ads",
+      title: "Optimise Google Ads",
       description: "Switch budget from Meta to Google for Riverside Properties - 23% better CPL projected.",
       action: "Review"
     },

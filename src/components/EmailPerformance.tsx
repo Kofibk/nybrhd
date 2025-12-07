@@ -204,7 +204,7 @@ const EmailPerformance = () => {
             <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
               <div className="flex-1">
                 <p className="text-sm font-medium">
-                  Your Personalized Property Matches Are Ready
+                  Your Personalised Property Matches Are Ready
                 </p>
               </div>
               <Badge variant="default" className="ml-2">

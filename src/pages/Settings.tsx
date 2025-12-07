@@ -198,7 +198,7 @@ const Settings = ({ userType }: SettingsProps) => {
                   { label: "New Lead Notifications", description: "Get notified when new leads arrive", enabled: true },
                   { label: "Campaign Alerts", description: "Receive alerts about campaign performance", enabled: true },
                   { label: "Weekly Summary", description: "Receive weekly performance reports", enabled: true },
-                  { label: "AI Recommendations", description: "Get AI-powered optimization tips", enabled: false },
+                  { label: "AI Recommendations", description: "Get AI-powered optimisation tips", enabled: false },
                 ].map((pref, index) => (
                   <div key={index} className="flex items-center justify-between gap-4">
                     <div className="min-w-0">

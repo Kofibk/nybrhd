@@ -717,12 +717,12 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
               <p className="text-xs text-muted-foreground">Set your campaign budget and timeline</p>
             </div>
 
-            {/* AI Budget Optimization */}
+            {/* AI Budget Optimisation */}
             <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <Wand2 className="h-4 w-4 text-accent" />
-                  <h3 className="font-medium text-xs md:text-sm">AI Budget Optimizer</h3>
+                  <h3 className="font-medium text-xs md:text-sm">AI Budget Optimiser</h3>
                 </div>
                 <Button
                   variant="outline"
@@ -744,7 +744,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                   {isLoadingBudget ? (
                     <>
                       <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                      Analyzing...
+                      Analysing...
                     </>
                   ) : (
                     <>
@@ -796,7 +796,7 @@ const CampaignWizard = ({ userType }: CampaignWizardProps) => {
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Click to get personalized budget suggestions.
+                  Click to get personalised budget suggestions.
                 </p>
               )}
             </div>

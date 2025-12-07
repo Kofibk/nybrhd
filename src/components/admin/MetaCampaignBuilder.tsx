@@ -136,7 +136,7 @@ const MetaCampaignBuilder = ({ onCampaignCreated, onClose }: MetaCampaignBuilder
 
   // AI Recommendations state
   const [aiRecommendations, setAiRecommendations] = useState<{[key: number]: string[]}>({
-    1: ["For property developments, Lead Generation typically outperforms Engagement by 40%", "Testing phase recommended for new developments to optimize before scaling"],
+    1: ["For property developments, Lead Generation typically outperforms Engagement by 40%", "Testing phase recommended for new developments to optimise before scaling"],
     2: ["UK and Middle East show highest property investment intent", "Consider targeting Finance and Property Investing interests together for HNWI audiences"],
     3: ["£5,000-£8,000 lifetime budget recommended for testing phase", "WhatsApp Add-On increases lead response rates by 35%"],
     4: ["Include 5-7 form fields max for optimal conversion", "Mobile-first landing pages convert 25% higher"],

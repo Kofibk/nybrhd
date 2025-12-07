@@ -81,7 +81,7 @@ const DeveloperDashboard = () => {
       action: "View Leads"
     },
     {
-      title: "Optimize ad creative for Marina Heights",
+      title: "Optimise ad creative for Marina Heights",
       description: "A/B test suggests lifestyle imagery outperforms architectural shots by 23%.",
       action: "Update Creative"
     },

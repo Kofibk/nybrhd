@@ -462,7 +462,7 @@ const WhatsAppAutomation = () => {
           <div>
             <h3 className="font-semibold text-lg mb-2">Template Variables</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Use these variables in your templates to personalize messages:
+              Use these variables in your templates to personalise messages:
             </p>
             <div className="flex flex-wrap gap-2">
               {["{{name}}", "{{development}}", "{{budget_range}}", "{{viewing_time}}", "{{agent_name}}", "{{starting_price}}", "{{available_units}}"].map((variable) => (

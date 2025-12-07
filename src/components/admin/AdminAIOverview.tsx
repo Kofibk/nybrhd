@@ -235,7 +235,7 @@ const AdminAIOverview = () => {
           id: "w3",
           type: "working",
           title: "Weekend Performance Peak",
-          description: "Lead submissions 35% higher on Sat-Sun. Current budget distribution optimized for weekend delivery.",
+          description: "Lead submissions 35% higher on Sat-Sun. Current budget distribution optimised for weekend delivery.",
           metric: "+35%",
         },
         {
