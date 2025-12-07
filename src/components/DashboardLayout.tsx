@@ -58,7 +58,7 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
       {/* Logo & Brand */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <LogoWithTransparency className="h-10 w-auto flex-shrink-0" variant="light" />
+          <LogoWithTransparency className="h-10 w-auto flex-shrink-0" variant="white" />
         </div>
       </div>
       
