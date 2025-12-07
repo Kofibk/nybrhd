@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -61,6 +62,7 @@ type SortField = "name" | "totalLeads" | "avgCPL" | "avgLeadScore";
 type SortOrder = "asc" | "desc";
 
 const AdminAIOverview = () => {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
@@ -277,16 +279,13 @@ const AdminAIOverview = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Brain className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">AI Overview</h2>
-            <p className="text-sm text-muted-foreground">
-              Last updated: {lastUpdated.toLocaleTimeString()}
-            </p>
-          </div>
+        <div>
+          <h2 className="text-xl font-semibold">
+            Welcome Back, {user?.name || user?.email?.split('@')[0] || 'Admin'}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Here's the latest updates: • Last refreshed: {lastUpdated.toLocaleTimeString()}
+          </p>
         </div>
         <Button
           variant="outline"
