@@ -65,7 +65,7 @@ const Login = () => {
       <Card className="w-full max-w-md p-8 shadow-card">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <LogoWithTransparency className="h-16 w-auto" />
+            <LogoWithTransparency className="h-12 w-auto" variant="white" />
           </div>
           <p className="text-muted-foreground mt-1">AI-Powered Property Sales Platform</p>
         </div>

@@ -1,5 +1,5 @@
 import logo from '@/assets/naybourhood-logo.png';
-import whiteLogo from '@/assets/naybourhood-logo-white.png';
+import whiteLogo from '@/assets/naybourhood-logo-white.svg';
 
 interface LogoWithTransparencyProps {
   className?: string;

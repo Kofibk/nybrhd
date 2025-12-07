@@ -41,7 +41,7 @@ export const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         
         {/* Logo with scale animation */}
         <div className="relative animate-[scale-in_0.6s_ease-out]">
-          <LogoWithTransparency className="h-24 w-auto" />
+          <LogoWithTransparency className="h-24 w-auto" variant="white" />
         </div>
         
         {/* Loading dots */}

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ArrowRight, Menu, Play, Target, Users, MessageSquare, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import whiteLogo from "@/assets/naybourhood-logo-white.png";
+import whiteLogo from "@/assets/naybourhood-logo-white.svg";
 
 const Landing = () => {
   const navigate = useNavigate();

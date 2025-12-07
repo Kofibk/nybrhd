@@ -44,7 +44,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-8 md:mb-12">
-          <LogoWithTransparency className="h-10 md:h-12 w-auto mx-auto mb-4 md:mb-6" />
+          <LogoWithTransparency className="h-10 md:h-12 w-auto mx-auto mb-4 md:mb-6" variant="white" />
           <h1 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">Welcome</h1>
           <p className="text-base md:text-xl text-muted-foreground">
             Let's get you set up. What best describes you?
