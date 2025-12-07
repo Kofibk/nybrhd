@@ -1,9 +1,10 @@
 import logo from '@/assets/naybourhood-logo.png';
+import whiteLogo from '@/assets/naybourhood-logo-white.png';
 
 interface LogoWithTransparencyProps {
   className?: string;
   alt?: string;
-  variant?: 'default' | 'light';
+  variant?: 'default' | 'light' | 'white';
 }
 
 export const LogoWithTransparency = ({ 
@@ -11,11 +12,14 @@ export const LogoWithTransparency = ({
   alt = "Naybourhood",
   variant = 'default'
 }: LogoWithTransparencyProps) => {
+  // Use white logo directly for light/white variants on dark backgrounds
+  const logoSrc = variant === 'light' || variant === 'white' ? whiteLogo : logo;
+  
   return (
     <img 
-      src={logo} 
+      src={logoSrc} 
       alt={alt} 
-      className={`${className} ${variant === 'light' ? 'brightness-0 invert' : ''}`}
+      className={className}
     />
   );
 };

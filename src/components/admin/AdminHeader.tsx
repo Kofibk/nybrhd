@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 
 const AdminHeader = () => {
   const navigate = useNavigate();
@@ -14,14 +15,12 @@ const AdminHeader = () => {
   };
 
   return (
-    <header className="border-b bg-card">
+    <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="bg-primary/10 p-1.5 md:p-2 rounded-lg">
-            <Shield className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-          </div>
+          <LogoWithTransparency className="h-6 md:h-8 w-auto" variant="white" />
           <div>
-            <h1 className="text-base md:text-xl font-bold">Naybourhood Admin</h1>
+            <h1 className="text-base md:text-xl font-bold text-foreground">Admin</h1>
             <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">Internal Dashboard</p>
           </div>
         </div>
