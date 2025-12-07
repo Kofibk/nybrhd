@@ -4,115 +4,112 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Naybourhood.ai Premium Monochrome Design System */
+/* Naybourhood.ai Premium Dark Monochrome Design System */
 
 @layer base {
   :root {
-    /* Primary: Pure Black */
-    --primary: 0 0% 8%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: White on Dark */
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
 
-    /* Secondary: Light Grey */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 8%;
+    /* Secondary: Dark Grey */
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 96%;
 
-    /* Accent: Charcoal Grey */
-    --accent: 0 0% 25%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: Light Grey */
+    --accent: 0 0% 85%;
+    --accent-foreground: 0 0% 5%;
 
-    /* Background: Pure White */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 15%;
+    /* Background: Rich Black */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 96%;
 
-    /* Card */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    /* Card: Slightly lighter black */
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 96%;
 
     /* Popover */
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
 
     /* Muted */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
 
     /* Destructive / Error */
-    --destructive: 0 0% 30%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     /* Border & Input */
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 8%;
+    --border: 0 0% 18%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
 
-    --radius: 0.25rem;
+    --radius: 0.375rem;
     
-    /* Success */
-    --success: 0 0% 30%;
+    /* Data/Reporting Colors - Green/Orange allowed */
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     
-    /* Warning */
-    --warning: 0 0% 40%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
     
-    /* Info */
-    --info: 0 0% 20%;
+    --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
+    /* Chart Colors for Dashboards */
+    --chart-1: 142 76% 36%;
+    --chart-2: 38 92% 50%;
+    --chart-3: 217 91% 60%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 0 72% 51%;
+
     /* Sidebar */
-    --sidebar-background: 0 0% 8%;
+    --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 8%;
-    --sidebar-accent: 0 0% 15%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 0 0% 20%;
+    --sidebar-border: 0 0% 15%;
     --sidebar-ring: 0 0% 100%;
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.03);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.03);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.03);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   }
 
   .dark {
-    --primary: 0 0% 96%;
-    --primary-foreground: 0 0% 8%;
-
-    --secondary: 0 0% 15%;
+    /* Same as root - already dark theme */
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 96%;
-
-    --accent: 0 0% 75%;
-    --accent-foreground: 0 0% 8%;
-
-    --background: 0 0% 8%;
+    --accent: 0 0% 85%;
+    --accent-foreground: 0 0% 5%;
+    --background: 0 0% 5%;
     --foreground: 0 0% 96%;
-
-    --card: 0 0% 12%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 96%;
-
-    --popover: 0 0% 12%;
+    --popover: 0 0% 10%;
     --popover-foreground: 0 0% 96%;
-
-    --muted: 0 0% 18%;
+    --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
-
-    --destructive: 0 0% 70%;
-    --destructive-foreground: 0 0% 8%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 96%;
-
-    --sidebar-background: 0 0% 5%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
+    --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 0 0% 96%;
-    --sidebar-primary-foreground: 0 0% 8%;
-    --sidebar-accent: 0 0% 15%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 0% 96%;
+    --sidebar-ring: 0 0% 100%;
   }
 }
 
