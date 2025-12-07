@@ -14,7 +14,11 @@ import {
   Landmark,
   PiggyBank,
   CheckCircle2,
-  Globe
+  Globe,
+  Zap,
+  BarChart3,
+  Clock,
+  Eye
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import whiteLogo from "@/assets/naybourhood-logo-white.svg";
@@ -30,109 +34,131 @@ const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: "Features", href: "#features" },
+    { label: "How It Works", href: "#how-it-works" },
+    { label: "Solutions", href: "#solutions" },
     { label: "Case Studies", href: "#case-studies" },
-    { label: "Pricing", href: "#pricing" },
     { label: "Admin", onClick: () => navigate('/admin') },
   ];
 
   const pillars = [
     {
       icon: Target,
+      step: "1",
       title: "Attract",
-      description: "Run smart digital campaigns to reach real buyers"
+      description: "Smart campaigns across Meta, Google, TikTok and more, targeting qualified buyers based on budget, location, and real-time market demand."
     },
     {
       icon: Users,
+      step: "2",
       title: "Qualify",
-      description: "Instantly score and prioritise high-intent leads"
+      description: "Every enquiry is scored by intent and buying power — so your team sees the right buyers, not a spreadsheet full of browsers."
     },
     {
       icon: MessageSquare,
+      step: "3",
       title: "Nurture",
-      description: "Automate email and WhatsApp follow-up"
+      description: "Automated follow-up across WhatsApp, email and SMS, triggered by buyer behaviour. Engage intelligently, and only when it counts."
     },
     {
       icon: TrendingUp,
+      step: "4",
       title: "Convert",
-      description: "Track and close sales with full visibility"
+      description: "Buyers are delivered to your CRM or inbox with full profile insight — verified, nurtured, and ready to act."
     }
   ];
 
   const trustedLogos = [
-    { name: "Berkeley", logo: berkeleyLogo },
-    { name: "Barratt", logo: barrattLogo },
-    { name: "Redrow", logo: redrowLogo },
-    { name: "Bellway", logo: bellwayLogo },
-    { name: "Persimmon", logo: persimmonLogo },
-    { name: "Taylor Wimpey", logo: taylorWimpeyLogo }
+    { name: "Berkeley Group", logo: berkeleyLogo },
+    { name: "Mount Anvil", logo: barrattLogo },
+    { name: "London Square", logo: redrowLogo },
+    { name: "Arada London", logo: bellwayLogo },
+    { name: "Hadley Property Group", logo: persimmonLogo },
+    { name: "Fine & Country", logo: taylorWimpeyLogo },
+    { name: "Marriott Residences", logo: berkeleyLogo },
+    { name: "Plum Guide", logo: barrattLogo },
+    { name: "Excel Winner", logo: redrowLogo },
+    { name: "Alexander James", logo: bellwayLogo },
   ];
 
   const whoItsFor = [
     {
       icon: Building2,
-      title: "Housebuilders",
+      title: "Developers",
       description: "Launching or scaling new developments"
     },
     {
       icon: Briefcase,
       title: "Estate Agents",
-      description: "Needing better buyer reach or listing support"
+      description: "Seeking serious buyers for key listings"
     },
     {
       icon: PiggyBank,
-      title: "Financial Services",
-      description: "Mortgage brokers, wealth managers"
+      title: "Marketing & PR Agencies",
+      description: "Adding performance property services"
     },
     {
       icon: Landmark,
-      title: "Banks & Funds",
-      description: "Needing direct enquiries"
+      title: "Financial Advisors & Banks",
+      description: "With international property portfolios"
     }
   ];
 
   const caseStudies = [
     {
       property: "Chelsea Island",
-      result: "£5M in reservations",
-      timeline: "7 days",
+      result: "£5M reserved in 7 days",
       buyer: "Egyptian investor",
+      campaign: "Meta + Google ads + nurture",
       flag: "🇪🇬",
       image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop"
     },
     {
       property: "The Lucan",
-      result: "£1.7M sale agreed",
-      timeline: "Direct enquiry",
+      result: "£1.7M sale agreed in 30 days",
       buyer: "Nigerian investor",
+      campaign: "UK & Ghana events + digital + lead scoring",
       flag: "🇳🇬",
       image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop"
     },
     {
       property: "Parkwood",
-      result: "£5M home sold",
-      timeline: "3 days",
+      result: "£5M home sold in 3 days",
       buyer: "UK residential family",
+      campaign: "Bespoke video + private outreach",
       flag: "🇬🇧",
       image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop"
     },
     {
       property: "One Clapham",
-      result: "£550K reservation",
-      timeline: "Secured",
+      result: "£550K reservation secured",
       buyer: "UAE investor",
+      campaign: "Targeted Google ads + CRM sync",
       flag: "🇦🇪",
       image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop"
     }
   ];
 
-  const workflowSteps = [
-    { label: "Campaign", step: "01", icon: Target },
-    { label: "Lead Capture", step: "02", icon: Users },
-    { label: "Qualification", step: "03", icon: CheckCircle2 },
-    { label: "Nurture", step: "04", icon: MessageSquare },
-    { label: "Reporting", step: "05", icon: TrendingUp },
-    { label: "Handover", step: "06", icon: Briefcase }
+  const whyItWorks = [
+    {
+      icon: Zap,
+      title: "Built by performance marketers",
+      description: "With £50M+ in property sold"
+    },
+    {
+      icon: Target,
+      title: "Reduces wasted viewings",
+      description: "And eliminates dead leads"
+    },
+    {
+      icon: Clock,
+      title: "Intelligent automation",
+      description: "That saves time and improves ROI"
+    },
+    {
+      icon: Eye,
+      title: "Real-time visibility",
+      description: "On buyer behaviour and conversion"
+    }
   ];
 
   const stats = [
@@ -140,12 +166,6 @@ const Landing = () => {
     { value: "2,500+", label: "Qualified Leads" },
     { value: "85%", label: "Lead Qualification Rate" },
     { value: "12", label: "Countries Reached" }
-  ];
-
-  const propertyImages = [
-    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop",
-    "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=400&fit=crop",
-    "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=400&fit=crop"
   ];
 
   return (
@@ -275,10 +295,6 @@ const Landing = () => {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50 mb-6 lg:mb-8">
-              <span className="text-xs font-body text-muted-foreground">AI-Powered Property Sales</span>
-            </div>
-            
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display text-foreground leading-[1.1] mb-6 lg:mb-8">
               The AI Property Sales
               <br className="hidden sm:block" />
@@ -286,7 +302,7 @@ const Landing = () => {
               & Marketing Platform
             </h1>
             <p className="text-base sm:text-lg lg:text-xl font-body text-muted-foreground mb-8 lg:mb-10 max-w-2xl leading-relaxed">
-              Attract high-intent buyers, qualify leads instantly, and convert faster — all from one platform.
+              Attract high-intent buyers, qualify them intelligently, and manage conversion — all from one powerful platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button 
@@ -324,44 +340,38 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Trusted By */}
-      <section className="py-12 lg:py-16 border-t border-border/50">
+      {/* What We Do Section */}
+      <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-6 lg:mb-8 text-center lg:text-left">
-            Trusted by leading brands
-          </p>
-          <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-8 sm:gap-x-12 lg:gap-x-16 gap-y-6">
-            {trustedLogos.map((brand) => (
-              <div 
-                key={brand.name} 
-                className="h-8 sm:h-10 opacity-50 hover:opacity-80 transition-opacity grayscale hover:grayscale-0"
-              >
-                <img 
-                  src={brand.logo} 
-                  alt={brand.name}
-                  className="h-full w-auto object-contain"
-                  onError={(e) => {
-                    // Fallback to text if image fails
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-sm font-body font-medium text-muted-foreground">${brand.name}</span>`;
-                  }}
-                />
-              </div>
-            ))}
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
+              What We Do
+            </p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground mb-6 leading-tight">
+              More Than Just Leads
+            </h2>
+            <p className="text-base sm:text-lg font-body text-muted-foreground leading-relaxed mb-6">
+              Naybourhood is the end-to-end platform built for property professionals who want more than just leads.
+            </p>
+            <p className="text-base font-body text-muted-foreground leading-relaxed mb-6">
+              We help developers, agents and advisors attract, qualify, and convert real buyers — combining campaign delivery, automation, and buyer intelligence into one seamless solution.
+            </p>
+            <p className="text-sm font-body text-muted-foreground/80 leading-relaxed">
+              Backed by the team behind Million Pound Homes, we have sold over £50M+ in property and now bring that same performance engine into your hands.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Pillars Section */}
-      <section id="features" className="py-16 lg:py-24">
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-16 lg:py-24 border-t border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 lg:mb-16">
             <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
               How It Works
             </p>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground">
-              Four Pillars of Success
+              Four Steps to Conversion
             </h2>
           </div>
           
@@ -371,10 +381,13 @@ const Landing = () => {
                 key={pillar.title} 
                 className="group relative p-6 lg:p-8 border border-border/50 hover:border-border bg-card/30 hover:bg-card/50 transition-all duration-300"
               >
-                <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <pillar.icon className="h-5 w-5 text-foreground" />
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl font-display text-muted-foreground/50">{pillar.step}</span>
+                  <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <pillar.icon className="h-5 w-5 text-foreground" />
+                  </div>
                 </div>
-                <h3 className="text-lg lg:text-xl font-display text-foreground mb-2">
+                <h3 className="text-lg lg:text-xl font-display text-foreground mb-3">
                   {pillar.title}
                 </h3>
                 <p className="text-sm font-body text-muted-foreground leading-relaxed">
@@ -386,55 +399,11 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Product Overview with Property Image */}
-      <section className="py-16 lg:py-24 border-t border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
-                Platform Overview
-              </p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground mb-6 leading-tight">
-                Built for Modern Property Sales
-              </h2>
-              <p className="text-base sm:text-lg font-body text-muted-foreground leading-relaxed mb-8">
-                Naybourhood combines AI, automation and first-party data to help housebuilders, agents and developers sell homes faster. Launch better campaigns. Capture better leads. Close with confidence.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  "AI-powered lead scoring and qualification",
-                  "Multi-channel campaign management",
-                  "Automated WhatsApp and email nurturing",
-                  "Real-time analytics and reporting"
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-foreground flex-shrink-0" />
-                    <span className="text-sm font-body text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            {/* Property Image */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-lg">
-                <img 
-                  src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop"
-                  alt="Luxury property interior"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Who It's For */}
-      <section className="py-16 lg:py-24 bg-card/30 border-t border-border/50">
+      <section id="solutions" className="py-16 lg:py-24 bg-card/30 border-t border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
-            Built For
+            Solutions
           </p>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground mb-10 lg:mb-12">
             Who It's For
@@ -468,7 +437,7 @@ const Landing = () => {
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-10 lg:mb-12">
             <div>
               <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
-                Results
+                Proven Results
               </p>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground">
                 Case Studies
@@ -496,7 +465,6 @@ const Landing = () => {
                 </div>
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-body text-muted-foreground">{study.timeline}</p>
                     <span className="text-lg">{study.flag}</span>
                   </div>
                   <h3 className="text-lg font-display text-foreground mb-2">
@@ -505,8 +473,11 @@ const Landing = () => {
                   <p className="text-xl font-display text-foreground mb-2">
                     {study.result}
                   </p>
-                  <p className="text-xs font-body text-muted-foreground">
-                    {study.buyer}
+                  <p className="text-xs font-body text-muted-foreground mb-2">
+                    Buyer: {study.buyer}
+                  </p>
+                  <p className="text-xs font-body text-muted-foreground/70">
+                    {study.campaign}
                   </p>
                 </div>
               </div>
@@ -515,41 +486,81 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Visual Workflow */}
+      {/* Why It Works */}
       <section className="py-16 lg:py-24 bg-card/30 border-t border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4">
-            Process
+          <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-4 text-center">
+            Why It Works
           </p>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground mb-10 lg:mb-12">
-            Your Journey to More Sales
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground mb-10 lg:mb-12 text-center">
+            The Naybourhood Advantage
           </h2>
-          
-          {/* Desktop: Horizontal flow */}
-          <div className="hidden lg:block relative">
-            {/* Connecting line */}
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-border via-muted-foreground/30 to-border" />
-            
-            <div className="grid grid-cols-6 gap-4">
-              {workflowSteps.map((step) => (
-                <div key={step.label} className="relative text-center">
-                  <div className="relative z-10 h-14 w-14 mx-auto rounded-full bg-background border border-border flex items-center justify-center mb-4 group hover:border-foreground/50 transition-colors">
-                    <step.icon className="h-6 w-6 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </div>
-                  <p className="text-xs font-body text-muted-foreground mb-1">{step.step}</p>
-                  <p className="text-sm font-body font-medium text-foreground">{step.label}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            {whyItWorks.map((item) => (
+              <div 
+                key={item.title} 
+                className="text-center p-6"
+              >
+                <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="h-6 w-6 text-foreground" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-base font-display text-foreground mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-sm font-body text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+            ))}
           </div>
-          
-          {/* Mobile: Grid flow */}
-          <div className="lg:hidden grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {workflowSteps.map((step) => (
-              <div key={step.label} className="p-4 border border-border/50 bg-background text-center">
-                <step.icon className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-                <p className="text-xs font-body text-muted-foreground mb-1">{step.step}</p>
-                <p className="text-sm font-body font-medium text-foreground">{step.label}</p>
+        </div>
+      </section>
+
+      {/* Trusted By - Carousel */}
+      <section className="py-12 lg:py-16 border-t border-border/50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+          <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase text-center">
+            Trusted By
+          </p>
+        </div>
+        
+        {/* Infinite scroll carousel */}
+        <div className="relative">
+          <div className="flex animate-scroll-left">
+            {/* First set of logos */}
+            {trustedLogos.map((brand, index) => (
+              <div 
+                key={`first-${index}`} 
+                className="flex-shrink-0 mx-8 lg:mx-12 h-10 sm:h-12 opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+              >
+                <img 
+                  src={brand.logo} 
+                  alt={brand.name}
+                  className="h-full w-auto object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement!.innerHTML = `<span class="text-sm font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
+                  }}
+                />
+              </div>
+            ))}
+            {/* Duplicate set for seamless loop */}
+            {trustedLogos.map((brand, index) => (
+              <div 
+                key={`second-${index}`} 
+                className="flex-shrink-0 mx-8 lg:mx-12 h-10 sm:h-12 opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+              >
+                <img 
+                  src={brand.logo} 
+                  alt={brand.name}
+                  className="h-full w-auto object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement!.innerHTML = `<span class="text-sm font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
+                  }}
+                />
               </div>
             ))}
           </div>
@@ -561,11 +572,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-display text-foreground mb-6 lg:mb-8 leading-tight">
-              Ready to convert more buyers?
+              Generate sales-ready buyers intelligently today
             </h2>
-            <p className="text-base font-body text-muted-foreground mb-8">
-              Join leading developers and agents using Naybourhood to sell more properties, faster.
-            </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 
                 size="lg" 
