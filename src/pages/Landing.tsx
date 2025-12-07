@@ -34,9 +34,11 @@ const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Solutions", href: "#solutions" },
-    { label: "Case Studies", href: "#case-studies" },
+    { label: "How It Works", href: "/how-it-works" },
+    { label: "Solutions", href: "/solutions" },
+    { label: "Case Studies", href: "/case-studies" },
+    { label: "About", href: "/about" },
+    { label: "Resources", href: "/resources" },
     { label: "Admin", onClick: () => navigate('/admin') },
   ];
 
