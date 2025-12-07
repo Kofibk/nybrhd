@@ -4,6 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Brain,
   TrendingUp,
   TrendingDown,
@@ -11,140 +19,155 @@ import {
   Lightbulb,
   Target,
   Users,
-  DollarSign,
+  PoundSterling,
   RefreshCw,
   ChevronRight,
+  CheckCircle,
+  XCircle,
+  Megaphone,
 } from "lucide-react";
 
 interface AIInsight {
   id: string;
-  type: "summary" | "recommendation" | "alert";
+  type: "working" | "attention";
   title: string;
   description: string;
   metric?: string;
-  trend?: "up" | "down" | "neutral";
-  priority: "high" | "medium" | "low";
   action?: string;
+}
+
+interface CampaignData {
+  id: string;
+  name: string;
+  totalLeads: number;
+  avgCPL: number;
+  avgLeadScore: number;
+  bestAudience: string;
 }
 
 const AdminAIOverview = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  // Mock AI insights - in production this would call an AI edge function
+  // Mock stats
+  const stats = {
+    totalActiveCampaigns: 12,
+    avgCPL: 34.50,
+    totalLeads: 1847,
+    avgLeadScore: 7.4,
+  };
+
+  // Mock campaign data
+  const mockCampaigns: CampaignData[] = [
+    {
+      id: "1",
+      name: "Damac Riverside - UK",
+      totalLeads: 342,
+      avgCPL: 28.50,
+      avgLeadScore: 8.2,
+      bestAudience: "London + Property Investing",
+    },
+    {
+      id: "2",
+      name: "Palm Tower - UAE",
+      totalLeads: 256,
+      avgCPL: 42.00,
+      avgLeadScore: 7.8,
+      bestAudience: "Dubai + Luxury Travel",
+    },
+    {
+      id: "3",
+      name: "Greenwich Residences - UK",
+      totalLeads: 189,
+      avgCPL: 31.25,
+      avgLeadScore: 7.5,
+      bestAudience: "Manchester + Finance",
+    },
+    {
+      id: "4",
+      name: "Marina Heights - Qatar",
+      totalLeads: 145,
+      avgCPL: 55.00,
+      avgLeadScore: 6.9,
+      bestAudience: "Doha + Home Interest",
+    },
+    {
+      id: "5",
+      name: "Victoria Gardens - Nigeria",
+      totalLeads: 298,
+      avgCPL: 18.75,
+      avgLeadScore: 6.4,
+      bestAudience: "Lagos + Property Investing",
+    },
+  ];
+
+  // Generate AI insights
   const generateInsights = () => {
     setIsLoading(true);
     
-    // Simulate AI processing delay
     setTimeout(() => {
       const mockInsights: AIInsight[] = [
+        // What's working
         {
-          id: "1",
-          type: "summary",
-          title: "Platform Performance",
-          description: "Overall lead generation is up 23% this month. Meta campaigns are outperforming with an average CPL of £32.50, which is 15% below target.",
-          metric: "+23%",
-          trend: "up",
-          priority: "high",
+          id: "w1",
+          type: "working",
+          title: "UK Lead Quality Outperforming",
+          description: "London campaigns show 40% higher intent scores with avg lead score of 8.2. Property Investing interest segment delivers best ROI.",
+          metric: "+40%",
         },
         {
-          id: "2",
-          type: "alert",
-          title: "Budget Alert",
-          description: "3 campaigns are approaching their budget limits within the next 48 hours. Consider increasing budgets or pausing to avoid interruptions.",
-          priority: "high",
-          action: "Review Campaigns",
+          id: "w2",
+          type: "working",
+          title: "Video Creatives Driving Engagement",
+          description: "UGC video content achieving 3.2% CTR vs 1.8% for static images. Consider scaling video-first strategy.",
+          metric: "3.2% CTR",
         },
         {
-          id: "3",
-          type: "recommendation",
-          title: "Optimize UK Targeting",
-          description: "London campaigns show 40% higher intent scores. Consider reallocating budget from underperforming regions to maximize ROI.",
-          priority: "medium",
-          action: "View Analysis",
+          id: "w3",
+          type: "working",
+          title: "Weekend Performance Peak",
+          description: "Lead submissions 35% higher on Sat-Sun. Current budget distribution optimized for weekend delivery.",
+          metric: "+35%",
+        },
+        // What needs attention
+        {
+          id: "a1",
+          type: "attention",
+          title: "Qatar CPL Above Target",
+          description: "Marina Heights campaign at £55 CPL vs £40 target. Recommend narrowing audience or testing new creatives.",
+          action: "Review Campaign",
         },
         {
-          id: "4",
-          type: "summary",
-          title: "Lead Quality Trend",
-          description: "High-intent leads (score 7+) have increased by 18% week-over-week. Current conversion rate from lead to viewing is 12.4%.",
-          metric: "+18%",
-          trend: "up",
-          priority: "medium",
+          id: "a2",
+          type: "attention",
+          title: "Nigeria Lead Score Dropping",
+          description: "Victoria Gardens avg score declined from 7.1 to 6.4 this week. Quality filters may need adjustment.",
+          action: "Check Targeting",
         },
         {
-          id: "5",
-          type: "recommendation",
-          title: "Creative Refresh Needed",
-          description: "Video creatives are showing fatigue with CTR dropping 0.5% daily. Recommend rotating in fresh UGC content for top 5 campaigns.",
-          priority: "medium",
-          action: "View Creatives",
-        },
-        {
-          id: "6",
-          type: "alert",
-          title: "Inactive Users",
-          description: "8 company users haven't logged in for 30+ days. Consider sending re-engagement emails or deactivating unused accounts.",
-          priority: "low",
-          action: "View Users",
-        },
-        {
-          id: "7",
-          type: "recommendation",
-          title: "Expand to Middle East",
-          description: "Based on lead quality data, UAE and Saudi Arabia show strong buyer intent. Consider launching dedicated regional campaigns.",
-          priority: "low",
-          action: "Create Campaign",
+          id: "a3",
+          type: "attention",
+          title: "3 Budgets Near Limit",
+          description: "Damac Riverside, Palm Tower, and Greenwich campaigns at 85%+ budget. Review for extension or pause.",
+          action: "Manage Budgets",
         },
       ];
       
       setInsights(mockInsights);
+      setCampaigns(mockCampaigns);
       setLastUpdated(new Date());
       setIsLoading(false);
-    }, 1500);
+    }, 1200);
   };
 
   useEffect(() => {
     generateInsights();
   }, []);
 
-  const getTypeIcon = (type: AIInsight["type"]) => {
-    switch (type) {
-      case "summary":
-        return <TrendingUp className="h-4 w-4" />;
-      case "recommendation":
-        return <Lightbulb className="h-4 w-4" />;
-      case "alert":
-        return <AlertTriangle className="h-4 w-4" />;
-    }
-  };
-
-  const getTypeBadgeVariant = (type: AIInsight["type"]) => {
-    switch (type) {
-      case "summary":
-        return "secondary";
-      case "recommendation":
-        return "default";
-      case "alert":
-        return "destructive";
-    }
-  };
-
-  const getPriorityColor = (priority: AIInsight["priority"]) => {
-    switch (priority) {
-      case "high":
-        return "border-l-destructive";
-      case "medium":
-        return "border-l-warning";
-      case "low":
-        return "border-l-muted-foreground";
-    }
-  };
-
-  const summaryInsights = insights.filter((i) => i.type === "summary");
-  const alertInsights = insights.filter((i) => i.type === "alert");
-  const recommendationInsights = insights.filter((i) => i.type === "recommendation");
+  const workingInsights = insights.filter((i) => i.type === "working");
+  const attentionInsights = insights.filter((i) => i.type === "attention");
 
   return (
     <div className="space-y-6">
@@ -172,20 +195,37 @@ const AdminAIOverview = () => {
         </Button>
       </div>
 
-      {/* Quick Stats from AI */}
+      {/* KPI Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <Target className="h-4 w-4" />
-              <span className="text-xs">Campaign Health</span>
+              <Megaphone className="h-4 w-4" />
+              <span className="text-xs">Total Active Campaigns</span>
             </div>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-success">85%</span>
-                <Badge variant="secondary" className="text-success">Good</Badge>
+                <span className="text-2xl font-bold">{stats.totalActiveCampaigns}</span>
+                <Badge variant="secondary" className="bg-success/10 text-success">Live</Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+              <PoundSterling className="h-4 w-4" />
+              <span className="text-xs">Avg. CPL</span>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</span>
+                <TrendingDown className="h-4 w-4 text-success" />
               </div>
             )}
           </CardContent>
@@ -195,13 +235,13 @@ const AdminAIOverview = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-2">
               <Users className="h-4 w-4" />
-              <span className="text-xs">Lead Quality</span>
+              <span className="text-xs">Total Leads</span>
             </div>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">7.2</span>
+                <span className="text-2xl font-bold">{stats.totalLeads.toLocaleString()}</span>
                 <TrendingUp className="h-4 w-4 text-success" />
               </div>
             )}
@@ -211,90 +251,29 @@ const AdminAIOverview = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <DollarSign className="h-4 w-4" />
-              <span className="text-xs">Budget Efficiency</span>
+              <Target className="h-4 w-4" />
+              <span className="text-xs">Avg. Lead Score</span>
             </div>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">92%</span>
-                <TrendingUp className="h-4 w-4 text-success" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs">Active Alerts</span>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-destructive">{alertInsights.length}</span>
-                <Badge variant="destructive">Attention</Badge>
+                <span className="text-2xl font-bold">{stats.avgLeadScore}</span>
+                <span className="text-xs text-muted-foreground">/ 10</span>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Insights Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Alerts Section */}
-        <Card className="md:col-span-2 lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isLoading ? (
-              <>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </>
-            ) : alertInsights.length > 0 ? (
-              alertInsights.map((insight) => (
-                <div
-                  key={insight.id}
-                  className={`p-3 rounded-lg border border-l-4 ${getPriorityColor(insight.priority)} bg-card`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-sm">{insight.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {insight.description}
-                      </p>
-                    </div>
-                  </div>
-                  {insight.action && (
-                    <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">
-                      {insight.action}
-                      <ChevronRight className="h-3 w-3 ml-1" />
-                    </Button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No active alerts
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Summaries Section */}
+      {/* AI Overview & Recommendations */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* What's Working */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              Performance Summary
+              <CheckCircle className="h-4 w-4 text-success" />
+              What's Working
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -304,23 +283,15 @@ const AdminAIOverview = () => {
                 <Skeleton className="h-20 w-full" />
               </>
             ) : (
-              summaryInsights.map((insight) => (
+              workingInsights.map((insight) => (
                 <div
                   key={insight.id}
-                  className="p-3 rounded-lg border bg-card"
+                  className="p-3 rounded-lg border border-l-4 border-l-success bg-card"
                 >
                   <div className="flex items-start justify-between">
                     <p className="font-medium text-sm">{insight.title}</p>
                     {insight.metric && (
-                      <Badge
-                        variant={insight.trend === "up" ? "default" : "secondary"}
-                        className={insight.trend === "up" ? "bg-success" : ""}
-                      >
-                        {insight.trend === "up" ? (
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 mr-1" />
-                        )}
+                      <Badge variant="secondary" className="bg-success/10 text-success text-xs">
                         {insight.metric}
                       </Badge>
                     )}
@@ -334,12 +305,12 @@ const AdminAIOverview = () => {
           </CardContent>
         </Card>
 
-        {/* Recommendations Section */}
+        {/* What Needs Attention */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-warning" />
-              AI Recommendations
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              Needs Attention
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -349,10 +320,10 @@ const AdminAIOverview = () => {
                 <Skeleton className="h-20 w-full" />
               </>
             ) : (
-              recommendationInsights.map((insight) => (
+              attentionInsights.map((insight) => (
                 <div
                   key={insight.id}
-                  className={`p-3 rounded-lg border border-l-4 ${getPriorityColor(insight.priority)} bg-card`}
+                  className="p-3 rounded-lg border border-l-4 border-l-warning bg-card"
                 >
                   <p className="font-medium text-sm">{insight.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -370,6 +341,67 @@ const AdminAIOverview = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Campaigns Performance Table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Megaphone className="h-4 w-4 text-primary" />
+            Campaign Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Campaign</TableHead>
+                    <TableHead className="text-right">Total Leads</TableHead>
+                    <TableHead className="text-right">Avg. CPL</TableHead>
+                    <TableHead className="text-right">Avg. Lead Score</TableHead>
+                    <TableHead>Best Performing Audience</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {campaigns.map((campaign) => (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="font-medium">{campaign.name}</TableCell>
+                      <TableCell className="text-right">{campaign.totalLeads}</TableCell>
+                      <TableCell className="text-right">£{campaign.avgCPL.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge 
+                          variant="secondary" 
+                          className={
+                            campaign.avgLeadScore >= 7.5 
+                              ? "bg-success/10 text-success" 
+                              : campaign.avgLeadScore >= 6.5 
+                                ? "bg-warning/10 text-warning" 
+                                : "bg-muted"
+                          }
+                        >
+                          {campaign.avgLeadScore}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {campaign.bestAudience}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
