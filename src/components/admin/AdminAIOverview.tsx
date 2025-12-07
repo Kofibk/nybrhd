@@ -1,8 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,8 +31,11 @@ import {
   RefreshCw,
   ChevronRight,
   CheckCircle,
-  XCircle,
   Megaphone,
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 interface AIInsight {
@@ -43,13 +54,23 @@ interface CampaignData {
   avgCPL: number;
   avgLeadScore: number;
   bestAudience: string;
+  region: string;
 }
+
+type SortField = "name" | "totalLeads" | "avgCPL" | "avgLeadScore";
+type SortOrder = "asc" | "desc";
 
 const AdminAIOverview = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  
+  // Filter and sort state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>("totalLeads");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // Mock stats
   const stats = {
@@ -68,6 +89,7 @@ const AdminAIOverview = () => {
       avgCPL: 28.50,
       avgLeadScore: 8.2,
       bestAudience: "London + Property Investing",
+      region: "UK",
     },
     {
       id: "2",
@@ -76,6 +98,7 @@ const AdminAIOverview = () => {
       avgCPL: 42.00,
       avgLeadScore: 7.8,
       bestAudience: "Dubai + Luxury Travel",
+      region: "Middle East",
     },
     {
       id: "3",
@@ -84,6 +107,7 @@ const AdminAIOverview = () => {
       avgCPL: 31.25,
       avgLeadScore: 7.5,
       bestAudience: "Manchester + Finance",
+      region: "UK",
     },
     {
       id: "4",
@@ -92,6 +116,7 @@ const AdminAIOverview = () => {
       avgCPL: 55.00,
       avgLeadScore: 6.9,
       bestAudience: "Doha + Home Interest",
+      region: "Middle East",
     },
     {
       id: "5",
@@ -100,8 +125,89 @@ const AdminAIOverview = () => {
       avgCPL: 18.75,
       avgLeadScore: 6.4,
       bestAudience: "Lagos + Property Investing",
+      region: "Africa",
+    },
+    {
+      id: "6",
+      name: "Kensington Square - UK",
+      totalLeads: 412,
+      avgCPL: 35.00,
+      avgLeadScore: 8.5,
+      bestAudience: "London + Luxury Travel",
+      region: "UK",
+    },
+    {
+      id: "7",
+      name: "Dubai Creek Harbour",
+      totalLeads: 178,
+      avgCPL: 48.00,
+      avgLeadScore: 7.2,
+      bestAudience: "UAE + Property Investing",
+      region: "Middle East",
     },
   ];
+
+  // Get unique regions for filter
+  const regions = useMemo(() => {
+    const uniqueRegions = [...new Set(mockCampaigns.map(c => c.region))];
+    return uniqueRegions.sort();
+  }, []);
+
+  // Filtered and sorted campaigns
+  const filteredCampaigns = useMemo(() => {
+    let result = [...campaigns];
+    
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.bestAudience.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply region filter
+    if (regionFilter !== "all") {
+      result = result.filter(c => c.region === regionFilter);
+    }
+    
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "totalLeads":
+          comparison = a.totalLeads - b.totalLeads;
+          break;
+        case "avgCPL":
+          comparison = a.avgCPL - b.avgCPL;
+          break;
+        case "avgLeadScore":
+          comparison = a.avgLeadScore - b.avgLeadScore;
+          break;
+      }
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+    
+    return result;
+  }, [campaigns, searchQuery, regionFilter, sortField, sortOrder]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1" />;
+    return sortOrder === "asc" 
+      ? <ArrowUp className="h-3 w-3 ml-1" /> 
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
 
   // Generate AI insights
   const generateInsights = () => {
@@ -109,7 +215,6 @@ const AdminAIOverview = () => {
     
     setTimeout(() => {
       const mockInsights: AIInsight[] = [
-        // What's working
         {
           id: "w1",
           type: "working",
@@ -131,7 +236,6 @@ const AdminAIOverview = () => {
           description: "Lead submissions 35% higher on Sat-Sun. Current budget distribution optimized for weekend delivery.",
           metric: "+35%",
         },
-        // What needs attention
         {
           id: "a1",
           type: "attention",
@@ -342,13 +446,39 @@ const AdminAIOverview = () => {
         </Card>
       </div>
 
-      {/* Campaigns Performance Table */}
+      {/* Campaigns Performance Table with Filters */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Megaphone className="h-4 w-4 text-primary" />
-            Campaign Performance
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-primary" />
+              Campaign Performance
+            </CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search campaigns..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 w-full sm:w-48 h-9"
+                />
+              </div>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
+                <SelectTrigger className="w-full sm:w-36 h-9">
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regions.map((region) => (
+                    <SelectItem key={region} value={region}>
+                      {region}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -362,40 +492,87 @@ const AdminAIOverview = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Campaign</TableHead>
-                    <TableHead className="text-right">Total Leads</TableHead>
-                    <TableHead className="text-right">Avg. CPL</TableHead>
-                    <TableHead className="text-right">Avg. Lead Score</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("name")}
+                    >
+                      <div className="flex items-center">
+                        Campaign
+                        {getSortIcon("name")}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-right cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("totalLeads")}
+                    >
+                      <div className="flex items-center justify-end">
+                        Total Leads
+                        {getSortIcon("totalLeads")}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-right cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("avgCPL")}
+                    >
+                      <div className="flex items-center justify-end">
+                        Avg. CPL
+                        {getSortIcon("avgCPL")}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-right cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("avgLeadScore")}
+                    >
+                      <div className="flex items-center justify-end">
+                        Avg. Lead Score
+                        {getSortIcon("avgLeadScore")}
+                      </div>
+                    </TableHead>
                     <TableHead>Best Performing Audience</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {campaigns.map((campaign) => (
-                    <TableRow key={campaign.id}>
-                      <TableCell className="font-medium">{campaign.name}</TableCell>
-                      <TableCell className="text-right">{campaign.totalLeads}</TableCell>
-                      <TableCell className="text-right">£{campaign.avgCPL.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        <Badge 
-                          variant="secondary" 
-                          className={
-                            campaign.avgLeadScore >= 7.5 
-                              ? "bg-success/10 text-success" 
-                              : campaign.avgLeadScore >= 6.5 
-                                ? "bg-warning/10 text-warning" 
-                                : "bg-muted"
-                          }
-                        >
-                          {campaign.avgLeadScore}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {campaign.bestAudience}
-                        </span>
+                  {filteredCampaigns.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No campaigns found
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredCampaigns.map((campaign) => (
+                      <TableRow key={campaign.id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            {campaign.name}
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              {campaign.region}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">{campaign.totalLeads}</TableCell>
+                        <TableCell className="text-right">£{campaign.avgCPL.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge 
+                            variant="secondary" 
+                            className={
+                              campaign.avgLeadScore >= 7.5 
+                                ? "bg-success/10 text-success" 
+                                : campaign.avgLeadScore >= 6.5 
+                                  ? "bg-warning/10 text-warning" 
+                                  : "bg-muted"
+                            }
+                          >
+                            {campaign.avgLeadScore}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {campaign.bestAudience}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
