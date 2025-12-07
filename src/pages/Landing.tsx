@@ -21,7 +21,7 @@ const Landing = () => {
     {
       icon: Target,
       title: "Attract",
-      description: "AI-powered campaign builder targets buyers globally across all channels with intelligent budget allocation and creative optimization"
+      description: "AI-powered campaign builder targets buyers globally across all channels with intelligent budget allocation and creative optimisation"
     },
     {
       icon: Sparkles,
@@ -193,7 +193,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-foreground mb-4">The Complete Sales Solution</h2>
-            <p className="text-lg text-muted-foreground">Four pillars working together to maximize conversions</p>
+            <p className="text-lg text-muted-foreground">Four pillars working together to maximise conversions</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {pillars.map((pillar) => (

@@ -94,7 +94,7 @@ const EmailCampaignBuilder = () => {
           <div>
             <h3 className="text-xl font-bold">AI Email Campaign Builder</h3>
             <p className="text-sm text-muted-foreground">
-              Generate personalized email campaigns with AI
+              Generate personalised email campaigns with AI
             </p>
           </div>
         </div>
@@ -248,9 +248,9 @@ const EmailCampaignBuilder = () => {
 
       {/* Personalization Tokens */}
       <Card className="p-6 bg-muted/30">
-        <h3 className="font-semibold mb-3">Personalization Tokens</h3>
+        <h3 className="font-semibold mb-3">Personalisation Tokens</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Use these tokens in your email to personalize content for each recipient:
+          Use these tokens in your email to personalise content for each recipient:
         </p>
         <div className="flex flex-wrap gap-2">
           {[
