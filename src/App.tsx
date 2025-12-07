@@ -8,6 +8,11 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { SplashScreen } from "./components/SplashScreen";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
+import HowItWorks from "./pages/HowItWorks";
+import Solutions from "./pages/Solutions";
+import About from "./pages/About";
+import CaseStudies from "./pages/CaseStudies";
+import Resources from "./pages/Resources";
 import Onboarding from "./pages/Onboarding";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
@@ -37,6 +42,11 @@ const AppRoutes = () => {
       {/* Demo mode - direct access to landing, login still available if needed */}
       <Route path="/" element={<Landing />} />
       <Route path="/landing" element={<Landing />} />
+      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/solutions" element={<Solutions />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/case-studies" element={<CaseStudies />} />
+      <Route path="/resources" element={<Resources />} />
       <Route path="/login" element={<Login />} />
       <Route path="/onboarding" element={<Onboarding />} />
       
