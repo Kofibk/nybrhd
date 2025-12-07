@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,9 +64,9 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 shadow-card">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <LogoWithTransparency className="h-12 w-auto" variant="white" />
-          </div>
+          <Link to="/landing" className="flex justify-center mb-4">
+            <LogoWithTransparency className="h-14 w-auto" variant="white" />
+          </Link>
           <p className="text-muted-foreground mt-1">AI-Powered Property Sales Platform</p>
         </div>
 

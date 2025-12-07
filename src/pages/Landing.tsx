@@ -14,10 +14,9 @@ import {
   Landmark,
   PiggyBank,
   CheckCircle2,
-  Globe,
-  Sparkles
+  Globe
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import whiteLogo from "@/assets/naybourhood-logo-white.svg";
 
 const Landing = () => {
@@ -35,26 +34,22 @@ const Landing = () => {
     {
       icon: Target,
       title: "Attract",
-      description: "Run smart digital campaigns to reach real buyers",
-      gradient: "from-emerald-500/20 to-transparent"
+      description: "Run smart digital campaigns to reach real buyers"
     },
     {
       icon: Users,
       title: "Qualify",
-      description: "Instantly score and prioritise high-intent leads",
-      gradient: "from-blue-500/20 to-transparent"
+      description: "Instantly score and prioritise high-intent leads"
     },
     {
       icon: MessageSquare,
       title: "Nurture",
-      description: "Automate email and WhatsApp follow-up",
-      gradient: "from-violet-500/20 to-transparent"
+      description: "Automate email and WhatsApp follow-up"
     },
     {
       icon: TrendingUp,
       title: "Convert",
-      description: "Track and close sales with full visibility",
-      gradient: "from-amber-500/20 to-transparent"
+      description: "Track and close sales with full visibility"
     }
   ];
 
@@ -96,28 +91,32 @@ const Landing = () => {
       result: "£5M in reservations",
       timeline: "7 days",
       buyer: "Egyptian investor",
-      flag: "🇪🇬"
+      flag: "🇪🇬",
+      image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop"
     },
     {
       property: "The Lucan",
       result: "£1.7M sale agreed",
       timeline: "Direct enquiry",
       buyer: "Nigerian investor",
-      flag: "🇳🇬"
+      flag: "🇳🇬",
+      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop"
     },
     {
       property: "Parkwood",
       result: "£5M home sold",
       timeline: "3 days",
       buyer: "UK residential family",
-      flag: "🇬🇧"
+      flag: "🇬🇧",
+      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop"
     },
     {
       property: "One Clapham",
       result: "£550K reservation",
       timeline: "Secured",
       buyer: "UAE investor",
-      flag: "🇦🇪"
+      flag: "🇦🇪",
+      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop"
     }
   ];
 
@@ -137,19 +136,25 @@ const Landing = () => {
     { value: "12", label: "Countries Reached" }
   ];
 
+  const propertyImages = [
+    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&h=400&fit=crop"
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            <div className="flex-shrink-0">
+            <Link to="/landing" className="flex-shrink-0 flex items-center">
               <img 
                 src={whiteLogo} 
                 alt="Naybourhood" 
-                className="h-6 lg:h-8 w-auto"
+                className="h-8 lg:h-10 w-auto"
               />
-            </div>
+            </Link>
             
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
@@ -242,22 +247,29 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section with Animated Gradient */}
+      {/* Hero Section with Video Background */}
       <section className="relative pt-24 pb-16 lg:pt-32 lg:pb-24 min-h-[90vh] flex items-center">
-        {/* Animated gradient background */}
+        {/* Video Background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-violet-500/10 via-transparent to-transparent rounded-full blur-3xl animate-pulse [animation-delay:1s]" />
-          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/5 to-transparent rounded-full blur-3xl animate-pulse [animation-delay:2s]" />
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            className="absolute w-full h-full object-cover opacity-30"
+          >
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-11-large.mp4" type="video/mp4" />
+          </video>
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-background/70" />
           
-          {/* Grid pattern overlay */}
+          {/* Subtle grid pattern */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50 mb-6 lg:mb-8">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-xs font-body text-muted-foreground">AI-Powered Property Sales</span>
             </div>
             
@@ -265,7 +277,7 @@ const Landing = () => {
               The AI Property Sales
               <br className="hidden sm:block" />
               <span className="sm:hidden"> </span>
-              <span className="bg-gradient-to-r from-emerald-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">& Marketing Platform</span>
+              & Marketing Platform
             </h1>
             <p className="text-base sm:text-lg lg:text-xl font-body text-muted-foreground mb-8 lg:mb-10 max-w-2xl leading-relaxed">
               Attract high-intent buyers, qualify leads instantly, and convert faster — all from one platform.
@@ -290,23 +302,6 @@ const Landing = () => {
             </div>
           </div>
         </div>
-        
-        {/* Floating elements for visual interest */}
-        <div className="absolute right-10 top-1/3 hidden xl:block">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur-xl" />
-            <div className="relative bg-card/80 backdrop-blur border border-border/50 rounded-xl p-4 shadow-2xl">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-emerald-400" />
-                </div>
-                <span className="text-sm font-body text-muted-foreground">Lead Score</span>
-              </div>
-              <p className="text-2xl font-display text-foreground">92/100</p>
-              <p className="text-xs text-emerald-400 mt-1">High Intent Buyer</p>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Stats Section */}
@@ -323,8 +318,29 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Trusted By */}
+      {/* Property Gallery Section */}
       <section className="py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+            {propertyImages.map((image, index) => (
+              <div 
+                key={index} 
+                className="relative aspect-[4/3] overflow-hidden group"
+              >
+                <img 
+                  src={image} 
+                  alt={`Luxury property ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trusted By */}
+      <section className="py-12 lg:py-16 border-t border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-6 lg:mb-8 text-center lg:text-left">
             Trusted by leading developers
@@ -358,29 +374,24 @@ const Landing = () => {
             {pillars.map((pillar) => (
               <div 
                 key={pillar.title} 
-                className="group relative p-6 lg:p-8 border border-border/50 hover:border-border bg-card/30 hover:bg-card/50 transition-all duration-300 overflow-hidden"
+                className="group relative p-6 lg:p-8 border border-border/50 hover:border-border bg-card/30 hover:bg-card/50 transition-all duration-300"
               >
-                {/* Gradient hover effect */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${pillar.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                
-                <div className="relative z-10">
-                  <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <pillar.icon className="h-5 w-5 text-foreground" />
-                  </div>
-                  <h3 className="text-lg lg:text-xl font-display text-foreground mb-2">
-                    {pillar.title}
-                  </h3>
-                  <p className="text-sm font-body text-muted-foreground leading-relaxed">
-                    {pillar.description}
-                  </p>
+                <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <pillar.icon className="h-5 w-5 text-foreground" />
                 </div>
+                <h3 className="text-lg lg:text-xl font-display text-foreground mb-2">
+                  {pillar.title}
+                </h3>
+                <p className="text-sm font-body text-muted-foreground leading-relaxed">
+                  {pillar.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Product Overview */}
+      {/* Product Overview with Property Image */}
       <section className="py-16 lg:py-24 border-t border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -402,47 +413,22 @@ const Landing = () => {
                   "Real-time analytics and reporting"
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-foreground flex-shrink-0" />
                     <span className="text-sm font-body text-muted-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             
-            {/* Visual mockup */}
+            {/* Property Image */}
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-violet-500/10 rounded-2xl blur-2xl" />
-              <div className="relative bg-card border border-border/50 rounded-xl overflow-hidden shadow-2xl">
-                <div className="h-8 bg-muted/50 border-b border-border/50 flex items-center gap-2 px-4">
-                  <div className="h-2.5 w-2.5 rounded-full bg-destructive/50" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-warning/50" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-success/50" />
-                </div>
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 w-32 bg-muted rounded animate-pulse" />
-                    <div className="h-6 w-20 bg-emerald-500/20 rounded" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="h-20 bg-muted/50 rounded-lg flex flex-col items-center justify-center">
-                      <span className="text-lg font-display text-foreground">248</span>
-                      <span className="text-xs text-muted-foreground">Leads</span>
-                    </div>
-                    <div className="h-20 bg-muted/50 rounded-lg flex flex-col items-center justify-center">
-                      <span className="text-lg font-display text-foreground">£42</span>
-                      <span className="text-xs text-muted-foreground">Avg CPL</span>
-                    </div>
-                    <div className="h-20 bg-muted/50 rounded-lg flex flex-col items-center justify-center">
-                      <span className="text-lg font-display text-foreground">12%</span>
-                      <span className="text-xs text-muted-foreground">Conv Rate</span>
-                    </div>
-                  </div>
-                  <div className="h-32 bg-muted/30 rounded-lg flex items-end justify-around p-4">
-                    {[60, 80, 45, 90, 70, 85, 95].map((h, i) => (
-                      <div key={i} className="w-6 bg-gradient-to-t from-emerald-500/50 to-emerald-400/50 rounded-t" style={{ height: `${h}%` }} />
-                    ))}
-                  </div>
-                </div>
+              <div className="relative overflow-hidden rounded-lg">
+                <img 
+                  src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop"
+                  alt="Luxury property interior"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               </div>
             </div>
           </div>
@@ -503,21 +489,31 @@ const Landing = () => {
             {caseStudies.map((study) => (
               <div 
                 key={study.property} 
-                className="group p-6 lg:p-8 bg-card border border-border/50 hover:border-border transition-all duration-300"
+                className="group bg-card border border-border/50 hover:border-border transition-all duration-300 overflow-hidden"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-body text-muted-foreground">{study.timeline}</p>
-                  <span className="text-lg">{study.flag}</span>
+                {/* Property Image */}
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img 
+                    src={study.image}
+                    alt={study.property}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
                 </div>
-                <h3 className="text-lg font-display text-foreground mb-3">
-                  {study.property}
-                </h3>
-                <p className="text-xl lg:text-2xl font-display text-foreground mb-3 bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                  {study.result}
-                </p>
-                <p className="text-xs font-body text-muted-foreground">
-                  {study.buyer}
-                </p>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-body text-muted-foreground">{study.timeline}</p>
+                    <span className="text-lg">{study.flag}</span>
+                  </div>
+                  <h3 className="text-lg font-display text-foreground mb-2">
+                    {study.property}
+                  </h3>
+                  <p className="text-xl font-display text-foreground mb-2">
+                    {study.result}
+                  </p>
+                  <p className="text-xs font-body text-muted-foreground">
+                    {study.buyer}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -540,7 +536,7 @@ const Landing = () => {
             <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-border via-muted-foreground/30 to-border" />
             
             <div className="grid grid-cols-6 gap-4">
-              {workflowSteps.map((step, index) => (
+              {workflowSteps.map((step) => (
                 <div key={step.label} className="relative text-center">
                   <div className="relative z-10 h-14 w-14 mx-auto rounded-full bg-background border border-border flex items-center justify-center mb-4 group hover:border-foreground/50 transition-colors">
                     <step.icon className="h-6 w-6 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -566,14 +562,8 @@ const Landing = () => {
       </section>
 
       {/* CTA Footer */}
-      <section className="py-16 lg:py-24 border-t border-border/50 relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-gradient-to-t from-emerald-500/10 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-t from-violet-500/10 to-transparent rounded-full blur-3xl" />
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <section className="py-16 lg:py-24 border-t border-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-display text-foreground mb-6 lg:mb-8 leading-tight">
               Ready to convert more buyers?
@@ -608,11 +598,13 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <img 
-                src={whiteLogo} 
-                alt="Naybourhood" 
-                className="h-5 w-auto"
-              />
+              <Link to="/landing">
+                <img 
+                  src={whiteLogo} 
+                  alt="Naybourhood" 
+                  className="h-6 w-auto"
+                />
+              </Link>
               <span className="text-xs font-body text-muted-foreground">
                 © 2024 Naybourhood.ai
               </span>
