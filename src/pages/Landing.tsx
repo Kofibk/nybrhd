@@ -18,6 +18,12 @@ import {
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import whiteLogo from "@/assets/naybourhood-logo-white.svg";
+import berkeleyLogo from "@/assets/logos/berkeley.png";
+import barrattLogo from "@/assets/logos/barratt.png";
+import redrowLogo from "@/assets/logos/redrow.png";
+import bellwayLogo from "@/assets/logos/bellway.png";
+import persimmonLogo from "@/assets/logos/persimmon.png";
+import taylorWimpeyLogo from "@/assets/logos/taylor-wimpey.png";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -54,12 +60,12 @@ const Landing = () => {
   ];
 
   const trustedLogos = [
-    "Mount Anvil",
-    "Berkeley Group", 
-    "London Square",
-    "Hadley",
-    "Excel Winner",
-    "Synergy Properties"
+    { name: "Berkeley", logo: berkeleyLogo },
+    { name: "Barratt", logo: barrattLogo },
+    { name: "Redrow", logo: redrowLogo },
+    { name: "Bellway", logo: bellwayLogo },
+    { name: "Persimmon", logo: persimmonLogo },
+    { name: "Taylor Wimpey", logo: taylorWimpeyLogo }
   ];
 
   const whoItsFor = [
@@ -324,14 +330,24 @@ const Landing = () => {
           <p className="text-xs font-body text-muted-foreground tracking-[0.15em] uppercase mb-6 lg:mb-8 text-center lg:text-left">
             Trusted by leading brands
           </p>
-          <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 sm:gap-x-10 lg:gap-x-12 gap-y-4">
-            {trustedLogos.map((logo) => (
-              <span 
-                key={logo} 
-                className="text-sm sm:text-base font-body font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-8 sm:gap-x-12 lg:gap-x-16 gap-y-6">
+            {trustedLogos.map((brand) => (
+              <div 
+                key={brand.name} 
+                className="h-8 sm:h-10 opacity-50 hover:opacity-80 transition-opacity grayscale hover:grayscale-0"
               >
-                {logo}
-              </span>
+                <img 
+                  src={brand.logo} 
+                  alt={brand.name}
+                  className="h-full w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback to text if image fails
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement!.innerHTML = `<span class="text-sm font-body font-medium text-muted-foreground">${brand.name}</span>`;
+                  }}
+                />
+              </div>
             ))}
           </div>
         </div>
