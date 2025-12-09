@@ -527,7 +527,7 @@ const Landing = () => {
             {trustedLogos.map((brand, index) => (
               <div 
                 key={`first-${index}`} 
-                className="flex-shrink-0 mx-12 lg:mx-20 flex items-center justify-center bg-white rounded-lg p-4"
+                className="flex-shrink-0 mx-12 lg:mx-20 flex items-center justify-center bg-white rounded-lg p-1"
               >
                 <img 
                   src={brand.logo} 
@@ -545,7 +545,7 @@ const Landing = () => {
             {trustedLogos.map((brand, index) => (
               <div 
                 key={`second-${index}`} 
-                className="flex-shrink-0 mx-12 lg:mx-20 flex items-center justify-center bg-white rounded-lg p-4"
+                className="flex-shrink-0 mx-12 lg:mx-20 flex items-center justify-center bg-white rounded-lg p-1"
               >
                 <img 
                   src={brand.logo} 
