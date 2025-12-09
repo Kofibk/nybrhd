@@ -527,19 +527,16 @@ const Landing = () => {
             {trustedLogos.map((brand, index) => (
               <div 
                 key={`first-${index}`} 
-                className="flex-shrink-0 mx-10 lg:mx-16 flex items-center justify-center"
+                className="flex-shrink-0 mx-12 lg:mx-20 flex items-center justify-center bg-white rounded-lg p-4"
               >
                 <img 
                   src={brand.logo} 
                   alt={brand.name}
-                  className="h-8 sm:h-10 lg:h-12 w-auto max-w-[120px] sm:max-w-[140px] lg:max-w-[160px] object-contain opacity-70 hover:opacity-100 transition-opacity mix-blend-multiply dark:mix-blend-normal dark:invert dark:brightness-200"
-                  style={{ filter: 'grayscale(100%)' }}
-                  onMouseEnter={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(0%)'}
-                  onMouseLeave={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(100%)'}
+                  className="h-16 sm:h-20 lg:h-24 w-auto max-w-[180px] sm:max-w-[220px] lg:max-w-[280px] object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-sm font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
+                    target.parentElement!.innerHTML = `<span class="text-lg font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
                   }}
                 />
               </div>
@@ -548,19 +545,16 @@ const Landing = () => {
             {trustedLogos.map((brand, index) => (
               <div 
                 key={`second-${index}`} 
-                className="flex-shrink-0 mx-10 lg:mx-16 flex items-center justify-center"
+                className="flex-shrink-0 mx-12 lg:mx-20 flex items-center justify-center bg-white rounded-lg p-4"
               >
                 <img 
                   src={brand.logo} 
                   alt={brand.name}
-                  className="h-8 sm:h-10 lg:h-12 w-auto max-w-[120px] sm:max-w-[140px] lg:max-w-[160px] object-contain opacity-70 hover:opacity-100 transition-opacity mix-blend-multiply dark:mix-blend-normal dark:invert dark:brightness-200"
-                  style={{ filter: 'grayscale(100%)' }}
-                  onMouseEnter={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(0%)'}
-                  onMouseLeave={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(100%)'}
+                  className="h-16 sm:h-20 lg:h-24 w-auto max-w-[180px] sm:max-w-[220px] lg:max-w-[280px] object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-sm font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
+                    target.parentElement!.innerHTML = `<span class="text-lg font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
                   }}
                 />
               </div>
