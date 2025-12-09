@@ -527,12 +527,15 @@ const Landing = () => {
             {trustedLogos.map((brand, index) => (
               <div 
                 key={`first-${index}`} 
-                className="flex-shrink-0 mx-8 lg:mx-12 h-10 sm:h-12 opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+                className="flex-shrink-0 mx-10 lg:mx-16 flex items-center justify-center"
               >
                 <img 
                   src={brand.logo} 
                   alt={brand.name}
-                  className="h-full w-auto object-contain"
+                  className="h-8 sm:h-10 lg:h-12 w-auto max-w-[120px] sm:max-w-[140px] lg:max-w-[160px] object-contain opacity-70 hover:opacity-100 transition-opacity mix-blend-multiply dark:mix-blend-normal dark:invert dark:brightness-200"
+                  style={{ filter: 'grayscale(100%)' }}
+                  onMouseEnter={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(0%)'}
+                  onMouseLeave={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(100%)'}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -545,12 +548,15 @@ const Landing = () => {
             {trustedLogos.map((brand, index) => (
               <div 
                 key={`second-${index}`} 
-                className="flex-shrink-0 mx-8 lg:mx-12 h-10 sm:h-12 opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+                className="flex-shrink-0 mx-10 lg:mx-16 flex items-center justify-center"
               >
                 <img 
                   src={brand.logo} 
                   alt={brand.name}
-                  className="h-full w-auto object-contain"
+                  className="h-8 sm:h-10 lg:h-12 w-auto max-w-[120px] sm:max-w-[140px] lg:max-w-[160px] object-contain opacity-70 hover:opacity-100 transition-opacity mix-blend-multiply dark:mix-blend-normal dark:invert dark:brightness-200"
+                  style={{ filter: 'grayscale(100%)' }}
+                  onMouseEnter={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(0%)'}
+                  onMouseLeave={(e) => (e.target as HTMLImageElement).style.filter = 'grayscale(100%)'}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
