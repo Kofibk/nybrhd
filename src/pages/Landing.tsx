@@ -22,12 +22,11 @@ import {
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import whiteLogo from "@/assets/naybourhood-logo-white.svg";
-import berkeleyLogo from "@/assets/logos/berkeley.png";
-import barrattLogo from "@/assets/logos/barratt.png";
-import redrowLogo from "@/assets/logos/redrow.png";
-import bellwayLogo from "@/assets/logos/bellway.png";
-import persimmonLogo from "@/assets/logos/persimmon.png";
-import taylorWimpeyLogo from "@/assets/logos/taylor-wimpey.png";
+import berkeleyLogo from "@/assets/logos/berkeley-group.jpeg";
+import mountAnvilLogo from "@/assets/logos/mount-anvil.jpeg";
+import londonSquareLogo from "@/assets/logos/london-square.jpeg";
+import hadleyLogo from "@/assets/logos/hadley-property-group.jpeg";
+import regalLondonLogo from "@/assets/logos/regal-london.jpeg";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -71,15 +70,10 @@ const Landing = () => {
 
   const trustedLogos = [
     { name: "Berkeley Group", logo: berkeleyLogo },
-    { name: "Mount Anvil", logo: barrattLogo },
-    { name: "London Square", logo: redrowLogo },
-    { name: "Arada London", logo: bellwayLogo },
-    { name: "Hadley Property Group", logo: persimmonLogo },
-    { name: "Fine & Country", logo: taylorWimpeyLogo },
-    { name: "Marriott Residences", logo: berkeleyLogo },
-    { name: "Plum Guide", logo: barrattLogo },
-    { name: "Excel Winner", logo: redrowLogo },
-    { name: "Alexander James", logo: bellwayLogo },
+    { name: "Mount Anvil", logo: mountAnvilLogo },
+    { name: "London Square", logo: londonSquareLogo },
+    { name: "Hadley Property Group", logo: hadleyLogo },
+    { name: "Regal London", logo: regalLondonLogo },
   ];
 
   const whoItsFor = [
