@@ -2,6 +2,7 @@ import { useState, useMemo, Fragment } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -48,9 +49,13 @@ import {
   ChevronUp,
   Globe,
   Sparkles,
+  Brain,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
-import MetaCampaignBuilder from "./MetaCampaignBuilder";
+import HybridSignalCampaignBuilder from "./HybridSignalCampaignBuilder";
+import CreativeBreakdownReport from "./CreativeBreakdownReport";
+import AttributionInsightsWidget from "./AttributionInsightsWidget";
 import {
   MOCK_META_CAMPAIGNS,
   COUNTRIES,
@@ -69,6 +74,8 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<"campaigns" | "breakdown">("campaigns");
+  const [showInsights, setShowInsights] = useState(true);
 
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(c => {
@@ -215,12 +222,25 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Attribution Insights Widget */}
+      {showInsights && (
+        <AttributionInsightsWidget 
+          onApplyRecommendation={(insight) => {
+            toast.success("Recommendation applied", { description: insight.title });
+          }}
+          onDismiss={() => setShowInsights(false)}
+        />
+      )}
+
       {/* Header with New Campaign Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold">Meta Campaigns</h2>
+          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            Hybrid Signal Campaigns
+          </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            {stats.activeCampaigns} active of {stats.totalCampaigns} campaigns
+            {stats.activeCampaigns} active of {stats.totalCampaigns} campaigns • Powered by Naybourhood Attribution
           </p>
         </div>
         <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
@@ -230,11 +250,14 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
               New Campaign
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle>Create Meta Campaign</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Hybrid Signal Campaign Engine
+              </DialogTitle>
             </DialogHeader>
-            <MetaCampaignBuilder 
+            <HybridSignalCampaignBuilder 
               onCampaignCreated={handleCampaignCreated}
               onClose={() => setIsBuilderOpen(false)}
             />
@@ -291,60 +314,77 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
         </Card>
       </div>
 
-      {/* Filters Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[120px] h-9 text-sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={phaseFilter} onValueChange={setPhaseFilter}>
-            <SelectTrigger className="w-[120px] h-9 text-sm">
-              <SelectValue placeholder="Phase" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Phases</SelectItem>
-              <SelectItem value="testing">Testing</SelectItem>
-              <SelectItem value="scaling">Scaling</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={regionFilter} onValueChange={setRegionFilter}>
-            <SelectTrigger className="w-[130px] h-9 text-sm">
-              <SelectValue placeholder="Region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              <SelectItem value="uk">UK</SelectItem>
-              <SelectItem value="middle east">Middle East</SelectItem>
-              <SelectItem value="africa">Africa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {/* View Toggle Tabs */}
+      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as "campaigns" | "breakdown")}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="campaigns" className="gap-1 text-xs">
+              <Target className="h-3 w-3" />
+              Campaigns
+            </TabsTrigger>
+            <TabsTrigger value="breakdown" className="gap-1 text-xs">
+              <BarChart3 className="h-3 w-3" />
+              Creative Breakdown
+            </TabsTrigger>
+          </TabsList>
 
-      {/* KPI Thresholds */}
-      <Card className="bg-muted/50">
-        <CardContent className="p-2 sm:p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium">Evaluation Thresholds</span>
-          </div>
-          <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs">
-            <span>CPC &lt; £1.50</span>
-            <span>CTR &gt; 2%</span>
-            <span>CPM &lt; £10</span>
-            <span>High-Intent &gt; 60%</span>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Filters Row - Only show for campaigns view */}
+          {activeView === "campaigns" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[120px] h-9 text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={phaseFilter} onValueChange={setPhaseFilter}>
+                <SelectTrigger className="w-[120px] h-9 text-sm">
+                  <SelectValue placeholder="Phase" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Phases</SelectItem>
+                  <SelectItem value="testing">Testing</SelectItem>
+                  <SelectItem value="scaling">Scaling</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
+                <SelectTrigger className="w-[130px] h-9 text-sm">
+                  <SelectValue placeholder="Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  <SelectItem value="uk">UK</SelectItem>
+                  <SelectItem value="middle east">Middle East</SelectItem>
+                  <SelectItem value="africa">Africa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+
+        {/* Campaigns Tab Content */}
+        <TabsContent value="campaigns" className="mt-4 space-y-4">
+          {/* KPI Thresholds */}
+          <Card className="bg-muted/50">
+            <CardContent className="p-2 sm:p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                <span className="text-xs sm:text-sm font-medium">Evaluation Thresholds</span>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs">
+                <span>CPC &lt; £1.50</span>
+                <span>CTR &gt; 2%</span>
+                <span>CPM &lt; £10</span>
+                <span>High-Intent &gt; 60%</span>
+              </div>
+            </CardContent>
+          </Card>
 
       {/* Campaigns Table */}
       <Card>
@@ -500,6 +540,13 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
           </Table>
         </div>
       </Card>
+        </TabsContent>
+
+        {/* Creative Breakdown Tab Content */}
+        <TabsContent value="breakdown" className="mt-4">
+          <CreativeBreakdownReport />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
