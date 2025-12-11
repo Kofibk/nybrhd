@@ -43,8 +43,11 @@ import {
   ArrowRight,
   CheckCircle2,
   XCircle,
-  Info
+  Info,
+  Facebook,
+  Instagram
 } from "lucide-react";
+import CampaignAdPreview from "./CampaignAdPreview";
 import {
   REGIONS,
   COUNTRIES,
@@ -170,6 +173,9 @@ const HybridSignalCampaignBuilder = ({ onCampaignCreated, onClose, userType = "d
   // Attribution Insights (NEW)
   const [showInsightCard, setShowInsightCard] = useState(true);
   const [activeInsight, setActiveInsight] = useState<AttributionInsight>(MOCK_ATTRIBUTION_INSIGHTS[0]);
+  
+  // Preview
+  const [previewPlatform, setPreviewPlatform] = useState<"facebook" | "instagram">("facebook");
 
   const isAfricaSelected = selectedRegions.includes("africa");
 
@@ -1242,8 +1248,60 @@ const HybridSignalCampaignBuilder = ({ onCampaignCreated, onClose, userType = "d
         {/* Step 7: Review */}
         {currentStep === 7 && (
           <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold mb-3">Campaign Review</h3>
+            <h3 className="text-base sm:text-lg font-semibold mb-3">Campaign Review & Ad Preview</h3>
             
+            {/* Ad Preview Section */}
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye className="h-4 w-4 text-primary" />
+                <h4 className="font-medium text-sm">Ad Preview</h4>
+              </div>
+              
+              {/* Platform Toggle */}
+              <div className="flex items-center gap-2 mb-4">
+                <Button
+                  variant={previewPlatform === "facebook" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPreviewPlatform("facebook")}
+                  className="gap-1.5"
+                >
+                  <Facebook className="h-3.5 w-3.5" />
+                  Facebook
+                </Button>
+                <Button
+                  variant={previewPlatform === "instagram" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPreviewPlatform("instagram")}
+                  className="gap-1.5"
+                >
+                  <Instagram className="h-3.5 w-3.5" />
+                  Instagram
+                </Button>
+              </div>
+
+              {/* Preview */}
+              <div className="flex justify-center bg-muted/30 rounded-lg p-4">
+                <CampaignAdPreview
+                  developmentName={developmentName}
+                  adCopy={adCopies[0] || ""}
+                  ctaLabel={selectedCTAs[0] || "learn_more"}
+                  landingPageUrl={landingPageUrl}
+                  creativeAsset={creativeAssets[0] ? {
+                    preview: creativeAssets[0].preview,
+                    type: creativeAssets[0].type,
+                    name: creativeAssets[0].name
+                  } : undefined}
+                  platform={previewPlatform}
+                />
+              </div>
+
+              {adCopies.filter(c => c.trim()).length > 1 && (
+                <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                  Showing first ad variation. {adCopies.filter(c => c.trim()).length} variations will be tested.
+                </p>
+              )}
+            </Card>
+
             {/* Attribution Insights */}
             <InsightCard insight={activeInsight} />
 
