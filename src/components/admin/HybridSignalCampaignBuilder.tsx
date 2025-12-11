@@ -93,8 +93,8 @@ const STEPS = [
   { id: 1, title: "Audience Strategy", icon: Users },
   { id: 2, title: "Targeting", icon: Target },
   { id: 3, title: "Budget", icon: DollarSign },
-  { id: 4, title: "Landing & UTM", icon: Link2 },
-  { id: 5, title: "Content", icon: Image },
+  { id: 4, title: "Content", icon: Image },
+  { id: 5, title: "Landing & UTM", icon: Link2 },
   { id: 6, title: "Tracking", icon: BarChart3 },
   { id: 7, title: "Review", icon: Eye },
 ];
@@ -388,9 +388,9 @@ const HybridSignalCampaignBuilder = ({ onCampaignCreated, onClose, userType = "d
       case 3:
         return budget !== "" && parseFloat(budget) > 0 && startDate !== "";
       case 4:
-        return selectedCTAs.length > 0;
-      case 5:
         return selectedContentTypes.length > 0 && selectedMessagingAngles.length > 0;
+      case 5:
+        return selectedCTAs.length > 0;
       case 6:
         return selectedEvents.length > 0;
       case 7:
@@ -897,124 +897,8 @@ const HybridSignalCampaignBuilder = ({ onCampaignCreated, onClose, userType = "d
           </div>
         )}
 
-        {/* Step 4: Landing Page & UTM (ENHANCED) */}
+        {/* Step 4: Content */}
         {currentStep === 4 && (
-          <div className="space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold mb-3">Landing Page & Universal Tracker</h3>
-            
-            <div>
-              <Label htmlFor="landingPage">Landing Page URL</Label>
-              <Input
-                id="landingPage"
-                type="url"
-                placeholder="https://yourdomain.com/property"
-                value={landingPageUrl}
-                onChange={(e) => setLandingPageUrl(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-
-            {/* UTM Schema Preview */}
-            <Card className="p-3 bg-muted/30">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                <Label className="font-medium text-sm">Universal Tracker UTM Schema</Label>
-                <Badge variant="secondary" className="text-[10px]">Auto-Injected</Badge>
-              </div>
-              <p className="text-[10px] text-muted-foreground mb-2">
-                Force-appended to every ad for granular attribution
-              </p>
-              {utmPreview && (
-                <div className="bg-background p-2 rounded border text-[10px] font-mono overflow-x-auto">
-                  <div className="space-y-0.5">
-                    <p><span className="text-primary">utm_source</span>=fb_ig</p>
-                    <p><span className="text-primary">utm_medium</span>=paidsocial</p>
-                    <p><span className="text-primary">utm_campaign</span>={utmPreview.utm_campaign}</p>
-                    <p><span className="text-primary">utm_content</span>={utmPreview.utm_content} <span className="text-muted-foreground">← Creative_ID + Headline_ID</span></p>
-                    <p><span className="text-primary">utm_term</span>={utmPreview.utm_term} <span className="text-muted-foreground">← Audience_ID</span></p>
-                    <p><span className="text-primary">naybourhood_device</span>={utmPreview.naybourhood_device}</p>
-                  </div>
-                </div>
-              )}
-              <p className="text-[10px] text-muted-foreground mt-2">
-                ✓ Enables Creative Breakdown reports: "Garden image drives clicks, Floorplan drives deals"
-              </p>
-            </Card>
-
-            {/* Device-Specific Experience */}
-            <Card className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <Label className="font-medium text-sm">Device-Specific Landing Pages</Label>
-                  <p className="text-xs text-muted-foreground">Optimise experience by device type</p>
-                </div>
-                <Switch checked={deviceOptimisation} onCheckedChange={setDeviceOptimisation} />
-              </div>
-              {deviceOptimisation && (
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  {DEVICE_CONFIGS.map((config) => (
-                    <div key={config.device} className="p-2 bg-muted/50 rounded text-center">
-                      <p className="text-xs font-medium capitalize">{config.device}</p>
-                      <p className="text-[10px] text-muted-foreground">{config.priorityElements[0]}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            <div>
-              <Label className="mb-2 block">Call-to-Action Buttons *</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {CTA_OPTIONS.map((cta) => (
-                  <Card
-                    key={cta.id}
-                    className={`p-2 cursor-pointer transition-all text-center ${
-                      selectedCTAs.includes(cta.id)
-                        ? "border-primary bg-primary/5 ring-1 ring-primary"
-                        : "hover:border-primary/50"
-                    }`}
-                    onClick={() => toggleCTA(cta.id)}
-                  >
-                    <div className="flex items-center justify-center gap-1 mb-0.5">
-                      <MousePointerClick className="h-3 w-3" />
-                      {selectedCTAs.includes(cta.id) && <Check className="h-3 w-3 text-primary" />}
-                    </div>
-                    <span className="font-medium text-xs block">{cta.label}</span>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="mb-2 block">Lead Form Fields (Hidden UTM Passthrough)</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {["name", "email", "phone", "country", "budget", "timeline", "bedrooms", "message"].map((field) => (
-                  <Badge
-                    key={field}
-                    variant={leadFormFields.includes(field) ? "default" : "outline"}
-                    className={`cursor-pointer px-2 py-1 text-xs capitalize ${
-                      leadFormFields.includes(field) ? "" : "hover:bg-primary/10"
-                    }`}
-                    onClick={() => {
-                      setLeadFormFields(prev =>
-                        prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field]
-                      );
-                    }}
-                  >
-                    {field}
-                    {leadFormFields.includes(field) && <Check className="h-3 w-3 ml-1" />}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                + All UTM parameters captured in hidden fields for CRM attribution
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Content */}
-        {currentStep === 5 && (
           <div className="space-y-4">
             <div>
               <h3 className="text-base sm:text-lg font-semibold mb-3">Content Types</h3>
@@ -1167,6 +1051,122 @@ const HybridSignalCampaignBuilder = ({ onCampaignCreated, onClose, userType = "d
                   />
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Landing & UTM */}
+        {currentStep === 5 && (
+          <div className="space-y-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3">Landing Page & Universal Tracker</h3>
+            
+            <div>
+              <Label htmlFor="landingPage">Landing Page URL</Label>
+              <Input
+                id="landingPage"
+                type="url"
+                placeholder="https://yourdomain.com/property"
+                value={landingPageUrl}
+                onChange={(e) => setLandingPageUrl(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            {/* UTM Schema Preview */}
+            <Card className="p-3 bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <Label className="font-medium text-sm">Universal Tracker UTM Schema</Label>
+                <Badge variant="secondary" className="text-[10px]">Auto-Injected</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground mb-2">
+                Force-appended to every ad for granular attribution
+              </p>
+              {utmPreview && (
+                <div className="bg-background p-2 rounded border text-[10px] font-mono overflow-x-auto">
+                  <div className="space-y-0.5">
+                    <p><span className="text-primary">utm_source</span>=fb_ig</p>
+                    <p><span className="text-primary">utm_medium</span>=paidsocial</p>
+                    <p><span className="text-primary">utm_campaign</span>={utmPreview.utm_campaign}</p>
+                    <p><span className="text-primary">utm_content</span>={utmPreview.utm_content} <span className="text-muted-foreground">← Creative_ID + Headline_ID</span></p>
+                    <p><span className="text-primary">utm_term</span>={utmPreview.utm_term} <span className="text-muted-foreground">← Audience_ID</span></p>
+                    <p><span className="text-primary">naybourhood_device</span>={utmPreview.naybourhood_device}</p>
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground mt-2">
+                ✓ Enables Creative Breakdown reports: "Garden image drives clicks, Floorplan drives deals"
+              </p>
+            </Card>
+
+            {/* Device-Specific Experience */}
+            <Card className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <Label className="font-medium text-sm">Device-Specific Landing Pages</Label>
+                  <p className="text-xs text-muted-foreground">Optimise experience by device type</p>
+                </div>
+                <Switch checked={deviceOptimisation} onCheckedChange={setDeviceOptimisation} />
+              </div>
+              {deviceOptimisation && (
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {DEVICE_CONFIGS.map((config) => (
+                    <div key={config.device} className="p-2 bg-muted/50 rounded text-center">
+                      <p className="text-xs font-medium capitalize">{config.device}</p>
+                      <p className="text-[10px] text-muted-foreground">{config.priorityElements[0]}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <div>
+              <Label className="mb-2 block">Call-to-Action Buttons *</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {CTA_OPTIONS.map((cta) => (
+                  <Card
+                    key={cta.id}
+                    className={`p-2 cursor-pointer transition-all text-center ${
+                      selectedCTAs.includes(cta.id)
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "hover:border-primary/50"
+                    }`}
+                    onClick={() => toggleCTA(cta.id)}
+                  >
+                    <div className="flex items-center justify-center gap-1 mb-0.5">
+                      <MousePointerClick className="h-3 w-3" />
+                      {selectedCTAs.includes(cta.id) && <Check className="h-3 w-3 text-primary" />}
+                    </div>
+                    <span className="font-medium text-xs block">{cta.label}</span>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Lead Form Fields (Hidden UTM Passthrough)</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {["name", "email", "phone", "country", "budget", "timeline", "bedrooms", "message"].map((field) => (
+                  <Badge
+                    key={field}
+                    variant={leadFormFields.includes(field) ? "default" : "outline"}
+                    className={`cursor-pointer px-2 py-1 text-xs capitalize ${
+                      leadFormFields.includes(field) ? "" : "hover:bg-primary/10"
+                    }`}
+                    onClick={() => {
+                      setLeadFormFields(prev =>
+                        prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field]
+                      );
+                    }}
+                  >
+                    {field}
+                    {leadFormFields.includes(field) && <Check className="h-3 w-3 ml-1" />}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                + All UTM parameters captured in hidden fields for CRM attribution
+              </p>
             </div>
           </div>
         )}
