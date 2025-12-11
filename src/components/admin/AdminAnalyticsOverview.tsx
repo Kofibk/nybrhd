@@ -22,6 +22,7 @@ import {
   Legend,
 } from "recharts";
 import { useState } from "react";
+import AttributionInsightsWidget from "./AttributionInsightsWidget";
 
 // Mock data for charts
 const leadsOverTime = [
@@ -53,6 +54,9 @@ const AdminAnalyticsOverview = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Attribution Reality Check */}
+      <AttributionInsightsWidget />
+
       {/* Date Range Selector */}
       <div className="flex justify-end">
         <Select value={dateRange} onValueChange={setDateRange}>

@@ -55,7 +55,7 @@ import {
 import { toast } from "sonner";
 import HybridSignalCampaignBuilder from "./HybridSignalCampaignBuilder";
 import CreativeBreakdownReport from "./CreativeBreakdownReport";
-import AttributionInsightsWidget from "./AttributionInsightsWidget";
+
 import {
   MOCK_META_CAMPAIGNS,
   COUNTRIES,
@@ -75,7 +75,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"campaigns" | "breakdown">("campaigns");
-  const [showInsights, setShowInsights] = useState(true);
 
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(c => {
@@ -222,15 +221,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Attribution Insights Widget */}
-      {showInsights && (
-        <AttributionInsightsWidget 
-          onApplyRecommendation={(insight) => {
-            toast.success("Recommendation applied", { description: insight.title });
-          }}
-          onDismiss={() => setShowInsights(false)}
-        />
-      )}
 
       {/* Header with New Campaign Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
