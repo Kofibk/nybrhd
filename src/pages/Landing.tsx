@@ -158,10 +158,10 @@ const Landing = () => {
   ];
 
   const stats = [
-    { value: "£50M+", label: "Property Value Sold" },
-    { value: "2,500+", label: "Qualified Leads" },
-    { value: "85%", label: "Lead Qualification Rate" },
-    { value: "12", label: "Countries Reached" }
+    { value: "£1B+", label: "Transaction Volume Sold by Our Clients" },
+    { value: "12", label: "Global Markets" },
+    { value: "85%", label: "Qualified Lead Rate" },
+    { value: "5,000+", label: "Verified Buyers" }
   ];
 
   return (
