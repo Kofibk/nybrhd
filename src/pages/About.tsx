@@ -27,16 +27,12 @@ const About = () => {
       role: "Founder & CEO"
     },
     {
-      name: "Amrita Bartels",
-      role: "Creative Strategy"
+      name: "Ahmad Tahir",
+      role: "CPO"
     },
     {
-      name: "Manoj Shah",
-      role: "Operations & Finance"
-    },
-    {
-      name: "James F.",
-      role: "Buyer Intelligence"
+      name: "Stephanie De Sousa",
+      role: "COO"
     }
   ];
 
@@ -163,7 +159,7 @@ const About = () => {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display text-foreground mb-10 lg:mb-12">
             The People Behind Naybourhood
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {team.map((member) => (
               <div 
                 key={member.name}
