@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CampaignBuilder from "@/components/CampaignBuilder";
 import LeadsManagement from "@/components/LeadsManagement";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
-import { FileText, Users, CheckCircle, Clock, Plus, Target, TrendingUp } from "lucide-react";
+import PerformanceOverview from "@/components/PerformanceOverview";
+import { FileText, Users, CheckCircle, Clock, Plus } from "lucide-react";
 
 const BrokerDashboard = () => {
   const stats = [
@@ -95,47 +96,7 @@ const BrokerDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <Card className="p-4 md:p-6">
-            <h3 className="text-lg md:text-xl font-bold mb-4 md:mb-6">AI Product Recommendations</h3>
-            <div className="space-y-3">
-              <div className="p-3 md:p-4 border border-border rounded-lg">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
-                  <div>
-                    <div className="font-medium text-sm md:text-base">Sarah Mitchell</div>
-                    <div className="text-xs md:text-sm text-muted-foreground">United Kingdom • £200k deposit</div>
-                  </div>
-                  <Badge className="text-[10px] md:text-xs">High Match</Badge>
-                </div>
-                <div className="text-xs md:text-sm">
-                  <span className="font-medium">Recommended:</span> Buy-to-Let Mortgage
-                </div>
-              </div>
-              <div className="p-3 md:p-4 border border-border rounded-lg">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
-                  <div>
-                    <div className="font-medium text-sm md:text-base">James Okonkwo</div>
-                    <div className="text-xs md:text-sm text-muted-foreground">Nigeria • £400k deposit</div>
-                  </div>
-                  <Badge className="text-[10px] md:text-xs">High Match</Badge>
-                </div>
-                <div className="text-xs md:text-sm">
-                  <span className="font-medium">Recommended:</span> International Mortgage
-                </div>
-              </div>
-              <div className="p-3 md:p-4 border border-border rounded-lg">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
-                  <div>
-                    <div className="font-medium text-sm md:text-base">Abdullah Al-Zahrani</div>
-                    <div className="text-xs md:text-sm text-muted-foreground">Saudi Arabia • £500k deposit</div>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px] md:text-xs">HNWI</Badge>
-                </div>
-                <div className="text-xs md:text-sm">
-                  <span className="font-medium">Recommended:</span> £1m+ International Mortgage + Wealth Management
-                </div>
-              </div>
-            </div>
-          </Card>
+          <PerformanceOverview userType="broker" />
         </TabsContent>
 
         <TabsContent value="campaigns">

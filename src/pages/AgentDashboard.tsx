@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import CampaignBuilder from "@/components/CampaignBuilder";
 import LeadsManagement from "@/components/LeadsManagement";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
-import { Home, Users, Calendar, TrendingUp, Plus, Sparkles, ArrowUpRight, Eye } from "lucide-react";
+import PerformanceOverview from "@/components/PerformanceOverview";
+import { Home, Users, Calendar, TrendingUp, Plus, Eye } from "lucide-react";
 
 const AgentDashboard = () => {
   const stats = [
@@ -30,23 +31,6 @@ const AgentDashboard = () => {
     { id: 4, name: "City Heights", units: 48, available: 12, status: "Live" },
   ];
 
-  const aiRecommendations = [
-    {
-      title: "Target First-Time Buyers",
-      description: "Your City Centre listings match first-time buyer profiles. Consider a targeted Meta campaign.",
-      action: "Create Campaign"
-    },
-    {
-      title: "Optimise Google Ads",
-      description: "Switch budget from Meta to Google for Riverside Properties - 23% better CPL projected.",
-      action: "Review"
-    },
-    {
-      title: "Schedule Viewings",
-      description: "7 high-intent leads matched to your Garden Square properties are ready for viewings.",
-      action: "Book Now"
-    }
-  ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -156,25 +140,8 @@ const AgentDashboard = () => {
             </div>
           </Card>
 
-          {/* AI Recommendations */}
-          <Card className="p-4 md:p-6">
-            <div className="flex items-center gap-2 mb-4 md:mb-6">
-              <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-accent" />
-              <h3 className="text-base md:text-lg font-semibold text-foreground">AI Recommendations</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              {aiRecommendations.map((rec, index) => (
-                <div key={index} className="p-3 md:p-4 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 transition-colors">
-                  <h4 className="font-medium text-foreground mb-1 md:mb-2 text-sm md:text-base">{rec.title}</h4>
-                  <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{rec.description}</p>
-                  <Button variant="outline" size="sm" className="w-full text-xs md:text-sm">
-                    {rec.action}
-                    <ArrowUpRight className="h-3 w-3 ml-1" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {/* Performance Overview */}
+          <PerformanceOverview userType="agent" />
         </TabsContent>
 
         <TabsContent value="campaigns">

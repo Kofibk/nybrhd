@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import PerformanceOverview from "@/components/PerformanceOverview";
 import { 
   Target, 
   Users, 
@@ -10,8 +10,6 @@ import {
   TrendingUp, 
   Plus,
   Building2,
-  Lightbulb,
-  ArrowRight,
   MoreHorizontal
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -64,28 +62,6 @@ const DeveloperDashboard = () => {
     { name: "Garden Residences", units: 64, sold: 28, status: "Live", image: "🌳" },
   ];
 
-  const aiRecommendations = [
-    {
-      title: "Target Dubai-based buyers for Chelsea Island",
-      description: "High-intent signals detected from UAE region. Consider launching a targeted LinkedIn campaign.",
-      action: "Create Campaign"
-    },
-    {
-      title: "Switch from Meta to Google for better CPL",
-      description: "Google Ads showing 15% lower cost per lead for UK investor segment.",
-      action: "View Analysis"
-    },
-    {
-      title: "Book viewings with 7 matched leads",
-      description: "These leads have high intent scores (85+) and haven't been contacted in 48hrs.",
-      action: "View Leads"
-    },
-    {
-      title: "Optimise ad creative for Marina Heights",
-      description: "A/B test suggests lifestyle imagery outperforms architectural shots by 23%.",
-      action: "Update Creative"
-    },
-  ];
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -194,28 +170,8 @@ const DeveloperDashboard = () => {
         </div>
       </div>
 
-      {/* AI Recommendations */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-accent" />
-          <h3 className="text-base md:text-lg font-semibold text-foreground">AI Recommendations</h3>
-        </div>
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-3 md:gap-4 pb-4">
-            {aiRecommendations.map((rec, index) => (
-              <Card key={index} className="p-4 md:p-5 min-w-[260px] md:min-w-[300px] max-w-[280px] md:max-w-[320px] shadow-card hover:shadow-card-hover transition-shadow flex-shrink-0">
-                <h4 className="font-semibold text-foreground mb-2 whitespace-normal text-sm md:text-base">{rec.title}</h4>
-                <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4 whitespace-normal">{rec.description}</p>
-                <Button variant="outline" size="sm" className="w-full text-xs md:text-sm">
-                  {rec.action}
-                  <ArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-2" />
-                </Button>
-              </Card>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
+      {/* Performance Overview */}
+      <PerformanceOverview userType="developer" />
     </DashboardLayout>
   );
 };
