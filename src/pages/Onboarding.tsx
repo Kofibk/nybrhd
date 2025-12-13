@@ -154,27 +154,8 @@ const Onboarding = () => {
   };
 
   const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return userType && companyName && contactName && email && phone;
-      case 2:
-        return true; // Optional step
-      case 3:
-        if (userType === "developer") {
-          return developmentName && devCountry && devCity && propertyType && minPrice && maxPrice;
-        } else if (userType === "agent") {
-          return agentFocusSegment && agentCoverageAreas;
-        } else if (userType === "broker") {
-          return brokerProducts.length > 0;
-        }
-        return true;
-      case 4:
-        return true; // Skip for now option available
-      case 5:
-        return campaignGoal && monthlyBudget && targetRegions.length > 0;
-      default:
-        return true;
-    }
+    // All fields optional during build phase
+    return true;
   };
 
   const handleNext = () => {
