@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, BarChart3, ArrowRight, ArrowLeft, Check, Plus, X, Sparkles, Calendar, MapPin } from "lucide-react";
+import { Building2, Users, BarChart3, ArrowRight, ArrowLeft, Check, Plus, X, Sparkles, Calendar, MapPin, Upload, Image, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 import { toast } from "sonner";
@@ -51,6 +51,13 @@ const Onboarding = () => {
   const [totalUnits, setTotalUnits] = useState("");
   const [availableUnits, setAvailableUnits] = useState("");
   const [bedrooms, setBedrooms] = useState<string[]>([]);
+  const [devLogo, setDevLogo] = useState<File | null>(null);
+  const [devHeroImage, setDevHeroImage] = useState<File | null>(null);
+  const [devBrochure, setDevBrochure] = useState<File | null>(null);
+  
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+  const brochureInputRef = useRef<HTMLInputElement>(null);
   
   // Agent fields
   const [agentFocusSegment, setAgentFocusSegment] = useState("");
@@ -520,6 +527,117 @@ const Onboarding = () => {
                 {bed}
               </Button>
             ))}
+          </div>
+        </div>
+
+        {/* File Uploads */}
+        <div className="md:col-span-2 pt-4 border-t">
+          <Label className="text-base font-medium mb-3 block">Development Assets (optional)</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Logo Upload */}
+            <div 
+              className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+              onClick={() => logoInputRef.current?.click()}
+            >
+              <input 
+                ref={logoInputRef}
+                type="file" 
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setDevLogo(e.target.files?.[0] || null)}
+              />
+              {devLogo ? (
+                <div className="space-y-2">
+                  <div className="w-12 h-12 mx-auto bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Image className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium truncate">{devLogo.name}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => { e.stopPropagation(); setDevLogo(null); }}
+                  >
+                    <X className="h-3 w-3 mr-1" /> Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <p className="text-sm font-medium">Development Logo</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                </div>
+              )}
+            </div>
+
+            {/* Hero Image Upload */}
+            <div 
+              className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+              onClick={() => heroInputRef.current?.click()}
+            >
+              <input 
+                ref={heroInputRef}
+                type="file" 
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setDevHeroImage(e.target.files?.[0] || null)}
+              />
+              {devHeroImage ? (
+                <div className="space-y-2">
+                  <div className="w-12 h-12 mx-auto bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Image className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium truncate">{devHeroImage.name}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => { e.stopPropagation(); setDevHeroImage(null); }}
+                  >
+                    <X className="h-3 w-3 mr-1" /> Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <p className="text-sm font-medium">Hero Image</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                </div>
+              )}
+            </div>
+
+            {/* Brochure Upload */}
+            <div 
+              className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+              onClick={() => brochureInputRef.current?.click()}
+            >
+              <input 
+                ref={brochureInputRef}
+                type="file" 
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => setDevBrochure(e.target.files?.[0] || null)}
+              />
+              {devBrochure ? (
+                <div className="space-y-2">
+                  <div className="w-12 h-12 mx-auto bg-primary/10 rounded-lg flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium truncate">{devBrochure.name}</p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => { e.stopPropagation(); setDevBrochure(null); }}
+                  >
+                    <X className="h-3 w-3 mr-1" /> Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <p className="text-sm font-medium">Brochure PDF</p>
+                  <p className="text-xs text-muted-foreground">PDF up to 20MB</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
