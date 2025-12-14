@@ -745,7 +745,23 @@ const Onboarding = () => {
     if (userType === "developer") return renderStep3Developer();
     if (userType === "agent") return renderStep3Agent();
     if (userType === "broker") return renderStep3Broker();
-    return null;
+    
+    // Fallback if no user type selected
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <Building2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+          <h2 className="text-2xl font-bold mb-2">Select Your Role First</h2>
+          <p className="text-muted-foreground mb-6">
+            Please go back to Step 1 and select whether you're a Developer, Estate Agent, or Mortgage Broker.
+          </p>
+          <Button variant="outline" onClick={() => setCurrentStep(1)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go to Step 1
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   const renderStep4 = () => (
