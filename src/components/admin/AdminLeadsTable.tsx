@@ -103,6 +103,9 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Local leads state (demoLeads + imported leads)
+  const [localLeads, setLocalLeads] = useState<Lead[]>(demoLeads);
+  
   // New lead form state
   const [newLead, setNewLead] = useState({
     name: "",
@@ -115,9 +118,14 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
     campaignName: "",
   });
 
+  // Handle importing leads from file upload
+  const handleLeadsImport = (importedLeads: Lead[]) => {
+    setLocalLeads(prev => [...importedLeads, ...prev]);
+  };
+
   // Get unique clients/campaigns for filter
-  const uniqueClients = [...new Set(demoLeads.map(lead => lead.campaignName))].filter(Boolean);
-  const uniqueCountries = [...new Set(demoLeads.map(lead => lead.country))];
+  const uniqueClients = [...new Set(localLeads.map(lead => lead.campaignName))].filter(Boolean);
+  const uniqueCountries = [...new Set(localLeads.map(lead => lead.country))];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -178,7 +186,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
     });
   };
 
-  const filteredLeads = demoLeads
+  const filteredLeads = localLeads
     .filter((lead) => {
       const matchesSearch =
         lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -488,7 +496,8 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                 type="leads" 
                 onUploadComplete={(data) => {
                   console.log("Lead report processed:", data);
-                }} 
+                }}
+                onLeadsImport={handleLeadsImport}
               />
               {/* Add Lead Dialog */}
               <Dialog open={addLeadOpen} onOpenChange={setAddLeadOpen}>
