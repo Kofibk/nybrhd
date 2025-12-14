@@ -8,6 +8,7 @@ import PerformanceOverview from "@/components/PerformanceOverview";
 import CampaignBuilder from "@/components/CampaignBuilder";
 import LeadsManagement from "@/components/LeadsManagement";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
+import AICampaignAnalysis from "@/components/AICampaignAnalysis";
 import { 
   Target, 
   Users, 
@@ -185,12 +186,15 @@ const DeveloperDashboard = () => {
             </div>
           </div>
 
+          {/* AI Campaign Analysis */}
+          <AICampaignAnalysis userType="developer" compact />
+
           {/* Performance Overview */}
           <PerformanceOverview userType="developer" context="dashboard" onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <PerformanceOverview userType="developer" context="campaigns" onTabChange={setActiveTab} />
+          <AICampaignAnalysis userType="developer" />
           <div className="mt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
