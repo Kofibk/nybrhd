@@ -488,6 +488,11 @@ export const auditLogsAPI = {
     callAirtableAPI<{ records: AirtableRecord<AirtableAuditLog>[] }>('create', AirtableTables.AUDIT_LOGS, { data }),
 };
 
+// Generic list function for testing any table
+export async function listTable(tableName: string, options?: AirtableOptions) {
+  return callAirtableAPI<AirtableListResponse>('list', tableName as AirtableTable, options);
+}
+
 // Export all APIs
 export const airtable = {
   users: usersAPI,
@@ -504,4 +509,5 @@ export const airtable = {
   invoices: invoicesAPI,
   settings: settingsAPI,
   auditLogs: auditLogsAPI,
+  listTable,
 };
