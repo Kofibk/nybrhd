@@ -13,13 +13,17 @@ import {
   FileText, 
   PenLine, 
   Edit,
-  Flame,
   Check,
   Clock,
   Target,
-  AlertCircle
+  AlertCircle,
+  Home,
+  Briefcase
 } from "lucide-react";
-import { Lead } from "@/lib/types";
+import { Lead, LEAD_SOURCES } from "@/lib/types";
+import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
+import { classifyLead } from "@/lib/leadClassification";
+import { format } from "date-fns";
 
 interface LeadDetailDrawerProps {
   lead: Lead | null;
@@ -56,8 +60,8 @@ const ScoreBar = ({ label, score, max }: ScoreBreakdown) => {
 export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps) => {
   if (!lead) return null;
 
-  const isHotLead = lead.intentScore >= 80 || lead.qualityScore >= 80;
-  const isWarmLead = (lead.intentScore >= 60 && lead.intentScore < 80) || (lead.qualityScore >= 60 && lead.qualityScore < 80);
+  const classification = lead.classification || classifyLead(lead.intentScore, lead.qualityScore);
+  const isHighPriority = classification === "hot" || classification === "lightning";
 
   // Mock engagement history
   const engagementHistory = [
@@ -82,26 +86,6 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
     { label: "Engagement", score: Math.round(lead.intentScore * 0.4 * 0.75), max: 40 },
   ];
 
-  const getStatusBadge = () => {
-    if (isHotLead) {
-      return (
-        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-          <Flame className="h-3 w-3 mr-1" /> Hot Lead
-        </Badge>
-      );
-    }
-    if (isWarmLead) {
-      return (
-        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-          Warm Lead
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="secondary">Cold Lead</Badge>
-    );
-  };
-
   const getTimelineLabel = (timeline?: string) => {
     const labels: Record<string, string> = {
       within_28_days: "Within 28 days",
@@ -122,6 +106,15 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
     return status ? labels[status] || status : "Not specified";
   };
 
+  const getPurposeLabel = (purpose?: string) => {
+    const labels: Record<string, string> = {
+      investment: "Investment",
+      primary_residence: "Primary Residence",
+      holiday_home: "Holiday Home",
+    };
+    return purpose ? labels[purpose] || purpose : "Not specified";
+  };
+
   return (
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
@@ -129,11 +122,14 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
           <div className="flex items-start justify-between">
             <div>
               <SheetTitle className="text-xl">{lead.name}</SheetTitle>
-              <div className="flex items-center gap-2 mt-2">
-                {getStatusBadge()}
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <LeadClassificationBadge classification={classification} />
                 <span className="text-sm text-muted-foreground">
                   Quality: {lead.qualityScore} • Intent: {lead.intentScore}
                 </span>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <LeadSourceBadge source={lead.source} sourceDetail={lead.sourceDetail} />
               </div>
             </div>
           </div>
@@ -186,9 +182,21 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 <p className="font-medium">{getBuyerStatusLabel(lead.buyerStatus)}</p>
               </div>
               <div>
+                <span className="text-muted-foreground">Purpose:</span>
+                <p className="font-medium flex items-center gap-1">
+                  {lead.purpose === "investment" && <Briefcase className="h-3 w-3" />}
+                  {lead.purpose === "primary_residence" && <Home className="h-3 w-3" />}
+                  {getPurposeLabel(lead.purpose)}
+                </p>
+              </div>
+              <div className="col-span-2">
                 <span className="text-muted-foreground">Viewing:</span>
                 <p className="font-medium">
-                  {lead.status === "booked_viewing" ? (
+                  {lead.viewingScheduled ? (
+                    <span className="text-green-500 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Scheduled ({format(new Date(lead.viewingScheduled), "MMM d, h:mma")})
+                    </span>
+                  ) : lead.status === "booked_viewing" ? (
                     <span className="text-green-500 flex items-center gap-1">
                       <Check className="h-3 w-3" /> Scheduled
                     </span>
@@ -287,7 +295,7 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
           </Card>
 
           {/* Recommended Next Steps */}
-          {isHotLead && (
+          {isHighPriority && (
             <Card className="p-4 border-primary/30 bg-primary/5">
               <div className="flex items-center gap-2 mb-3">
                 <Target className="h-4 w-4 text-primary" />

@@ -98,6 +98,46 @@ export type PaymentMethod = "cash" | "mortgage" | "undecided";
 export type BuyerStatus = "browsing" | "actively_looking";
 export type PurchaseTimeline = "within_28_days" | "0_3_months" | "3_6_months" | "6_9_months" | "9_12_months" | "12_months_plus";
 
+// Lead sources
+export type LeadSource = 
+  | "meta_campaign" 
+  | "portal" 
+  | "direct_web" 
+  | "email_forward" 
+  | "introducer" 
+  | "crm_import" 
+  | "manual_upload";
+
+// Lead classification based on dual scoring
+export type LeadClassification = 
+  | "hot"           // 🔥 High intent + High quality
+  | "star"          // ⭐ High quality, moderate intent
+  | "lightning"     // ⚡ High intent, moderate quality
+  | "verified"      // ✓ Moderate both scores
+  | "dormant"       // 💤 Low engagement
+  | "warning"       // ⚠️ Potential issues
+  | "cold";         // ❌ Low scores
+
+export const LEAD_SOURCES = [
+  { value: "meta_campaign", label: "Meta Campaign", icon: "📱" },
+  { value: "portal", label: "Property Portal", icon: "🏠" },
+  { value: "direct_web", label: "Direct Website", icon: "🌐" },
+  { value: "email_forward", label: "Email Forward", icon: "📧" },
+  { value: "introducer", label: "Introducer/Agent", icon: "🤝" },
+  { value: "crm_import", label: "CRM Import (Zapier/Make)", icon: "🔄" },
+  { value: "manual_upload", label: "Manual Upload (CSV)", icon: "📤" },
+] as const;
+
+export const LEAD_CLASSIFICATIONS = [
+  { value: "hot", label: "Hot Lead", icon: "🔥", color: "text-red-500", bgColor: "bg-red-500/10" },
+  { value: "star", label: "Star Quality", icon: "⭐", color: "text-yellow-500", bgColor: "bg-yellow-500/10" },
+  { value: "lightning", label: "High Intent", icon: "⚡", color: "text-blue-500", bgColor: "bg-blue-500/10" },
+  { value: "verified", label: "Verified", icon: "✓", color: "text-green-500", bgColor: "bg-green-500/10" },
+  { value: "dormant", label: "Dormant", icon: "💤", color: "text-gray-500", bgColor: "bg-gray-500/10" },
+  { value: "warning", label: "Warning", icon: "⚠️", color: "text-orange-500", bgColor: "bg-orange-500/10" },
+  { value: "cold", label: "Cold", icon: "❌", color: "text-slate-400", bgColor: "bg-slate-500/10" },
+] as const;
+
 export interface Lead {
   id: string;
   name: string;
@@ -118,6 +158,12 @@ export interface Lead {
   createdAt: string;
   notes: string;
   aiRecommendations?: AIRecommendation[];
+  // New lead flow fields
+  source: LeadSource;
+  sourceDetail?: string; // e.g., portal name, introducer name
+  classification?: LeadClassification;
+  viewingScheduled?: string;
+  purpose?: "investment" | "primary_residence" | "holiday_home";
 }
 
 export interface AIRecommendation {
