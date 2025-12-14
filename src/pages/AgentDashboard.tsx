@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import PerformanceOverview from "@/components/PerformanceOverview";
 import { Home, Users, Calendar, TrendingUp, Plus, Eye } from "lucide-react";
 
 const AgentDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
   const stats = [
     { label: "Active Listings", value: "24", icon: Home, change: "+3 this week" },
     { label: "Leads This Week", value: "156", icon: Users, change: "+12%" },
@@ -71,7 +73,7 @@ const AgentDashboard = () => {
         ))}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
         <TabsList className="bg-muted/50 p-1 w-full overflow-x-auto flex justify-start">
           <TabsTrigger value="overview" className="data-[state=active]:bg-background text-xs md:text-sm">Overview</TabsTrigger>
           <TabsTrigger value="campaigns" className="data-[state=active]:bg-background text-xs md:text-sm">Campaigns</TabsTrigger>
@@ -141,11 +143,11 @@ const AgentDashboard = () => {
           </Card>
 
           {/* Performance Overview */}
-          <PerformanceOverview userType="agent" />
+          <PerformanceOverview userType="agent" onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <PerformanceOverview userType="agent" context="campaigns" />
+          <PerformanceOverview userType="agent" context="campaigns" onTabChange={setActiveTab} />
           <div className="mt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-lg md:text-xl font-semibold text-foreground">AI Campaign Builder</h2>
@@ -159,7 +161,7 @@ const AgentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="leads">
-          <PerformanceOverview userType="agent" context="leads" />
+          <PerformanceOverview userType="agent" context="leads" onTabChange={setActiveTab} />
           <div className="mt-6">
             <LeadsManagement />
           </div>
