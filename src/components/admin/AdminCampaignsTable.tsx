@@ -42,6 +42,7 @@ import {
   Download
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import ReportUploadDialog from "./ReportUploadDialog";
 
 interface AdminCampaignsTableProps {
   searchQuery: string;
@@ -292,6 +293,12 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
               ))}
             </SelectContent>
           </Select>
+          <ReportUploadDialog 
+            type="campaigns" 
+            onUploadComplete={(data) => {
+              console.log("Campaign report processed:", data);
+            }} 
+          />
           <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2 h-8">
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export</span>

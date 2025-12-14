@@ -77,6 +77,7 @@ import {
 import { demoLeads, demoCampaigns } from "@/lib/demoData";
 import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
+import ReportUploadDialog from "./ReportUploadDialog";
 
 interface AdminLeadsTableProps {
   searchQuery: string;
@@ -482,6 +483,13 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
               </span>
             </CardTitle>
             <div className="flex items-center gap-2">
+              {/* Report Upload */}
+              <ReportUploadDialog 
+                type="leads" 
+                onUploadComplete={(data) => {
+                  console.log("Lead report processed:", data);
+                }} 
+              />
               {/* Add Lead Dialog */}
               <Dialog open={addLeadOpen} onOpenChange={setAddLeadOpen}>
                 <DialogTrigger asChild>
