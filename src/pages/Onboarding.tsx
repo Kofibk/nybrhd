@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, BarChart3, ArrowRight, ArrowLeft, Check, Plus, X, Sparkles, Calendar, MapPin, Upload, Image, FileText } from "lucide-react";
+import { Building2, Users, BarChart3, ArrowRight, ArrowLeft, Check, Plus, X, Sparkles, Calendar, MapPin, Upload, Image, FileText, Link2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 import { toast } from "sonner";
+import { LeadUploadModal } from "@/components/LeadUploadModal";
 
 type UserType = "developer" | "agent" | "broker" | null;
 
@@ -78,6 +79,10 @@ const Onboarding = () => {
   const [campaignGoal, setCampaignGoal] = useState("leads");
   const [monthlyBudget, setMonthlyBudget] = useState("");
   const [targetRegions, setTargetRegions] = useState<string[]>(["uk"]);
+  
+  // Lead Upload Modal
+  const [leadUploadModalOpen, setLeadUploadModalOpen] = useState(false);
+  const [importedLeadsCount, setImportedLeadsCount] = useState(0);
 
   const userTypes = [
     {
@@ -902,40 +907,53 @@ const Onboarding = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button 
-              variant="default"
-              onClick={() => {
-                toast.success("Navigating to lead upload...");
-                const selected = userTypes.find(type => type.id === userType);
-                if (selected) {
-                  navigate(`${selected.route}?tab=settings&section=lead-sources`);
-                }
-              }}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Leads CSV
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                toast.success("Navigating to lead sources...");
-                const selected = userTypes.find(type => type.id === userType);
-                if (selected) {
-                  navigate(`${selected.route}?tab=settings&section=lead-sources`);
-                }
-              }}
-            >
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Connect Lead Sources
-            </Button>
-          </div>
+          {importedLeadsCount > 0 ? (
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <p className="text-sm font-medium text-green-600 flex items-center justify-center gap-2">
+                <Check className="h-4 w-4" />
+                {importedLeadsCount} leads imported and scored
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                variant="default"
+                onClick={() => setLeadUploadModalOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Leads CSV
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  toast.success("Navigating to lead sources...");
+                  const selected = userTypes.find(type => type.id === userType);
+                  if (selected) {
+                    navigate(`${selected.route}?tab=settings&section=lead-sources`);
+                  }
+                }}
+              >
+                <Link2 className="h-4 w-4 mr-2" />
+                Connect Lead Sources
+              </Button>
+            </div>
+          )}
 
           <p className="text-xs text-muted-foreground">
             You can also do this later from Settings → Lead Sources
           </p>
         </div>
       </Card>
+
+      {/* Lead Upload Modal */}
+      <LeadUploadModal 
+        open={leadUploadModalOpen} 
+        onOpenChange={setLeadUploadModalOpen}
+        onImportComplete={(count) => {
+          setImportedLeadsCount(count);
+          toast.success(`${count} leads imported and scored!`);
+        }}
+      />
 
       {/* Divider */}
       <div className="flex items-center gap-4 max-w-md mx-auto">
