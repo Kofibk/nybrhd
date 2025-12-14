@@ -28,6 +28,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ClientDetail from "./pages/admin/ClientDetail";
 import AdminRoute from "./components/admin/AdminRoute";
+import AirtableTest from "./pages/AirtableTest";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +117,9 @@ const AppRoutes = () => {
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/admin/clients/:clientId" element={<AdminRoute><ClientDetail /></AdminRoute>} />
+
+      {/* Test Routes */}
+      <Route path="/airtable-test" element={<AirtableTest />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
