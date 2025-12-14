@@ -10,10 +10,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { 
   User, Mail, Phone, MapPin, TrendingUp, Target, Calendar, 
   DollarSign, Home, MessageSquare, Search, Download, X,
-  Building2, Clock, Sparkles, Lightbulb, CreditCard, Timer
+  Building2, Clock, Sparkles, Lightbulb, CreditCard, Timer, Filter
 } from "lucide-react";
 import { useState } from "react";
-import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline } from "@/lib/types";
+import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline, LeadSource, LEAD_SOURCES } from "@/lib/types";
+import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
+import { classifyLead } from "@/lib/leadClassification";
 
 interface Lead {
   id: string;
@@ -29,7 +31,8 @@ interface Lead {
   intentScore: number;
   qualityScore: number;
   status: "new" | "engaged" | "viewing" | "offer" | "closed";
-  source: string;
+  source: LeadSource;
+  sourceDetail?: string;
   lastActivity: string;
   assignedAgent: string | null;
   matchedUnits: string[];
@@ -45,6 +48,8 @@ interface Lead {
 const LeadsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [classificationFilter, setClassificationFilter] = useState("all");
   const [developmentFilter, setDevelopmentFilter] = useState("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -64,7 +69,8 @@ const LeadsManagement = () => {
       intentScore: 78,
       qualityScore: 85,
       status: "engaged",
-      source: "Meta Campaign - Lagos HNW",
+      source: "meta_campaign",
+      sourceDetail: "Lagos HNW Campaign",
       lastActivity: "2 hours ago",
       assignedAgent: "Sarah Johnson",
       matchedUnits: ["Marina Heights - Unit 405", "Skyline Tower - Unit 1201"],
@@ -107,7 +113,8 @@ const LeadsManagement = () => {
       intentScore: 91,
       qualityScore: 72,
       status: "viewing",
-      source: "Google Ads - UK Investors",
+      source: "portal",
+      sourceDetail: "Rightmove",
       lastActivity: "1 day ago",
       assignedAgent: "Mike Chen",
       matchedUnits: ["Garden Residences - Unit 12"],
@@ -141,7 +148,8 @@ const LeadsManagement = () => {
       intentScore: 85,
       qualityScore: 90,
       status: "offer",
-      source: "LinkedIn - Dubai Expats",
+      source: "introducer",
+      sourceDetail: "Dubai Partners Ltd",
       lastActivity: "3 hours ago",
       assignedAgent: "Sarah Johnson",
       matchedUnits: ["Skyline Tower - Penthouse A"],
@@ -175,7 +183,8 @@ const LeadsManagement = () => {
       intentScore: 82,
       qualityScore: 68,
       status: "new",
-      source: "Website - Organic Search",
+      source: "direct_web",
+      sourceDetail: "Organic Search",
       lastActivity: "5 hours ago",
       assignedAgent: null,
       matchedUnits: ["Marina Heights - Unit 302", "Riverside Plaza - Unit 15"],
@@ -208,7 +217,8 @@ const LeadsManagement = () => {
       intentScore: 76,
       qualityScore: 79,
       status: "engaged",
-      source: "Instagram Ads",
+      source: "manual_upload",
+      sourceDetail: "CRM Import - Jan 2025",
       lastActivity: "1 day ago",
       assignedAgent: null,
       matchedUnits: ["Garden Residences - Unit 8"],
@@ -278,7 +288,10 @@ const LeadsManagement = () => {
                          lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lead.country.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSource = sourceFilter === "all" || lead.source === sourceFilter;
+    const leadClassification = classifyLead(lead.intentScore, lead.qualityScore);
+    const matchesClassification = classificationFilter === "all" || leadClassification === classificationFilter;
+    return matchesSearch && matchesStatus && matchesSource && matchesClassification;
   });
 
   const stats = [
@@ -309,41 +322,74 @@ const LeadsManagement = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, email, or country..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="engaged">Engaged</SelectItem>
-              <SelectItem value="viewing">Viewing</SelectItem>
-              <SelectItem value="offer">Offer Made</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={developmentFilter} onValueChange={setDevelopmentFilter}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <SelectValue placeholder="Development" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Developments</SelectItem>
-              <SelectItem value="marina">Marina Heights</SelectItem>
-              <SelectItem value="skyline">Skyline Tower</SelectItem>
-              <SelectItem value="garden">Garden Residences</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, or country..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="engaged">Engaged</SelectItem>
+                <SelectItem value="viewing">Viewing</SelectItem>
+                <SelectItem value="offer">Offer Made</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {LEAD_SOURCES.map((source) => (
+                  <SelectItem key={source.value} value={source.value}>
+                    <span className="flex items-center gap-2">
+                      <span>{source.icon}</span>
+                      <span>{source.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={classificationFilter} onValueChange={setClassificationFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Classification" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classifications</SelectItem>
+                <SelectItem value="hot">🔥 Hot Lead</SelectItem>
+                <SelectItem value="star">⭐ Quality Lead</SelectItem>
+                <SelectItem value="lightning">⚡ Intent Lead</SelectItem>
+                <SelectItem value="verified">✓ Valid Lead</SelectItem>
+                <SelectItem value="dormant">💤 Cold Lead</SelectItem>
+                <SelectItem value="warning">⚠️ At Risk</SelectItem>
+                <SelectItem value="cold">❌ Disqualified</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={developmentFilter} onValueChange={setDevelopmentFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Development" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Developments</SelectItem>
+                <SelectItem value="marina">Marina Heights</SelectItem>
+                <SelectItem value="skyline">Skyline Tower</SelectItem>
+                <SelectItem value="garden">Garden Residences</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
