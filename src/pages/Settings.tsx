@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { LeadSourceManager } from "@/components/LeadSourceManager";
 import { 
   Building2, 
   Users, 
@@ -14,7 +15,8 @@ import {
   Upload,
   Download,
   Plus,
-  Trash2
+  Trash2,
+  ArrowRight
 } from "lucide-react";
 import { useState } from "react";
 
@@ -42,9 +44,10 @@ const Settings = ({ userType }: SettingsProps) => {
     <DashboardLayout title="Settings" userType={userType}>
       <Tabs defaultValue="company" className="space-y-4 md:space-y-6">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-4 md:max-w-2xl">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 md:max-w-3xl">
             <TabsTrigger value="company" className="text-xs md:text-sm whitespace-nowrap">Company Info</TabsTrigger>
             <TabsTrigger value="team" className="text-xs md:text-sm whitespace-nowrap">Team Access</TabsTrigger>
+            <TabsTrigger value="lead-sources" className="text-xs md:text-sm whitespace-nowrap">Lead Sources</TabsTrigger>
             <TabsTrigger value="integrations" className="text-xs md:text-sm whitespace-nowrap">Integrations</TabsTrigger>
             <TabsTrigger value="preferences" className="text-xs md:text-sm whitespace-nowrap">Preferences</TabsTrigger>
           </TabsList>
@@ -148,6 +151,10 @@ const Settings = ({ userType }: SettingsProps) => {
               ))}
             </div>
           </Card>
+        </TabsContent>
+        {/* Lead Sources Tab */}
+        <TabsContent value="lead-sources">
+          <LeadSourceManager />
         </TabsContent>
 
         {/* Integrations Tab */}
