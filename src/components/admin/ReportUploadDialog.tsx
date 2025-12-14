@@ -10,24 +10,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileSpreadsheet, FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Upload, FileSpreadsheet, FileText, Loader2, CheckCircle, AlertCircle, Users } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Lead } from "@/lib/types";
 
 interface ReportUploadDialogProps {
   type: "leads" | "campaigns";
   onUploadComplete?: (data: any) => void;
+  onLeadsImport?: (leads: Lead[]) => void;
 }
 
-type UploadStatus = "idle" | "uploading" | "processing" | "complete" | "error";
+type UploadStatus = "idle" | "uploading" | "processing" | "preview" | "importing" | "complete" | "error";
 
-const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps) => {
+const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUploadDialogProps) => {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [processingResult, setProcessingResult] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const acceptedTypes = ".csv,.xlsx,.xls,.pdf";
@@ -45,6 +50,7 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
       setStatus("idle");
       setErrorMessage("");
       setProcessingResult(null);
+      setSelectedLeads(new Set());
     }
   };
 
@@ -58,6 +64,7 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
         setStatus("idle");
         setErrorMessage("");
         setProcessingResult(null);
+        setSelectedLeads(new Set());
       } else {
         toast({
           title: "Invalid file type",
@@ -80,13 +87,12 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
       setProgress(40);
       setStatus("processing");
 
-      // Call appropriate AI edge function based on type
+      // Call AI edge function for lead extraction
       const functionName = type === "leads" ? "ai-lead-analysis" : "ai-campaign-intelligence";
-      const analysisType = type === "leads" ? "bulk_analysis" : "report_analysis";
 
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
-          type: analysisType,
+          type: "bulk_analysis",
           fileContent: content,
           fileName: selectedFile.name,
           fileType: selectedFile.name.split('.').pop()?.toLowerCase(),
@@ -97,13 +103,23 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
 
       if (error) throw error;
 
+      if (data.error) throw new Error(data.error);
+
       setProcessingResult(data);
       setProgress(100);
-      setStatus("complete");
+      
+      // If leads were extracted, show preview
+      if (type === "leads" && data.leads && data.leads.length > 0) {
+        // Select all leads by default
+        setSelectedLeads(new Set(data.leads.map((_: any, i: number) => i)));
+        setStatus("preview");
+      } else {
+        setStatus("complete");
+      }
 
       toast({
         title: "Report processed successfully",
-        description: `${typeLabel} report has been analysed with AI.`,
+        description: `${data.recordsFound || 0} records found.`,
       });
 
       if (onUploadComplete) {
@@ -121,12 +137,43 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
     }
   };
 
+  const handleImportLeads = () => {
+    if (!processingResult?.leads || !onLeadsImport) return;
+
+    setStatus("importing");
+    
+    const leadsToImport = processingResult.leads.filter((_: any, i: number) => selectedLeads.has(i));
+    
+    // Add classification based on scores
+    const processedLeads = leadsToImport.map((lead: Lead) => ({
+      ...lead,
+      classification: getClassification(lead.qualityScore, lead.intentScore),
+    }));
+
+    onLeadsImport(processedLeads);
+    
+    setStatus("complete");
+    toast({
+      title: "Leads imported",
+      description: `Successfully imported ${processedLeads.length} leads.`,
+    });
+  };
+
+  const getClassification = (quality: number, intent: number) => {
+    if (quality >= 80 && intent >= 80) return "hot";
+    if (quality >= 70 && intent >= 50) return "star";
+    if (intent >= 70 && quality >= 50) return "lightning";
+    if (quality >= 50 && intent >= 50) return "verified";
+    if (quality < 40 && intent < 40) return "cold";
+    if (quality < 50 || intent < 50) return "dormant";
+    return "verified";
+  };
+
   const readFileContent = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
       if (file.name.endsWith(".pdf")) {
-        // For PDF, read as base64
         reader.onload = () => {
           const base64 = (reader.result as string).split(",")[1];
           resolve(base64);
@@ -134,7 +181,6 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
         reader.onerror = reject;
         reader.readAsDataURL(file);
       } else {
-        // For CSV/Excel, read as text
         reader.onload = () => {
           resolve(reader.result as string);
         };
@@ -150,6 +196,7 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
     setProgress(0);
     setProcessingResult(null);
     setErrorMessage("");
+    setSelectedLeads(new Set());
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -162,6 +209,24 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
     setOpen(isOpen);
   };
 
+  const toggleLeadSelection = (index: number) => {
+    const newSelected = new Set(selectedLeads);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedLeads(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedLeads.size === processingResult?.leads?.length) {
+      setSelectedLeads(new Set());
+    } else {
+      setSelectedLeads(new Set(processingResult.leads.map((_: any, i: number) => i)));
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
@@ -170,11 +235,11 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
           <span className="hidden sm:inline">Upload Report</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Upload {typeLabel} Report</DialogTitle>
           <DialogDescription>
-            Upload a PDF, CSV, or Excel file containing {type} data for AI analysis.
+            Upload a PDF, CSV, or Excel file containing {type} data for AI analysis and import.
           </DialogDescription>
         </DialogHeader>
 
@@ -226,43 +291,87 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
               <div className="flex items-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <span className="text-sm">
-                  {status === "uploading" ? "Uploading file..." : "AI is analysing your report..."}
+                  {status === "uploading" ? "Uploading file..." : "AI is extracting lead data..."}
                 </span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
           )}
 
-          {/* Success state */}
-          {status === "complete" && processingResult && (
+          {/* Lead Preview */}
+          {status === "preview" && processingResult?.leads && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 text-green-600">
-                <CheckCircle className="h-5 w-5" />
-                <span className="text-sm font-medium">Analysis complete!</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">
+                    {processingResult.leads.length} leads extracted
+                  </span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
+                  {selectedLeads.size === processingResult.leads.length ? "Deselect All" : "Select All"}
+                </Button>
               </div>
-              
-              {/* Results summary */}
-              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                <p className="text-sm font-medium">AI Analysis Summary:</p>
-                {processingResult.summary && (
-                  <p className="text-sm text-muted-foreground">{processingResult.summary}</p>
-                )}
-                {processingResult.recordsFound !== undefined && (
-                  <p className="text-sm text-muted-foreground">
-                    Records found: {processingResult.recordsFound}
-                  </p>
-                )}
-                {processingResult.insights && processingResult.insights.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-xs font-medium mb-1">Key Insights:</p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      {processingResult.insights.slice(0, 3).map((insight: string, i: number) => (
-                        <li key={i}>• {insight}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+
+              <ScrollArea className="h-[300px] border rounded-lg">
+                <div className="p-2 space-y-2">
+                  {processingResult.leads.map((lead: any, index: number) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                        selectedLeads.has(index) ? "bg-primary/5 border-primary/30" : "bg-muted/30 border-transparent"
+                      }`}
+                      onClick={() => toggleLeadSelection(index)}
+                    >
+                      <Checkbox
+                        checked={selectedLeads.has(index)}
+                        onCheckedChange={() => toggleLeadSelection(index)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{lead.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{lead.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">{lead.country}</p>
+                        <p className="text-xs font-medium">{lead.budget}</p>
+                      </div>
+                      <div className="text-right min-w-[60px]">
+                        <p className="text-xs">Q: {lead.qualityScore}</p>
+                        <p className="text-xs">I: {lead.intentScore}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+
+              {processingResult.insights && processingResult.insights.length > 0 && (
+                <div className="p-3 bg-muted/50 rounded-lg">
+                  <p className="text-xs font-medium mb-1">AI Insights:</p>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    {processingResult.insights.slice(0, 3).map((insight: string, i: number) => (
+                      <li key={i}>• {insight}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Importing state */}
+          {status === "importing" && (
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm">Importing leads...</span>
+            </div>
+          )}
+
+          {/* Success state */}
+          {status === "complete" && (
+            <div className="flex items-center gap-3 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span className="text-sm font-medium">
+                {type === "leads" ? "Leads imported successfully!" : "Analysis complete!"}
+              </span>
             </div>
           )}
 
@@ -281,7 +390,7 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
           {status === "idle" && !selectedFile && (
             <div className="p-3 bg-muted/50 rounded-lg">
               <p className="text-xs text-muted-foreground">
-                <strong>Tip:</strong> Upload {type === "leads" ? "lead lists, CRM exports, or qualification reports" : "campaign performance reports, Meta/Google exports, or analytics summaries"} for AI-powered analysis and insights.
+                <strong>Tip:</strong> Upload {type === "leads" ? "lead lists, CRM exports, or qualification reports" : "campaign performance reports, Meta/Google exports, or analytics summaries"} for AI-powered extraction and import.
               </p>
             </div>
           )}
@@ -295,6 +404,19 @@ const ReportUploadDialog = ({ type, onUploadComplete }: ReportUploadDialogProps)
               </Button>
               <Button onClick={processFile} disabled={!selectedFile}>
                 Process with AI
+              </Button>
+            </>
+          )}
+          {status === "preview" && (
+            <>
+              <Button variant="outline" onClick={resetDialog}>
+                Upload Different File
+              </Button>
+              <Button 
+                onClick={handleImportLeads} 
+                disabled={selectedLeads.size === 0 || !onLeadsImport}
+              >
+                Import {selectedLeads.size} Lead{selectedLeads.size !== 1 ? "s" : ""}
               </Button>
             </>
           )}
