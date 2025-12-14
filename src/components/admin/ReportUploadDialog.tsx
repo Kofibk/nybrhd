@@ -12,31 +12,46 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, FileSpreadsheet, FileText, Loader2, CheckCircle, AlertCircle, Users } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText, Loader2, CheckCircle, AlertCircle, Users, BarChart3 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Lead } from "@/lib/types";
+
+interface Campaign {
+  id: string;
+  name: string;
+  client: string;
+  clientType: string;
+  status: string;
+  budget: number;
+  spent: number;
+  leads: number;
+  cpl: number;
+  startDate: string;
+}
 
 interface ReportUploadDialogProps {
   type: "leads" | "campaigns";
   onUploadComplete?: (data: any) => void;
   onLeadsImport?: (leads: Lead[]) => void;
+  onCampaignsImport?: (campaigns: Campaign[]) => void;
 }
 
 type UploadStatus = "idle" | "uploading" | "processing" | "preview" | "importing" | "complete" | "error";
 
-const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUploadDialogProps) => {
+const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaignsImport }: ReportUploadDialogProps) => {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [processingResult, setProcessingResult] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const acceptedTypes = ".csv,.xlsx,.xls,.pdf";
   const typeLabel = type === "leads" ? "Lead" : "Campaign";
+  const dataKey = type === "leads" ? "leads" : "campaigns";
 
   const getFileIcon = (fileName: string) => {
     if (fileName.endsWith(".pdf")) return <FileText className="h-5 w-5 text-red-500" />;
@@ -50,7 +65,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
       setStatus("idle");
       setErrorMessage("");
       setProcessingResult(null);
-      setSelectedLeads(new Set());
+      setSelectedItems(new Set());
     }
   };
 
@@ -64,7 +79,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
         setStatus("idle");
         setErrorMessage("");
         setProcessingResult(null);
-        setSelectedLeads(new Set());
+        setSelectedItems(new Set());
       } else {
         toast({
           title: "Invalid file type",
@@ -82,12 +97,10 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
     setProgress(20);
 
     try {
-      // Read file content
       const content = await readFileContent(selectedFile);
       setProgress(40);
       setStatus("processing");
 
-      // Call AI edge function for lead extraction
       const functionName = type === "leads" ? "ai-lead-analysis" : "ai-campaign-intelligence";
 
       const { data, error } = await supabase.functions.invoke(functionName, {
@@ -102,16 +115,14 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
       setProgress(80);
 
       if (error) throw error;
-
       if (data.error) throw new Error(data.error);
 
       setProcessingResult(data);
       setProgress(100);
       
-      // If leads were extracted, show preview
-      if (type === "leads" && data.leads && data.leads.length > 0) {
-        // Select all leads by default
-        setSelectedLeads(new Set(data.leads.map((_: any, i: number) => i)));
+      const items = data[dataKey];
+      if (items && items.length > 0) {
+        setSelectedItems(new Set(items.map((_: any, i: number) => i)));
         setStatus("preview");
       } else {
         setStatus("complete");
@@ -119,7 +130,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
 
       toast({
         title: "Report processed successfully",
-        description: `${data.recordsFound || 0} records found.`,
+        description: `${data.recordsFound || 0} ${type} found.`,
       });
 
       if (onUploadComplete) {
@@ -142,10 +153,9 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
 
     setStatus("importing");
     
-    const leadsToImport = processingResult.leads.filter((_: any, i: number) => selectedLeads.has(i));
+    const leadsToImport = processingResult.leads.filter((_: any, i: number) => selectedItems.has(i));
     
     try {
-      // Call AI to score all leads
       const { data: scoringResult, error } = await supabase.functions.invoke('ai-lead-analysis', {
         body: {
           action: 'bulk_scoring',
@@ -165,7 +175,6 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
       let scoredLeads = leadsToImport;
 
       if (!error && scoringResult && Array.isArray(scoringResult)) {
-        // Merge AI scores with leads
         scoredLeads = leadsToImport.map((lead: any) => {
           const aiScore = scoringResult.find((s: any) => s.leadId === lead.id);
           if (aiScore) {
@@ -190,7 +199,6 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
           description: `Scored ${scoringResult.length} leads with AI analysis.`,
         });
       } else {
-        // Fallback: use initial scores with classification
         scoredLeads = leadsToImport.map((lead: Lead) => ({
           ...lead,
           classification: getClassification(lead.qualityScore, lead.intentScore),
@@ -206,7 +214,6 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
       });
     } catch (err) {
       console.error("Scoring error:", err);
-      // Import anyway with basic classification
       const processedLeads = leadsToImport.map((lead: Lead) => ({
         ...lead,
         classification: getClassification(lead.qualityScore, lead.intentScore),
@@ -218,6 +225,30 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
         title: "Leads imported",
         description: `Imported ${processedLeads.length} leads (AI scoring unavailable).`,
       });
+    }
+  };
+
+  const handleImportCampaigns = () => {
+    if (!processingResult?.campaigns || !onCampaignsImport) return;
+
+    setStatus("importing");
+    
+    const campaignsToImport = processingResult.campaigns.filter((_: any, i: number) => selectedItems.has(i));
+    
+    onCampaignsImport(campaignsToImport);
+    
+    setStatus("complete");
+    toast({
+      title: "Campaigns imported",
+      description: `Successfully imported ${campaignsToImport.length} campaigns.`,
+    });
+  };
+
+  const handleImport = () => {
+    if (type === "leads") {
+      handleImportLeads();
+    } else {
+      handleImportCampaigns();
     }
   };
 
@@ -258,7 +289,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
     setProgress(0);
     setProcessingResult(null);
     setErrorMessage("");
-    setSelectedLeads(new Set());
+    setSelectedItems(new Set());
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -271,23 +302,27 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
     setOpen(isOpen);
   };
 
-  const toggleLeadSelection = (index: number) => {
-    const newSelected = new Set(selectedLeads);
+  const toggleItemSelection = (index: number) => {
+    const newSelected = new Set(selectedItems);
     if (newSelected.has(index)) {
       newSelected.delete(index);
     } else {
       newSelected.add(index);
     }
-    setSelectedLeads(newSelected);
+    setSelectedItems(newSelected);
   };
 
   const toggleSelectAll = () => {
-    if (selectedLeads.size === processingResult?.leads?.length) {
-      setSelectedLeads(new Set());
+    const items = processingResult?.[dataKey] || [];
+    if (selectedItems.size === items.length) {
+      setSelectedItems(new Set());
     } else {
-      setSelectedLeads(new Set(processingResult.leads.map((_: any, i: number) => i)));
+      setSelectedItems(new Set(items.map((_: any, i: number) => i)));
     }
   };
+
+  const items = processingResult?.[dataKey] || [];
+  const canImport = type === "leads" ? !!onLeadsImport : !!onCampaignsImport;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -353,25 +388,25 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
               <div className="flex items-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <span className="text-sm">
-                  {status === "uploading" ? "Uploading file..." : "AI is extracting lead data..."}
+                  {status === "uploading" ? "Uploading file..." : `AI is extracting ${type} data...`}
                 </span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
           )}
 
-          {/* Lead Preview */}
-          {status === "preview" && processingResult?.leads && (
+          {/* Preview - Leads */}
+          {status === "preview" && type === "leads" && processingResult?.leads && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
                   <span className="text-sm font-medium">
-                    {processingResult.leads.length} leads extracted
+                    {items.length} leads extracted
                   </span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
-                  {selectedLeads.size === processingResult.leads.length ? "Deselect All" : "Select All"}
+                  {selectedItems.size === items.length ? "Deselect All" : "Select All"}
                 </Button>
               </div>
 
@@ -381,13 +416,13 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
                     <div
                       key={index}
                       className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
-                        selectedLeads.has(index) ? "bg-primary/5 border-primary/30" : "bg-muted/30 border-transparent"
+                        selectedItems.has(index) ? "bg-primary/5 border-primary/30" : "bg-muted/30 border-transparent"
                       }`}
-                      onClick={() => toggleLeadSelection(index)}
+                      onClick={() => toggleItemSelection(index)}
                     >
                       <Checkbox
-                        checked={selectedLeads.has(index)}
-                        onCheckedChange={() => toggleLeadSelection(index)}
+                        checked={selectedItems.has(index)}
+                        onCheckedChange={() => toggleItemSelection(index)}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{lead.name}</p>
@@ -405,17 +440,66 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
                   ))}
                 </div>
               </ScrollArea>
+            </div>
+          )}
 
-              {processingResult.insights && processingResult.insights.length > 0 && (
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-xs font-medium mb-1">AI Insights:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    {processingResult.insights.slice(0, 3).map((insight: string, i: number) => (
-                      <li key={i}>• {insight}</li>
-                    ))}
-                  </ul>
+          {/* Preview - Campaigns */}
+          {status === "preview" && type === "campaigns" && processingResult?.campaigns && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">
+                    {items.length} campaigns extracted
+                  </span>
                 </div>
-              )}
+                <Button variant="ghost" size="sm" onClick={toggleSelectAll}>
+                  {selectedItems.size === items.length ? "Deselect All" : "Select All"}
+                </Button>
+              </div>
+
+              <ScrollArea className="h-[300px] border rounded-lg">
+                <div className="p-2 space-y-2">
+                  {processingResult.campaigns.map((campaign: any, index: number) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                        selectedItems.has(index) ? "bg-primary/5 border-primary/30" : "bg-muted/30 border-transparent"
+                      }`}
+                      onClick={() => toggleItemSelection(index)}
+                    >
+                      <Checkbox
+                        checked={selectedItems.has(index)}
+                        onCheckedChange={() => toggleItemSelection(index)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{campaign.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{campaign.client}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground capitalize">{campaign.status}</p>
+                        <p className="text-xs font-medium">£{campaign.budget?.toLocaleString()}</p>
+                      </div>
+                      <div className="text-right min-w-[80px]">
+                        <p className="text-xs">{campaign.leads} leads</p>
+                        <p className="text-xs">CPL: £{campaign.cpl?.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          )}
+
+          {/* Insights */}
+          {status === "preview" && processingResult?.insights && processingResult.insights.length > 0 && (
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="text-xs font-medium mb-1">AI Insights:</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                {processingResult.insights.slice(0, 3).map((insight: string, i: number) => (
+                  <li key={i}>• {insight}</li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -423,7 +507,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
           {status === "importing" && (
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="text-sm">Importing leads...</span>
+              <span className="text-sm">Importing {type}...</span>
             </div>
           )}
 
@@ -432,7 +516,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
             <div className="flex items-center gap-3 text-green-600">
               <CheckCircle className="h-5 w-5" />
               <span className="text-sm font-medium">
-                {type === "leads" ? "Leads imported successfully!" : "Analysis complete!"}
+                {typeLabel}s imported successfully!
               </span>
             </div>
           )}
@@ -475,10 +559,10 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
                 Upload Different File
               </Button>
               <Button 
-                onClick={handleImportLeads} 
-                disabled={selectedLeads.size === 0 || !onLeadsImport}
+                onClick={handleImport} 
+                disabled={selectedItems.size === 0 || !canImport}
               >
-                Import {selectedLeads.size} Lead{selectedLeads.size !== 1 ? "s" : ""}
+                Import {selectedItems.size} {typeLabel}{selectedItems.size !== 1 ? "s" : ""}
               </Button>
             </>
           )}
