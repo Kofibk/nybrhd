@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 
 const DeveloperDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
   const userName = "John";
   
   const stats = [
@@ -102,7 +104,7 @@ const DeveloperDashboard = () => {
         ))}
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
         <TabsList className="w-full overflow-x-auto flex justify-start">
           <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
           <TabsTrigger value="campaigns" className="text-xs md:text-sm">Campaigns</TabsTrigger>
@@ -184,11 +186,11 @@ const DeveloperDashboard = () => {
           </div>
 
           {/* Performance Overview */}
-          <PerformanceOverview userType="developer" context="dashboard" />
+          <PerformanceOverview userType="developer" context="dashboard" onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <PerformanceOverview userType="developer" context="campaigns" />
+          <PerformanceOverview userType="developer" context="campaigns" onTabChange={setActiveTab} />
           <div className="mt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
@@ -202,7 +204,7 @@ const DeveloperDashboard = () => {
         </TabsContent>
 
         <TabsContent value="leads">
-          <PerformanceOverview userType="developer" context="leads" />
+          <PerformanceOverview userType="developer" context="leads" onTabChange={setActiveTab} />
           <div className="mt-6">
             <LeadsManagement />
           </div>

@@ -1,16 +1,33 @@
 import { Card } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Minus, ArrowRight, Lightbulb, Target, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { TrendingUp, TrendingDown, Minus, ArrowRight, Lightbulb, Target, Users, ExternalLink } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+
+interface MetricAction {
+  label: string;
+  tab?: string;
+  filter?: string;
+}
+
+interface Metric {
+  label: string;
+  value: string;
+  description: string;
+  trend: string;
+  action?: MetricAction;
+}
 
 interface PerformanceOverviewProps {
   userType: "developer" | "agent" | "broker";
   context?: "dashboard" | "campaigns" | "leads";
+  onTabChange?: (tab: string) => void;
 }
 
-const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOverviewProps) => {
+const PerformanceOverview = ({ userType, context = "dashboard", onTabChange }: PerformanceOverviewProps) => {
+  const navigate = useNavigate();
+  
   // Context-specific data based on tab
-  const getContextData = () => {
+  const getContextData = (): Record<string, { summary: string; metrics: Metric[] }> => {
     if (context === "campaigns") {
       return {
         developer: {
@@ -20,13 +37,15 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Best Performing",
               value: "Meta Ads - Lagos HNW",
               description: "Lowest CPL at £20.16 with 3.2% CTR",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Campaign", tab: "campaigns", filter: "lagos-hnw" }
             },
             {
               label: "Optimise Budget",
               value: "Shift to Meta",
               description: "Meta outperforming other channels by 35%",
-              trend: "up"
+              trend: "up",
+              action: { label: "Adjust Budget", tab: "campaigns" }
             },
             {
               label: "Creative Tip",
@@ -38,7 +57,8 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Needs Attention",
               value: "LinkedIn Campaign",
               description: "CPL 40% higher than target - consider pausing",
-              trend: "down"
+              trend: "down",
+              action: { label: "Review Campaign", tab: "campaigns", filter: "linkedin" }
             }
           ]
         },
@@ -49,13 +69,15 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Top Campaign",
               value: "City Centre Apartments",
               description: "Best ROI this month at 4.1% CTR",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Campaign", tab: "campaigns", filter: "city-centre" }
             },
             {
               label: "Budget Advice",
               value: "Increase Spend",
               description: "High-performing campaigns have room to scale",
-              trend: "up"
+              trend: "up",
+              action: { label: "Adjust Budget", tab: "campaigns" }
             },
             {
               label: "Audience Insight",
@@ -67,7 +89,8 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Review Required",
               value: "Suburban Homes",
               description: "CTR dropped 15% - refresh creatives",
-              trend: "down"
+              trend: "down",
+              action: { label: "Review Campaign", tab: "campaigns", filter: "suburban" }
             }
           ]
         },
@@ -78,13 +101,15 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Star Campaign",
               value: "Residential Mortgages",
               description: "Highest quality leads with 8% conversion",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Campaign", tab: "campaigns", filter: "residential" }
             },
             {
               label: "Scale Opportunity",
               value: "Middle East Targeting",
               description: "Strong intent signals - increase budget 20%",
-              trend: "up"
+              trend: "up",
+              action: { label: "Adjust Budget", tab: "campaigns" }
             },
             {
               label: "Creative Insight",
@@ -96,7 +121,8 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Action Needed",
               value: "Life Insurance Ads",
               description: "Low engagement - test new angles",
-              trend: "down"
+              trend: "down",
+              action: { label: "Review Campaign", tab: "campaigns", filter: "insurance" }
             }
           ]
         }
@@ -112,19 +138,22 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Hot Leads",
               value: "12 Ready to Book",
               description: "High intent score leads awaiting contact",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Hot Leads", tab: "leads", filter: "hot" }
             },
             {
               label: "Best Source",
               value: "Meta Campaigns",
               description: "Generating highest quality leads this week",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Meta Leads", tab: "leads", filter: "meta" }
             },
             {
               label: "Follow-Up Alert",
               value: "8 Leads Cooling",
               description: "Haven't been contacted in 48+ hours",
-              trend: "down"
+              trend: "down",
+              action: { label: "Contact Now", tab: "leads", filter: "cooling" }
             },
             {
               label: "Conversion Tip",
@@ -141,19 +170,22 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Priority Leads",
               value: "15 Hot Prospects",
               description: "High intent buyers ready for viewings",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Priority", tab: "leads", filter: "hot" }
             },
             {
               label: "Best Performing",
               value: "City Centre Leads",
               description: "Highest quality score average: 85/100",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Quality Leads", tab: "leads", filter: "quality" }
             },
             {
               label: "Needs Attention",
               value: "6 Stale Leads",
               description: "No activity in 7+ days - re-engage now",
-              trend: "down"
+              trend: "down",
+              action: { label: "Re-engage", tab: "leads", filter: "stale" }
             },
             {
               label: "Booking Tip",
@@ -170,19 +202,22 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
               label: "Ready to Close",
               value: "9 Qualified Leads",
               description: "Pre-approved and ready for application",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Qualified", tab: "leads", filter: "qualified" }
             },
             {
               label: "Best Segment",
               value: "International Buyers",
               description: "Highest average loan value at £1.2m",
-              trend: "up"
+              trend: "up",
+              action: { label: "View Segment", tab: "leads", filter: "international" }
             },
             {
               label: "Re-engage Now",
               value: "5 Cold Leads",
               description: "Previously interested - worth a follow-up",
-              trend: "down"
+              trend: "down",
+              action: { label: "Follow Up", tab: "leads", filter: "cold" }
             },
             {
               label: "Nurture Tip",
@@ -204,13 +239,15 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             label: "What's Working",
             value: "Meta Ads",
             description: "Getting you the most leads at the lowest cost",
-            trend: "up"
+            trend: "up",
+            action: { label: "View Campaigns", tab: "campaigns" }
           },
           {
             label: "Best Audience",
             value: "UK Investors",
             description: "Highest quality leads from this group",
-            trend: "up"
+            trend: "up",
+            action: { label: "View Leads", tab: "leads", filter: "uk-investors" }
           },
           {
             label: "Top Development",
@@ -222,7 +259,8 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             label: "Needs Attention",
             value: "LinkedIn Ads",
             description: "Higher cost per lead than other channels",
-            trend: "down"
+            trend: "down",
+            action: { label: "Review", tab: "campaigns", filter: "linkedin" }
           }
         ]
       },
@@ -233,13 +271,15 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             label: "What's Working",
             value: "City Centre Apartments",
             description: "Best performing campaign this month",
-            trend: "up"
+            trend: "up",
+            action: { label: "View Campaign", tab: "campaigns" }
           },
           {
             label: "Hot Property",
             value: "Garden Square",
             description: "Most enquiries received this week",
-            trend: "up"
+            trend: "up",
+            action: { label: "View Leads", tab: "leads" }
           },
           {
             label: "Best Day",
@@ -251,7 +291,8 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             label: "Needs Attention",
             value: "Suburban Homes",
             description: "Lower engagement than expected",
-            trend: "down"
+            trend: "down",
+            action: { label: "Review", tab: "campaigns", filter: "suburban" }
           }
         ]
       },
@@ -262,13 +303,15 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             label: "What's Working",
             value: "Residential Mortgages",
             description: "Highest conversion rate this month",
-            trend: "up"
+            trend: "up",
+            action: { label: "View Campaign", tab: "campaigns" }
           },
           {
             label: "Best Region",
             value: "Middle East",
             description: "Strong interest in international mortgages",
-            trend: "up"
+            trend: "up",
+            action: { label: "View Leads", tab: "leads", filter: "middle-east" }
           },
           {
             label: "Top Product",
@@ -280,11 +323,18 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             label: "Needs Attention",
             value: "Life Insurance",
             description: "Fewer enquiries than last month",
-            trend: "down"
+            trend: "down",
+            action: { label: "Review", tab: "campaigns", filter: "insurance" }
           }
         ]
       }
     };
+  };
+
+  const handleActionClick = (action: MetricAction) => {
+    if (onTabChange && action.tab) {
+      onTabChange(action.tab);
+    }
   };
 
   const contextData = getContextData();
@@ -357,7 +407,8 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
         {data.metrics.map((metric, index) => (
           <Card 
             key={index} 
-            className={`p-4 border ${getTrendBg(metric.trend)} transition-all hover:shadow-md`}
+            className={`p-4 border ${getTrendBg(metric.trend)} transition-all hover:shadow-md ${metric.action ? 'cursor-pointer' : ''}`}
+            onClick={() => metric.action && handleActionClick(metric.action)}
           >
             <div className="flex items-start justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -368,9 +419,23 @@ const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOve
             <div className="text-base md:text-lg font-semibold text-foreground mb-1">
               {metric.value}
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed mb-2">
               {metric.description}
             </p>
+            {metric.action && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full mt-1 text-xs h-7 text-primary hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleActionClick(metric.action!);
+                }}
+              >
+                {metric.action.label}
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Button>
+            )}
           </Card>
         ))}
       </div>

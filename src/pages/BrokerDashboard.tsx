@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import PerformanceOverview from "@/components/PerformanceOverview";
 import { FileText, Users, CheckCircle, Clock, Plus } from "lucide-react";
 
 const BrokerDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
   const stats = [
     { label: "Active Applications", value: "67", icon: FileText },
     { label: "Total Clients", value: "234", icon: Users },
@@ -87,7 +89,7 @@ const BrokerDashboard = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
         <TabsList className="w-full overflow-x-auto flex justify-start">
           <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
           <TabsTrigger value="campaigns" className="text-xs md:text-sm">Campaigns</TabsTrigger>
@@ -96,11 +98,11 @@ const BrokerDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview">
-          <PerformanceOverview userType="broker" />
+          <PerformanceOverview userType="broker" onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <PerformanceOverview userType="broker" context="campaigns" />
+          <PerformanceOverview userType="broker" context="campaigns" onTabChange={setActiveTab} />
           <div className="mt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
@@ -114,7 +116,7 @@ const BrokerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="leads">
-          <PerformanceOverview userType="broker" context="leads" />
+          <PerformanceOverview userType="broker" context="leads" onTabChange={setActiveTab} />
           <div className="mt-6">
             <LeadsManagement />
           </div>
