@@ -25,6 +25,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogoWithTransparency } from "./LogoWithTransparency";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProductTour } from "./ProductTour";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -40,11 +41,11 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   
   const basePath = `/${userType}`;
   const navigation = [
-    { name: "Dashboard", icon: LayoutDashboard, href: basePath },
-    { name: "Campaigns", icon: Megaphone, href: `${basePath}/campaigns` },
-    { name: "Leads", icon: Users, href: `${basePath}/leads` },
-    { name: "Analytics", icon: BarChart3, href: `${basePath}/analytics` },
-    { name: "Settings", icon: Settings, href: `${basePath}/settings` },
+    { name: "Dashboard", icon: LayoutDashboard, href: basePath, tourId: "dashboard" },
+    { name: "Campaigns", icon: Megaphone, href: `${basePath}/campaigns`, tourId: "campaigns" },
+    { name: "Leads", icon: Users, href: `${basePath}/leads`, tourId: "leads" },
+    { name: "Analytics", icon: BarChart3, href: `${basePath}/analytics`, tourId: "analytics" },
+    { name: "Settings", icon: Settings, href: `${basePath}/settings`, tourId: "settings" },
   ];
 
   const isActive = (href: string) => location.pathname === href;
@@ -66,7 +67,7 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
       <nav className="flex-1 p-3">
         <ul className="space-y-1">
           {navigation.map((item) => (
-            <li key={item.name}>
+            <li key={item.name} data-tour={item.tourId}>
               <Link to={item.href} onClick={() => isMobile && setOpen(false)}>
                 <Button
                   variant="ghost"
@@ -128,39 +129,42 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   );
 
   return (
-    <div className="min-h-screen bg-background flex w-full">
-      {/* Desktop Sidebar */}
-      <aside 
-        className="hidden lg:flex flex-col w-64"
-      >
-        <SidebarContent />
-      </aside>
+    <>
+      <ProductTour userType={userType} />
+      <div className="min-h-screen bg-background flex w-full">
+        {/* Desktop Sidebar */}
+        <aside 
+          className="hidden lg:flex flex-col w-64"
+        >
+          <SidebarContent />
+        </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <header className="bg-card border-b border-border p-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
-          {/* Mobile Menu */}
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
-              <SidebarContent isMobile />
-            </SheetContent>
-          </Sheet>
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <header className="bg-card border-b border-border p-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+            {/* Mobile Menu */}
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <SidebarContent isMobile />
+              </SheetContent>
+            </Sheet>
+            
+            <div className="flex-1" data-tour="ai-insights">
+              <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+            </div>
+          </header>
           
-          <div className="flex-1">
-            <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+          <div className="p-4 md:p-6">
+            {children}
           </div>
-        </header>
-        
-        <div className="p-4 md:p-6">
-          {children}
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 };
 
