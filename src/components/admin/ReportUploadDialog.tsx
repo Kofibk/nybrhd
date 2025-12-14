@@ -137,26 +137,88 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport }: ReportUpl
     }
   };
 
-  const handleImportLeads = () => {
+  const handleImportLeads = async () => {
     if (!processingResult?.leads || !onLeadsImport) return;
 
     setStatus("importing");
     
     const leadsToImport = processingResult.leads.filter((_: any, i: number) => selectedLeads.has(i));
     
-    // Add classification based on scores
-    const processedLeads = leadsToImport.map((lead: Lead) => ({
-      ...lead,
-      classification: getClassification(lead.qualityScore, lead.intentScore),
-    }));
+    try {
+      // Call AI to score all leads
+      const { data: scoringResult, error } = await supabase.functions.invoke('ai-lead-analysis', {
+        body: {
+          action: 'bulk_scoring',
+          leads: leadsToImport.map((lead: any) => ({
+            id: lead.id,
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            country: lead.country,
+            budget: lead.budget,
+            bedrooms: lead.bedrooms,
+            notes: lead.notes,
+          })),
+        },
+      });
 
-    onLeadsImport(processedLeads);
-    
-    setStatus("complete");
-    toast({
-      title: "Leads imported",
-      description: `Successfully imported ${processedLeads.length} leads.`,
-    });
+      let scoredLeads = leadsToImport;
+
+      if (!error && scoringResult && Array.isArray(scoringResult)) {
+        // Merge AI scores with leads
+        scoredLeads = leadsToImport.map((lead: any) => {
+          const aiScore = scoringResult.find((s: any) => s.leadId === lead.id);
+          if (aiScore) {
+            return {
+              ...lead,
+              qualityScore: aiScore.qualityScore ?? lead.qualityScore,
+              intentScore: aiScore.intentScore ?? lead.intentScore,
+              classification: aiScore.classification || getClassification(
+                aiScore.qualityScore ?? lead.qualityScore,
+                aiScore.intentScore ?? lead.intentScore
+              ),
+            };
+          }
+          return {
+            ...lead,
+            classification: getClassification(lead.qualityScore, lead.intentScore),
+          };
+        });
+
+        toast({
+          title: "AI Scoring Complete",
+          description: `Scored ${scoringResult.length} leads with AI analysis.`,
+        });
+      } else {
+        // Fallback: use initial scores with classification
+        scoredLeads = leadsToImport.map((lead: Lead) => ({
+          ...lead,
+          classification: getClassification(lead.qualityScore, lead.intentScore),
+        }));
+      }
+
+      onLeadsImport(scoredLeads);
+      
+      setStatus("complete");
+      toast({
+        title: "Leads imported",
+        description: `Successfully imported ${scoredLeads.length} leads with AI scoring.`,
+      });
+    } catch (err) {
+      console.error("Scoring error:", err);
+      // Import anyway with basic classification
+      const processedLeads = leadsToImport.map((lead: Lead) => ({
+        ...lead,
+        classification: getClassification(lead.qualityScore, lead.intentScore),
+      }));
+      
+      onLeadsImport(processedLeads);
+      setStatus("complete");
+      toast({
+        title: "Leads imported",
+        description: `Imported ${processedLeads.length} leads (AI scoring unavailable).`,
+      });
+    }
   };
 
   const getClassification = (quality: number, intent: number) => {
