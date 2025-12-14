@@ -5,3 +5,21 @@ verify_jwt = false
 
 [functions.optimize-budget]
 verify_jwt = false
+
+[functions.airtable-api]
+verify_jwt = false
+
+[functions.create-airtable-base]
+verify_jwt = false
+
+[functions.ai-lead-analysis]
+verify_jwt = false
+
+[functions.ai-campaign-intelligence]
+verify_jwt = false
+
+[functions.ai-content-generation]
+verify_jwt = false
+
+[functions.ai-image-analysis]
+verify_jwt = false
