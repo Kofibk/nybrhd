@@ -877,35 +877,114 @@ const Onboarding = () => {
       </div>
       
       <div>
-        <h2 className="text-3xl font-bold mb-3">You're All Set!</h2>
+        <h2 className="text-3xl font-bold mb-3">Almost There!</h2>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Welcome to Naybourhood. Your account is ready and you can start creating campaigns right away.
+          To get started with lead scoring and identify your priority leads, upload your existing leads or connect a lead source.
         </p>
       </div>
 
+      {/* Lead Upload/Connect Section */}
+      <Card className="p-6 text-left max-w-xl mx-auto border-2 border-dashed border-primary/30 bg-primary/5">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-lg mb-1">Import Your Leads</h3>
+            <p className="text-sm text-muted-foreground">
+              Upload a CSV file or connect your lead sources to get instant lead scoring and know who to prioritise
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button 
+              variant="default"
+              onClick={() => {
+                toast.success("Navigating to lead upload...");
+                const selected = userTypes.find(type => type.id === userType);
+                if (selected) {
+                  navigate(`${selected.route}?tab=settings&section=lead-sources`);
+                }
+              }}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Leads CSV
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                toast.success("Navigating to lead sources...");
+                const selected = userTypes.find(type => type.id === userType);
+                if (selected) {
+                  navigate(`${selected.route}?tab=settings&section=lead-sources`);
+                }
+              }}
+            >
+              <ArrowRight className="h-4 w-4 mr-2" />
+              Connect Lead Sources
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            You can also do this later from Settings → Lead Sources
+          </p>
+        </div>
+      </Card>
+
+      {/* Divider */}
+      <div className="flex items-center gap-4 max-w-md mx-auto">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-sm text-muted-foreground">or get started with</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* Action Options */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-        <Card className="p-4 text-left hover:shadow-md transition-shadow cursor-pointer" onClick={handleComplete}>
-          <Building2 className="h-8 w-8 text-primary mb-2" />
+        <Card 
+          className="p-4 text-left hover:shadow-md hover:border-primary/50 transition-all cursor-pointer group" 
+          onClick={() => {
+            toast.success("Let's create your first campaign!");
+            const selected = userTypes.find(type => type.id === userType);
+            if (selected) {
+              navigate(`${selected.route}?action=new-campaign`);
+            }
+          }}
+        >
+          <Building2 className="h-8 w-8 text-primary mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold">Create Your First Campaign</h3>
           <p className="text-xs text-muted-foreground">Launch ads and start generating leads</p>
         </Card>
         
-        <Card className="p-4 text-left hover:shadow-md transition-shadow cursor-pointer">
-          <Calendar className="h-8 w-8 text-primary mb-2" />
+        <Card 
+          className="p-4 text-left hover:shadow-md hover:border-primary/50 transition-all cursor-pointer group"
+          onClick={() => {
+            window.open("https://calendly.com/naybourhood/onboarding", "_blank");
+            toast.success("Opening booking page...");
+          }}
+        >
+          <Calendar className="h-8 w-8 text-primary mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold">Book Onboarding Call</h3>
-          <p className="text-xs text-muted-foreground">Get a walkthrough with Ahmad</p>
+          <p className="text-xs text-muted-foreground">Get a walkthrough with our team</p>
         </Card>
         
-        <Card className="p-4 text-left hover:shadow-md transition-shadow cursor-pointer" onClick={handleComplete}>
-          <MapPin className="h-8 w-8 text-primary mb-2" />
+        <Card 
+          className="p-4 text-left hover:shadow-md hover:border-primary/50 transition-all cursor-pointer group" 
+          onClick={handleComplete}
+        >
+          <MapPin className="h-8 w-8 text-primary mb-2 group-hover:scale-110 transition-transform" />
           <h3 className="font-semibold">Explore Dashboard</h3>
           <p className="text-xs text-muted-foreground">See your analytics and leads</p>
         </Card>
       </div>
 
-      <Button size="lg" onClick={handleComplete} className="px-12">
-        Go to Dashboard
-        <ArrowRight className="ml-2 h-5 w-5" />
+      <Button variant="ghost" onClick={handleComplete} className="text-muted-foreground">
+        Skip for now → Go to Dashboard
       </Button>
     </div>
   );
