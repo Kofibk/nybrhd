@@ -29,6 +29,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import ClientDetail from "./pages/admin/ClientDetail";
 import AdminRoute from "./components/admin/AdminRoute";
 import AirtableTest from "./pages/AirtableTest";
+import AITestPage from "./pages/AITestPage";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const AppRoutes = () => {
 
       {/* Test Routes */}
       <Route path="/airtable-test" element={<AirtableTest />} />
+      <Route path="/ai-test" element={<AITestPage />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
