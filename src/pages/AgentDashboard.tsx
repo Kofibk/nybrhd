@@ -145,18 +145,24 @@ const AgentDashboard = () => {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
-            <h2 className="text-lg md:text-xl font-semibold text-foreground">AI Campaign Builder</h2>
-            <Button className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              New Campaign
-            </Button>
+          <PerformanceOverview userType="agent" context="campaigns" />
+          <div className="mt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
+              <h2 className="text-lg md:text-xl font-semibold text-foreground">AI Campaign Builder</h2>
+              <Button className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" />
+                New Campaign
+              </Button>
+            </div>
+            <CampaignBuilder />
           </div>
-          <CampaignBuilder />
         </TabsContent>
 
         <TabsContent value="leads">
-          <LeadsManagement />
+          <PerformanceOverview userType="agent" context="leads" />
+          <div className="mt-6">
+            <LeadsManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="analytics">

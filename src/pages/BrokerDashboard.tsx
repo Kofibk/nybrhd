@@ -100,7 +100,7 @@ const BrokerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <PerformanceOverview userType="broker" />
+          <PerformanceOverview userType="broker" context="campaigns" />
           <div className="mt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
@@ -114,7 +114,7 @@ const BrokerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="leads">
-          <PerformanceOverview userType="broker" />
+          <PerformanceOverview userType="broker" context="leads" />
           <div className="mt-6">
             <LeadsManagement />
           </div>
