@@ -1,0 +1,331 @@
+{
+  "name": "Naybourhood.ai Platform",
+  "description": "Complete backend schema for property lead generation platform",
+  "version": "1.0.0",
+  "tables": [
+    {
+      "name": "Users",
+      "description": "Platform users (developers, agents, brokers)",
+      "fields": [
+        { "name": "email", "type": "email", "required": true, "unique": true },
+        { "name": "full_name", "type": "singleLineText", "required": true },
+        { "name": "phone", "type": "phoneNumber" },
+        { "name": "avatar_url", "type": "url" },
+        { "name": "user_type", "type": "singleSelect", "options": ["developer", "agent", "broker"] },
+        { "name": "status", "type": "singleSelect", "options": ["active", "inactive", "pending"] },
+        { "name": "company", "type": "link", "linkedTable": "Companies" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Companies",
+      "description": "Client companies",
+      "fields": [
+        { "name": "name", "type": "singleLineText", "required": true },
+        { "name": "website", "type": "url" },
+        { "name": "industry", "type": "singleSelect", "options": ["developer", "agency", "brokerage"] },
+        { "name": "logo_url", "type": "url" },
+        { "name": "users", "type": "link", "linkedTable": "Users", "multiple": true },
+        { "name": "campaigns", "type": "link", "linkedTable": "Campaigns", "multiple": true },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "User_Roles",
+      "description": "Role-based access control",
+      "fields": [
+        { "name": "user", "type": "link", "linkedTable": "Users", "required": true },
+        { "name": "role", "type": "singleSelect", "options": ["admin", "manager", "member"], "required": true }
+      ]
+    },
+    {
+      "name": "Developments",
+      "description": "Property developments",
+      "fields": [
+        { "name": "name", "type": "singleLineText", "required": true },
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "location", "type": "singleLineText" },
+        { "name": "country", "type": "singleSelect", "options": ["United Kingdom", "UAE", "Saudi Arabia", "Qatar", "Kuwait", "Bahrain", "Oman", "Jordan", "Turkey", "Egypt", "Nigeria", "Ghana", "Kenya", "South Africa"] },
+        { "name": "city", "type": "singleLineText" },
+        { "name": "total_units", "type": "number", "precision": 0 },
+        { "name": "available_units", "type": "number", "precision": 0 },
+        { "name": "price_from", "type": "currency", "symbol": "£" },
+        { "name": "price_to", "type": "currency", "symbol": "£" },
+        { "name": "bedrooms_range", "type": "singleLineText" },
+        { "name": "status", "type": "singleSelect", "options": ["pre-launch", "live", "sold-out"] },
+        { "name": "description", "type": "multilineText" },
+        { "name": "image_url", "type": "url" },
+        { "name": "features", "type": "multipleSelects", "options": ["gym", "pool", "concierge", "parking", "garden", "balcony", "security", "spa"] },
+        { "name": "completion_date", "type": "date" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Campaigns",
+      "description": "Meta advertising campaigns",
+      "fields": [
+        { "name": "name", "type": "singleLineText", "required": true },
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "development", "type": "link", "linkedTable": "Developments" },
+        { "name": "user_type", "type": "singleSelect", "options": ["developer", "agent", "broker"] },
+        { "name": "objective", "type": "singleSelect", "options": ["leads", "awareness"] },
+        { "name": "status", "type": "singleSelect", "options": ["draft", "pending", "active", "paused", "completed"] },
+        { "name": "audience_maturity", "type": "singleSelect", "options": ["cold-start", "warm-data", "verified-lookalikes"] },
+        { "name": "audience_clusters", "type": "multipleSelects", "options": ["Young Professionals", "HNWI", "First-Time Buyers", "Investors", "Downsizers", "Families", "Expats", "Holiday Home Seekers"] },
+        { "name": "anti_tire_kicker_enabled", "type": "checkbox" },
+        { "name": "target_countries", "type": "multipleSelects", "options": ["United Kingdom", "UAE", "Saudi Arabia", "Qatar", "Kuwait", "Bahrain", "Oman", "Jordan", "Turkey", "Egypt", "Nigeria", "Ghana", "Kenya", "South Africa"] },
+        { "name": "target_cities", "type": "multipleSelects", "options": ["London", "Manchester", "Birmingham", "Dubai", "Abu Dhabi", "Riyadh", "Jeddah", "Doha", "Kuwait City", "Lagos", "Accra", "Nairobi", "Cairo"] },
+        { "name": "target_regions", "type": "multipleSelects", "options": ["uk", "middle-east", "africa"] },
+        { "name": "total_budget", "type": "currency", "symbol": "£" },
+        { "name": "daily_cap", "type": "currency", "symbol": "£" },
+        { "name": "start_date", "type": "date" },
+        { "name": "end_date", "type": "date" },
+        { "name": "whatsapp_addon", "type": "checkbox" },
+        { "name": "landing_page_url", "type": "url" },
+        { "name": "cta_type", "type": "singleSelect", "options": ["learn-more", "book-viewing", "submit-offer", "request-callback", "book-consultation", "download-brochure"] },
+        { "name": "pixel_id", "type": "singleLineText" },
+        { "name": "conversion_events", "type": "multipleSelects", "options": ["Lead", "ViewContent", "SubmitForm", "Schedule", "Contact"] },
+        { "name": "utm_campaign", "type": "singleLineText" },
+        { "name": "utm_source", "type": "singleLineText" },
+        { "name": "utm_medium", "type": "singleLineText" },
+        { "name": "meta_campaign_id", "type": "singleLineText" },
+        { "name": "meta_adset_id", "type": "singleLineText" },
+        { "name": "meta_ad_ids", "type": "multilineText" },
+        { "name": "meta_form_id", "type": "singleLineText" },
+        { "name": "total_leads", "type": "rollup", "linkedTable": "Leads", "aggregation": "count" },
+        { "name": "total_spend", "type": "rollup", "linkedTable": "Campaign_Metrics", "field": "spend", "aggregation": "sum" },
+        { "name": "creative_assets", "type": "link", "linkedTable": "Creative_Assets", "multiple": true },
+        { "name": "ad_copies", "type": "link", "linkedTable": "Ad_Copies", "multiple": true },
+        { "name": "leads", "type": "link", "linkedTable": "Leads", "multiple": true },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Creative_Assets",
+      "description": "Campaign creative files",
+      "fields": [
+        { "name": "campaign", "type": "link", "linkedTable": "Campaigns", "required": true },
+        { "name": "type", "type": "singleSelect", "options": ["static", "carousel", "video"] },
+        { "name": "file", "type": "attachment" },
+        { "name": "thumbnail_url", "type": "url" },
+        { "name": "file_size_bytes", "type": "number" },
+        { "name": "status", "type": "singleSelect", "options": ["pending", "approved", "rejected"] },
+        { "name": "performance_score", "type": "number", "precision": 0 },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Ad_Copies",
+      "description": "Campaign ad copy variations",
+      "fields": [
+        { "name": "campaign", "type": "link", "linkedTable": "Campaigns", "required": true },
+        { "name": "headline", "type": "singleLineText" },
+        { "name": "body", "type": "multilineText" },
+        { "name": "cta", "type": "singleSelect", "options": ["Learn More", "Book Viewing", "Get Quote", "Contact Us", "Download Brochure"] },
+        { "name": "message_angle", "type": "singleSelect", "options": ["investment", "family", "holiday-home", "downsizer", "first-time-buyer"] },
+        { "name": "is_ai_generated", "type": "checkbox" },
+        { "name": "performance_score", "type": "number", "precision": 0 },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Campaign_Metrics",
+      "description": "Daily campaign performance data",
+      "fields": [
+        { "name": "campaign", "type": "link", "linkedTable": "Campaigns", "required": true },
+        { "name": "date", "type": "date", "required": true },
+        { "name": "impressions", "type": "number", "precision": 0 },
+        { "name": "clicks", "type": "number", "precision": 0 },
+        { "name": "spend", "type": "currency", "symbol": "£" },
+        { "name": "leads", "type": "number", "precision": 0 },
+        { "name": "ctr", "type": "percent", "precision": 2 },
+        { "name": "cpc", "type": "currency", "symbol": "£" },
+        { "name": "cpl", "type": "currency", "symbol": "£" },
+        { "name": "cpm", "type": "currency", "symbol": "£" },
+        { "name": "reach", "type": "number", "precision": 0 },
+        { "name": "frequency", "type": "number", "precision": 2 },
+        { "name": "mobile_leads", "type": "number", "precision": 0 },
+        { "name": "desktop_leads", "type": "number", "precision": 0 },
+        { "name": "verified_leads", "type": "number", "precision": 0 },
+        { "name": "high_intent_leads", "type": "number", "precision": 0 }
+      ]
+    },
+    {
+      "name": "Leads",
+      "description": "All captured leads with dual scoring",
+      "fields": [
+        { "name": "campaign", "type": "link", "linkedTable": "Campaigns" },
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "development", "type": "link", "linkedTable": "Developments" },
+        { "name": "full_name", "type": "singleLineText", "required": true },
+        { "name": "email", "type": "email", "required": true },
+        { "name": "phone", "type": "phoneNumber" },
+        { "name": "country", "type": "singleSelect", "options": ["United Kingdom", "UAE", "Saudi Arabia", "Qatar", "Kuwait", "Bahrain", "Oman", "Jordan", "Turkey", "Egypt", "Nigeria", "Ghana", "Kenya", "South Africa"] },
+        { "name": "city", "type": "singleLineText" },
+        { "name": "budget_min", "type": "currency", "symbol": "£" },
+        { "name": "budget_max", "type": "currency", "symbol": "£" },
+        { "name": "bedrooms", "type": "singleSelect", "options": ["1", "2", "3", "4+"] },
+        { "name": "timeline", "type": "singleSelect", "options": ["Within 28 days", "0-3 months", "3-6 months", "6-9 months", "9-12 months", "12+ months"] },
+        { "name": "payment_method", "type": "singleSelect", "options": ["cash", "mortgage", "investor"] },
+        { "name": "property_purpose", "type": "singleSelect", "options": ["residence", "investment", "holiday"] },
+        { "name": "property_value", "type": "currency", "symbol": "£", "description": "Mortgage broker field" },
+        { "name": "borrowing_amount", "type": "currency", "symbol": "£", "description": "Mortgage broker field" },
+        { "name": "browsing_status", "type": "singleSelect", "options": ["browsing", "active-looking"], "description": "Mortgage broker field" },
+        { "name": "quality_score", "type": "number", "precision": 0, "description": "0-100" },
+        { "name": "intent_score", "type": "number", "precision": 0, "description": "0-100" },
+        { "name": "classification", "type": "singleSelect", "options": ["hot", "quality", "intent", "valid", "cold", "at-risk", "disqualified"] },
+        { "name": "lead_source", "type": "singleSelect", "options": ["meta", "portal", "website", "email", "introducer", "crm", "csv"] },
+        { "name": "source_detail", "type": "singleLineText" },
+        { "name": "utm_campaign", "type": "singleLineText" },
+        { "name": "utm_content", "type": "singleLineText" },
+        { "name": "utm_term", "type": "singleLineText" },
+        { "name": "device_type", "type": "singleSelect", "options": ["mobile", "desktop", "tablet"] },
+        { "name": "status", "type": "singleSelect", "options": ["new", "contacted", "qualified", "viewing-booked", "offer-made", "won", "lost"] },
+        { "name": "assigned_agent", "type": "link", "linkedTable": "Users" },
+        { "name": "notes", "type": "multilineText" },
+        { "name": "interactions", "type": "link", "linkedTable": "Lead_Interactions", "multiple": true },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Lead_Interactions",
+      "description": "Lead engagement timeline",
+      "fields": [
+        { "name": "lead", "type": "link", "linkedTable": "Leads", "required": true },
+        { "name": "type", "type": "singleSelect", "options": ["form-submit", "email-open", "email-click", "whatsapp-reply", "call", "viewing", "brochure-download", "offer-submitted"] },
+        { "name": "description", "type": "singleLineText" },
+        { "name": "metadata", "type": "multilineText", "description": "JSON data" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Lead_Sources",
+      "description": "Configured lead ingestion sources",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "source_type", "type": "singleSelect", "options": ["portal", "website", "email", "introducer", "crm"] },
+        { "name": "name", "type": "singleLineText" },
+        { "name": "config", "type": "multilineText", "description": "JSON config" },
+        { "name": "is_active", "type": "checkbox" },
+        { "name": "leads_count", "type": "rollup", "linkedTable": "Leads", "aggregation": "count" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Automation_Sequences",
+      "description": "WhatsApp/Email drip campaigns",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "name", "type": "singleLineText", "required": true },
+        { "name": "channel", "type": "singleSelect", "options": ["whatsapp", "email", "sms"] },
+        { "name": "trigger", "type": "singleSelect", "options": ["new-lead", "viewing-booked", "offer-made", "manual"] },
+        { "name": "target_classifications", "type": "multipleSelects", "options": ["hot", "quality", "intent", "valid", "cold"] },
+        { "name": "is_active", "type": "checkbox" },
+        { "name": "messages", "type": "link", "linkedTable": "Automation_Messages", "multiple": true },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Automation_Messages",
+      "description": "Individual messages in sequences",
+      "fields": [
+        { "name": "sequence", "type": "link", "linkedTable": "Automation_Sequences", "required": true },
+        { "name": "order", "type": "number", "precision": 0 },
+        { "name": "delay_days", "type": "number", "precision": 0 },
+        { "name": "delay_hours", "type": "number", "precision": 0 },
+        { "name": "subject", "type": "singleLineText", "description": "Email only" },
+        { "name": "body", "type": "multilineText" },
+        { "name": "cta_text", "type": "singleLineText" },
+        { "name": "cta_url", "type": "url" },
+        { "name": "is_ai_generated", "type": "checkbox" }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Client billing and plans",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "plan", "type": "singleSelect", "options": ["starter", "growth", "enterprise"] },
+        { "name": "status", "type": "singleSelect", "options": ["active", "past-due", "cancelled", "trial"] },
+        { "name": "monthly_fee", "type": "currency", "symbol": "£" },
+        { "name": "leads_included", "type": "number", "precision": 0 },
+        { "name": "leads_used", "type": "number", "precision": 0 },
+        { "name": "billing_cycle_start", "type": "date" },
+        { "name": "billing_cycle_end", "type": "date" },
+        { "name": "stripe_subscription_id", "type": "singleLineText" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "description": "Payment records",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "subscription", "type": "link", "linkedTable": "Subscriptions" },
+        { "name": "amount", "type": "currency", "symbol": "£" },
+        { "name": "status", "type": "singleSelect", "options": ["pending", "paid", "failed", "refunded"] },
+        { "name": "invoice_date", "type": "date" },
+        { "name": "due_date", "type": "date" },
+        { "name": "paid_at", "type": "date" },
+        { "name": "stripe_invoice_id", "type": "singleLineText" },
+        { "name": "pdf_url", "type": "url" }
+      ]
+    },
+    {
+      "name": "Settings",
+      "description": "Platform and integration settings",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "meta_app_id", "type": "singleLineText" },
+        { "name": "meta_access_token", "type": "singleLineText" },
+        { "name": "meta_ad_account_id", "type": "singleLineText" },
+        { "name": "meta_pixel_id", "type": "singleLineText" },
+        { "name": "whatsapp_phone_id", "type": "singleLineText" },
+        { "name": "whatsapp_access_token", "type": "singleLineText" },
+        { "name": "whatsapp_business_id", "type": "singleLineText" },
+        { "name": "timezone", "type": "singleSelect", "options": ["Europe/London", "Asia/Dubai", "Africa/Lagos", "Africa/Cairo"] },
+        { "name": "date_format", "type": "singleSelect", "options": ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"] },
+        { "name": "email_notifications", "type": "checkbox" },
+        { "name": "weekly_report", "type": "checkbox" }
+      ]
+    },
+    {
+      "name": "Audit_Logs",
+      "description": "Activity tracking",
+      "fields": [
+        { "name": "user", "type": "link", "linkedTable": "Users" },
+        { "name": "company", "type": "link", "linkedTable": "Companies" },
+        { "name": "action", "type": "singleSelect", "options": ["create", "update", "delete", "login", "logout", "export", "import"] },
+        { "name": "entity_type", "type": "singleLineText" },
+        { "name": "entity_id", "type": "singleLineText" },
+        { "name": "changes", "type": "multilineText", "description": "JSON diff" },
+        { "name": "ip_address", "type": "singleLineText" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "from": "Users.company", "to": "Companies" },
+    { "from": "User_Roles.user", "to": "Users" },
+    { "from": "Developments.company", "to": "Companies" },
+    { "from": "Campaigns.company", "to": "Companies" },
+    { "from": "Campaigns.development", "to": "Developments" },
+    { "from": "Creative_Assets.campaign", "to": "Campaigns" },
+    { "from": "Ad_Copies.campaign", "to": "Campaigns" },
+    { "from": "Campaign_Metrics.campaign", "to": "Campaigns" },
+    { "from": "Leads.campaign", "to": "Campaigns" },
+    { "from": "Leads.company", "to": "Companies" },
+    { "from": "Leads.development", "to": "Developments" },
+    { "from": "Leads.assigned_agent", "to": "Users" },
+    { "from": "Lead_Interactions.lead", "to": "Leads" },
+    { "from": "Lead_Sources.company", "to": "Companies" },
+    { "from": "Automation_Sequences.company", "to": "Companies" },
+    { "from": "Automation_Messages.sequence", "to": "Automation_Sequences" },
+    { "from": "Subscriptions.company", "to": "Companies" },
+    { "from": "Invoices.company", "to": "Companies" },
+    { "from": "Invoices.subscription", "to": "Subscriptions" },
+    { "from": "Settings.company", "to": "Companies" },
+    { "from": "Audit_Logs.user", "to": "Users" },
+    { "from": "Audit_Logs.company", "to": "Companies" }
+  ]
+}
