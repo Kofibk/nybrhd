@@ -8,6 +8,7 @@ import CampaignBuilder from "@/components/CampaignBuilder";
 import LeadsManagement from "@/components/LeadsManagement";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import PerformanceOverview from "@/components/PerformanceOverview";
+import AICampaignAnalysis from "@/components/AICampaignAnalysis";
 import { FileText, Users, CheckCircle, Clock, Plus } from "lucide-react";
 
 const BrokerDashboard = () => {
@@ -97,13 +98,14 @@ const BrokerDashboard = () => {
           <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="space-y-6">
+          <AICampaignAnalysis userType="broker" compact />
           <PerformanceOverview userType="broker" onTabChange={setActiveTab} />
         </TabsContent>
 
-        <TabsContent value="campaigns">
-          <PerformanceOverview userType="broker" context="campaigns" onTabChange={setActiveTab} />
-          <div className="mt-6">
+        <TabsContent value="campaigns" className="space-y-6">
+          <AICampaignAnalysis userType="broker" />
+          <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
               <Button className="w-full sm:w-auto">

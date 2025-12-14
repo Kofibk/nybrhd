@@ -22,6 +22,7 @@ import AdminMetaCampaigns from "@/components/admin/AdminMetaCampaigns";
 import AdminAIOverview from "@/components/admin/AdminAIOverview";
 import AdminUsersTable from "@/components/admin/AdminUsersTable";
 import AdminCompaniesTable from "@/components/admin/AdminCompaniesTable";
+import AICampaignAnalysis from "@/components/AICampaignAnalysis";
 
 const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,7 +93,8 @@ const AdminDashboard = () => {
             <AdminCompaniesTable searchQuery={searchQuery} />
           </TabsContent>
 
-          <TabsContent value="campaigns">
+          <TabsContent value="campaigns" className="space-y-6">
+            <AICampaignAnalysis userType="admin" />
             <AdminMetaCampaigns searchQuery={searchQuery} />
           </TabsContent>
 
@@ -104,7 +106,8 @@ const AdminDashboard = () => {
             <AdminBillingTable searchQuery={searchQuery} />
           </TabsContent>
 
-          <TabsContent value="analytics">
+          <TabsContent value="analytics" className="space-y-6">
+            <AICampaignAnalysis userType="admin" />
             <AdminAnalyticsOverview />
           </TabsContent>
 

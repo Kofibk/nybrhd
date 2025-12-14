@@ -9,6 +9,7 @@ import CampaignBuilder from "@/components/CampaignBuilder";
 import LeadsManagement from "@/components/LeadsManagement";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import PerformanceOverview from "@/components/PerformanceOverview";
+import AICampaignAnalysis from "@/components/AICampaignAnalysis";
 import { Home, Users, Calendar, TrendingUp, Plus, Eye } from "lucide-react";
 
 const AgentDashboard = () => {
@@ -142,12 +143,15 @@ const AgentDashboard = () => {
             </div>
           </Card>
 
+          {/* AI Campaign Analysis */}
+          <AICampaignAnalysis userType="agent" compact />
+
           {/* Performance Overview */}
           <PerformanceOverview userType="agent" onTabChange={setActiveTab} />
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <PerformanceOverview userType="agent" context="campaigns" onTabChange={setActiveTab} />
+          <AICampaignAnalysis userType="agent" />
           <div className="mt-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
               <h2 className="text-lg md:text-xl font-semibold text-foreground">AI Campaign Builder</h2>
