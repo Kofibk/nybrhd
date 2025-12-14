@@ -18,6 +18,7 @@ import {
   Palette,
   Clock,
   ChevronRight,
+  Check,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ interface Recommendation {
   description: string;
   expectedImpact: string;
   action: string;
+  applied?: boolean;
 }
 
 interface AnalysisResult {
@@ -58,12 +60,15 @@ interface AICampaignAnalysisProps {
   campaigns?: Campaign[];
   userType: "developer" | "agent" | "broker" | "admin";
   compact?: boolean;
+  onApplyRecommendation?: (recommendation: Recommendation, campaignId?: string) => void;
 }
 
-const AICampaignAnalysis = ({ campaigns = [], userType, compact = false }: AICampaignAnalysisProps) => {
+const AICampaignAnalysis = ({ campaigns = [], userType, compact = false, onApplyRecommendation }: AICampaignAnalysisProps) => {
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [applyingIndex, setApplyingIndex] = useState<number | null>(null);
+  const [appliedRecommendations, setAppliedRecommendations] = useState<Set<number>>(new Set());
 
   // Sample campaigns if none provided
   const sampleCampaigns: Campaign[] = campaigns.length > 0 ? campaigns : [
@@ -108,6 +113,37 @@ const AICampaignAnalysis = ({ campaigns = [], userType, compact = false }: AICam
       });
     } finally {
       setIsAnalysing(false);
+      setAppliedRecommendations(new Set());
+    }
+  };
+
+  const applyRecommendation = async (recommendation: Recommendation, index: number) => {
+    setApplyingIndex(index);
+    
+    try {
+      // Simulate applying the recommendation
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Call the callback if provided
+      if (onApplyRecommendation) {
+        onApplyRecommendation(recommendation, sampleCampaigns[0]?.id);
+      }
+      
+      // Mark as applied
+      setAppliedRecommendations(prev => new Set([...prev, index]));
+      
+      toast({
+        title: "Recommendation Applied",
+        description: `${recommendation.title} has been applied to your campaign.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Failed to Apply",
+        description: err.message || "Could not apply recommendation.",
+        variant: "destructive",
+      });
+    } finally {
+      setApplyingIndex(null);
     }
   };
 
@@ -219,9 +255,26 @@ const AICampaignAnalysis = ({ campaigns = [], userType, compact = false }: AICam
                     <p className="text-sm font-medium">{rec.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{rec.description}</p>
                   </div>
-                  <Badge variant={getPriorityColor(rec.priority)} className="text-xs">
-                    {rec.priority}
-                  </Badge>
+                  {appliedRecommendations.has(i) ? (
+                    <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500 border-green-500/30">
+                      <Check className="h-3 w-3 mr-1" />
+                      Applied
+                    </Badge>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-xs px-2"
+                      onClick={() => applyRecommendation(rec, i)}
+                      disabled={applyingIndex === i}
+                    >
+                      {applyingIndex === i ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
+                    </Button>
+                  )}
                 </div>
               ))}
 
@@ -374,10 +427,29 @@ const AICampaignAnalysis = ({ campaigns = [], userType, compact = false }: AICam
                               <span className="text-xs text-muted-foreground">
                                 Expected impact: {rec.expectedImpact}
                               </span>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs">
-                                {rec.action}
-                                <ChevronRight className="h-3 w-3 ml-1" />
-                              </Button>
+                              {appliedRecommendations.has(i) ? (
+                                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30 text-xs">
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Applied
+                                </Badge>
+                              ) : (
+                                <Button 
+                                  variant="default" 
+                                  size="sm" 
+                                  className="h-7 text-xs gap-1"
+                                  onClick={() => applyRecommendation(rec, i)}
+                                  disabled={applyingIndex === i}
+                                >
+                                  {applyingIndex === i ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <Check className="h-3 w-3" />
+                                      Apply Now
+                                    </>
+                                  )}
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
