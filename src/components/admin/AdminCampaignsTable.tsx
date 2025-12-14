@@ -144,14 +144,35 @@ const getStatusColor = (status: string) => {
   }
 };
 
+interface Campaign {
+  id: string;
+  name: string;
+  client: string;
+  clientType: string;
+  status: string;
+  budget: number;
+  spent: number;
+  leads: number;
+  cpl: number;
+  startDate: string;
+}
+
 const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "startDate", direction: "desc" });
+  
+  // Local campaigns state (mockCampaigns + imported campaigns)
+  const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>(mockCampaigns);
 
-  const uniqueClients = [...new Set(mockCampaigns.map((c) => c.client))];
+  // Handle importing campaigns from file upload
+  const handleCampaignsImport = (importedCampaigns: Campaign[]) => {
+    setLocalCampaigns(prev => [...importedCampaigns, ...prev]);
+  };
 
-  const filteredCampaigns = mockCampaigns
+  const uniqueClients = [...new Set(localCampaigns.map((c) => c.client))];
+
+  const filteredCampaigns = localCampaigns
     .filter((campaign) => {
       const matchesSearch =
         campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -297,7 +318,8 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
             type="campaigns" 
             onUploadComplete={(data) => {
               console.log("Campaign report processed:", data);
-            }} 
+            }}
+            onCampaignsImport={handleCampaignsImport}
           />
           <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2 h-8">
             <Download className="h-4 w-4" />

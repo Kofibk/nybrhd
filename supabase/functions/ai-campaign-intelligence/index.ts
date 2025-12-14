@@ -16,11 +16,111 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const { action, campaign, campaigns, metrics } = await req.json();
+    const body = await req.json();
+    const { action, type, campaign, campaigns, metrics, fileContent, fileName, fileType } = body;
 
+    // Handle bulk file analysis for campaign imports
+    if (type === 'bulk_analysis' || action === 'parse_campaigns') {
+      console.log('Processing campaign file upload:', fileName, fileType);
+      
+      const systemPrompt = `You are a campaign data extraction expert. Parse the provided file content and extract campaign information.
+
+For CSV/Excel content, parse the rows and identify columns for: campaign name, client, status, budget, spent, leads, CPL, start date, etc.
+For PDF content, analyze the text and extract any campaign performance data found.
+
+IMPORTANT: Return ONLY valid JSON in exactly this format:
+{
+  "success": true,
+  "campaigns": [
+    {
+      "name": "Campaign Name",
+      "client": "Client Company Name",
+      "clientType": "developer" | "agent" | "broker",
+      "status": "live" | "paused" | "draft" | "completed",
+      "budget": 5000,
+      "spent": 3200,
+      "leads": 87,
+      "cpl": 36.78,
+      "startDate": "2024-01-15"
+    }
+  ],
+  "summary": "Extracted X campaigns from the file",
+  "insights": ["Key insight 1", "Key insight 2"],
+  "recordsFound": 5
+}
+
+Guidelines:
+- Budget and spent should be numbers (no currency symbols)
+- CPL (Cost Per Lead) = spent / leads if not provided
+- Status defaults to "live" if not specified
+- ClientType should be inferred from client name or context
+- Dates should be in YYYY-MM-DD format
+- If any field is missing, use reasonable defaults`;
+
+      const userPrompt = `Parse this ${fileType?.toUpperCase() || 'file'} content and extract all campaign data:
+
+File name: ${fileName}
+Content:
+${fileContent}`;
+
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI Gateway error:', response.status, errorText);
+        throw new Error(`AI Gateway error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      console.log('AI Response:', content?.substring(0, 500));
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.error('Failed to find JSON in response:', content);
+        throw new Error('Failed to parse AI response - no JSON found');
+      }
+
+      const result = JSON.parse(jsonMatch[0]);
+      
+      // Ensure campaigns have required fields
+      if (result.campaigns && Array.isArray(result.campaigns)) {
+        result.campaigns = result.campaigns.map((campaign: any, index: number) => ({
+          id: `imported_${Date.now()}_${index}`,
+          name: campaign.name || 'Unnamed Campaign',
+          client: campaign.client || 'Unknown Client',
+          clientType: campaign.clientType || 'developer',
+          status: campaign.status || 'live',
+          budget: Number(campaign.budget) || 0,
+          spent: Number(campaign.spent) || 0,
+          leads: Number(campaign.leads) || 0,
+          cpl: Number(campaign.cpl) || (campaign.leads > 0 ? campaign.spent / campaign.leads : 0),
+          startDate: campaign.startDate || new Date().toISOString().split('T')[0],
+        }));
+      }
+
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Original campaign intelligence actions
     let systemPrompt = '';
     let userPrompt = '';
-    let model = 'openai/gpt-5';
+    let model = 'google/gemini-2.5-flash';
 
     switch (action) {
       case 'recommendations':
@@ -129,7 +229,6 @@ Respond with valid JSON only:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.4,
       }),
     });
 
