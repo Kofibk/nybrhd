@@ -100,18 +100,24 @@ const BrokerDashboard = () => {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
-            <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
-            <Button className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              New Campaign
-            </Button>
+          <PerformanceOverview userType="broker" />
+          <div className="mt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-bold">AI Campaign Builder</h2>
+              <Button className="w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" />
+                New Campaign
+              </Button>
+            </div>
+            <CampaignBuilder />
           </div>
-          <CampaignBuilder />
         </TabsContent>
 
         <TabsContent value="leads">
-          <LeadsManagement />
+          <PerformanceOverview userType="broker" />
+          <div className="mt-6">
+            <LeadsManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="analytics">
