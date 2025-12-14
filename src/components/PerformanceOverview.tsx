@@ -1,105 +1,294 @@
 import { Card } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, ArrowRight, Lightbulb, Target, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 interface PerformanceOverviewProps {
   userType: "developer" | "agent" | "broker";
+  context?: "dashboard" | "campaigns" | "leads";
 }
 
-const PerformanceOverview = ({ userType }: PerformanceOverviewProps) => {
-  // Simple performance data with plain language explanations
-  const performanceData = {
-    developer: {
-      summary: "Your campaigns are performing well this week",
-      metrics: [
-        {
-          label: "What's Working",
-          value: "Meta Ads",
-          description: "Getting you the most leads at the lowest cost",
-          trend: "up"
+const PerformanceOverview = ({ userType, context = "dashboard" }: PerformanceOverviewProps) => {
+  // Context-specific data based on tab
+  const getContextData = () => {
+    if (context === "campaigns") {
+      return {
+        developer: {
+          summary: "Your campaign performance insights",
+          metrics: [
+            {
+              label: "Best Performing",
+              value: "Meta Ads - Lagos HNW",
+              description: "Lowest CPL at £20.16 with 3.2% CTR",
+              trend: "up"
+            },
+            {
+              label: "Optimise Budget",
+              value: "Shift to Meta",
+              description: "Meta outperforming other channels by 35%",
+              trend: "up"
+            },
+            {
+              label: "Creative Tip",
+              value: "Video Content",
+              description: "Video ads getting 2x more engagement",
+              trend: "up"
+            },
+            {
+              label: "Needs Attention",
+              value: "LinkedIn Campaign",
+              description: "CPL 40% higher than target - consider pausing",
+              trend: "down"
+            }
+          ]
         },
-        {
-          label: "Best Audience",
-          value: "UK Investors",
-          description: "Highest quality leads from this group",
-          trend: "up"
+        agent: {
+          summary: "Campaign optimisation recommendations",
+          metrics: [
+            {
+              label: "Top Campaign",
+              value: "City Centre Apartments",
+              description: "Best ROI this month at 4.1% CTR",
+              trend: "up"
+            },
+            {
+              label: "Budget Advice",
+              value: "Increase Spend",
+              description: "High-performing campaigns have room to scale",
+              trend: "up"
+            },
+            {
+              label: "Audience Insight",
+              value: "First-Time Buyers",
+              description: "This segment converting 3x better",
+              trend: "up"
+            },
+            {
+              label: "Review Required",
+              value: "Suburban Homes",
+              description: "CTR dropped 15% - refresh creatives",
+              trend: "down"
+            }
+          ]
         },
-        {
-          label: "Top Development",
-          value: "Marina Heights",
-          description: "45% of all viewings booked this week",
-          trend: "up"
-        },
-        {
-          label: "Needs Attention",
-          value: "LinkedIn Ads",
-          description: "Higher cost per lead than other channels",
-          trend: "down"
+        broker: {
+          summary: "Campaign performance recommendations",
+          metrics: [
+            {
+              label: "Star Campaign",
+              value: "Residential Mortgages",
+              description: "Highest quality leads with 8% conversion",
+              trend: "up"
+            },
+            {
+              label: "Scale Opportunity",
+              value: "Middle East Targeting",
+              description: "Strong intent signals - increase budget 20%",
+              trend: "up"
+            },
+            {
+              label: "Creative Insight",
+              value: "Rate Comparison Ads",
+              description: "Outperforming lifestyle messaging 2:1",
+              trend: "up"
+            },
+            {
+              label: "Action Needed",
+              value: "Life Insurance Ads",
+              description: "Low engagement - test new angles",
+              trend: "down"
+            }
+          ]
         }
-      ]
-    },
-    agent: {
-      summary: "Your listings are getting good traction",
-      metrics: [
-        {
-          label: "What's Working",
-          value: "City Centre Apartments",
-          description: "Best performing campaign this month",
-          trend: "up"
-        },
-        {
-          label: "Hot Property",
-          value: "Garden Square",
-          description: "Most enquiries received this week",
-          trend: "up"
-        },
-        {
-          label: "Best Day",
-          value: "Tuesday",
-          description: "You get the most leads on this day",
-          trend: "neutral"
-        },
-        {
-          label: "Needs Attention",
-          value: "Suburban Homes",
-          description: "Lower engagement than expected",
-          trend: "down"
-        }
-      ]
-    },
-    broker: {
-      summary: "Your mortgage campaigns are on track",
-      metrics: [
-        {
-          label: "What's Working",
-          value: "Residential Mortgages",
-          description: "Highest conversion rate this month",
-          trend: "up"
-        },
-        {
-          label: "Best Region",
-          value: "Middle East",
-          description: "Strong interest in international mortgages",
-          trend: "up"
-        },
-        {
-          label: "Top Product",
-          value: "Buy-to-Let",
-          description: "Most applications submitted this week",
-          trend: "up"
-        },
-        {
-          label: "Needs Attention",
-          value: "Life Insurance",
-          description: "Fewer enquiries than last month",
-          trend: "down"
-        }
-      ]
+      };
     }
+    
+    if (context === "leads") {
+      return {
+        developer: {
+          summary: "Lead quality and prioritisation insights",
+          metrics: [
+            {
+              label: "Hot Leads",
+              value: "12 Ready to Book",
+              description: "High intent score leads awaiting contact",
+              trend: "up"
+            },
+            {
+              label: "Best Source",
+              value: "Meta Campaigns",
+              description: "Generating highest quality leads this week",
+              trend: "up"
+            },
+            {
+              label: "Follow-Up Alert",
+              value: "8 Leads Cooling",
+              description: "Haven't been contacted in 48+ hours",
+              trend: "down"
+            },
+            {
+              label: "Conversion Tip",
+              value: "Call Within 5 Mins",
+              description: "Leads contacted quickly convert 4x better",
+              trend: "up"
+            }
+          ]
+        },
+        agent: {
+          summary: "Lead management recommendations",
+          metrics: [
+            {
+              label: "Priority Leads",
+              value: "15 Hot Prospects",
+              description: "High intent buyers ready for viewings",
+              trend: "up"
+            },
+            {
+              label: "Best Performing",
+              value: "City Centre Leads",
+              description: "Highest quality score average: 85/100",
+              trend: "up"
+            },
+            {
+              label: "Needs Attention",
+              value: "6 Stale Leads",
+              description: "No activity in 7+ days - re-engage now",
+              trend: "down"
+            },
+            {
+              label: "Booking Tip",
+              value: "Weekend Viewings",
+              description: "Saturday viewings have 60% show rate",
+              trend: "up"
+            }
+          ]
+        },
+        broker: {
+          summary: "Lead scoring and prioritisation insights",
+          metrics: [
+            {
+              label: "Ready to Close",
+              value: "9 Qualified Leads",
+              description: "Pre-approved and ready for application",
+              trend: "up"
+            },
+            {
+              label: "Best Segment",
+              value: "International Buyers",
+              description: "Highest average loan value at £1.2m",
+              trend: "up"
+            },
+            {
+              label: "Re-engage Now",
+              value: "5 Cold Leads",
+              description: "Previously interested - worth a follow-up",
+              trend: "down"
+            },
+            {
+              label: "Nurture Tip",
+              value: "Rate Updates",
+              description: "Sending rate alerts increases response 40%",
+              trend: "up"
+            }
+          ]
+        }
+      };
+    }
+    
+    // Default dashboard context
+    return {
+      developer: {
+        summary: "Your campaigns are performing well this week",
+        metrics: [
+          {
+            label: "What's Working",
+            value: "Meta Ads",
+            description: "Getting you the most leads at the lowest cost",
+            trend: "up"
+          },
+          {
+            label: "Best Audience",
+            value: "UK Investors",
+            description: "Highest quality leads from this group",
+            trend: "up"
+          },
+          {
+            label: "Top Development",
+            value: "Marina Heights",
+            description: "45% of all viewings booked this week",
+            trend: "up"
+          },
+          {
+            label: "Needs Attention",
+            value: "LinkedIn Ads",
+            description: "Higher cost per lead than other channels",
+            trend: "down"
+          }
+        ]
+      },
+      agent: {
+        summary: "Your listings are getting good traction",
+        metrics: [
+          {
+            label: "What's Working",
+            value: "City Centre Apartments",
+            description: "Best performing campaign this month",
+            trend: "up"
+          },
+          {
+            label: "Hot Property",
+            value: "Garden Square",
+            description: "Most enquiries received this week",
+            trend: "up"
+          },
+          {
+            label: "Best Day",
+            value: "Tuesday",
+            description: "You get the most leads on this day",
+            trend: "neutral"
+          },
+          {
+            label: "Needs Attention",
+            value: "Suburban Homes",
+            description: "Lower engagement than expected",
+            trend: "down"
+          }
+        ]
+      },
+      broker: {
+        summary: "Your mortgage campaigns are on track",
+        metrics: [
+          {
+            label: "What's Working",
+            value: "Residential Mortgages",
+            description: "Highest conversion rate this month",
+            trend: "up"
+          },
+          {
+            label: "Best Region",
+            value: "Middle East",
+            description: "Strong interest in international mortgages",
+            trend: "up"
+          },
+          {
+            label: "Top Product",
+            value: "Buy-to-Let",
+            description: "Most applications submitted this week",
+            trend: "up"
+          },
+          {
+            label: "Needs Attention",
+            value: "Life Insurance",
+            description: "Fewer enquiries than last month",
+            trend: "down"
+          }
+        ]
+      }
+    };
   };
 
-  const data = performanceData[userType];
+  const contextData = getContextData();
+  const data = contextData[userType];
   const analyticsPath = `/${userType}/analytics`;
 
   const getTrendIcon = (trend: string) => {
@@ -124,12 +313,37 @@ const PerformanceOverview = ({ userType }: PerformanceOverviewProps) => {
     }
   };
 
+  const getContextIcon = () => {
+    switch (context) {
+      case "campaigns":
+        return <Target className="h-4 w-4 text-primary" />;
+      case "leads":
+        return <Users className="h-4 w-4 text-primary" />;
+      default:
+        return <Lightbulb className="h-4 w-4 text-primary" />;
+    }
+  };
+
+  const getContextTitle = () => {
+    switch (context) {
+      case "campaigns":
+        return "Campaign Insights";
+      case "leads":
+        return "Lead Insights";
+      default:
+        return "Performance Overview";
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div>
-          <h3 className="text-base md:text-lg font-semibold text-foreground">Performance Overview</h3>
-          <p className="text-xs md:text-sm text-muted-foreground">{data.summary}</p>
+        <div className="flex items-center gap-2">
+          {getContextIcon()}
+          <div>
+            <h3 className="text-base md:text-lg font-semibold text-foreground">{getContextTitle()}</h3>
+            <p className="text-xs md:text-sm text-muted-foreground">{data.summary}</p>
+          </div>
         </div>
         <Link to={analyticsPath}>
           <Button variant="outline" size="sm" className="w-full sm:w-auto">
