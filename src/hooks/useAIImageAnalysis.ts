@@ -53,7 +53,7 @@ export const useAIImageAnalysis = () => {
       if (fnError) throw fnError;
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to analyze creative");
+      setError(err instanceof Error ? err.message : "Failed to analyse creative");
       return null;
     } finally {
       setIsLoading(false);
@@ -70,7 +70,7 @@ export const useAIImageAnalysis = () => {
       if (fnError) throw fnError;
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to bulk analyze images");
+      setError(err instanceof Error ? err.message : "Failed to bulk analyse images");
       return null;
     } finally {
       setIsLoading(false);

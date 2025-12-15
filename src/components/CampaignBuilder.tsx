@@ -44,7 +44,7 @@ const CampaignBuilder = () => {
         description: "Facebook & Instagram targeting high-net-worth individuals",
         recommended: true,
         reasoning: "Highest budget allocation justified by superior targeting capabilities for international HNWIs. Meta's audience segmentation allows precise location, income, and interest-based targeting across Nigeria, UK, and Dubai. Visual format ideal for showcasing premium property features. Expected 4.2x ROI based on engagement rates and lead quality from similar developments.",
-        budgetJustification: "£2,500 supports comprehensive creative testing (3 ad sets × 5 variants) across target markets. Ensures sufficient daily budget (£83/day) to optimize algorithm learning and reach qualified prospects at scale."
+        budgetJustification: "£2,500 supports comprehensive creative testing (3 ad sets × 5 variants) across target markets. Ensures sufficient daily budget (£83/day) to optimise algorithm learning and reach qualified prospects at scale."
       },
       { 
         name: "Google Ads", 
@@ -224,7 +224,7 @@ const CampaignBuilder = () => {
               <h3 className="text-lg md:text-xl font-bold">AI Campaign Strategy Generated</h3>
             </div>
             <p className="text-muted-foreground text-sm">
-              Based on your inputs, we've created a comprehensive campaign strategy optimized for your target audience.
+              Based on your inputs, we've created a comprehensive campaign strategy optimised for your target audience.
             </p>
           </Card>
 

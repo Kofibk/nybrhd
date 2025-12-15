@@ -66,15 +66,15 @@ export function UploadZone({
 
   if (isUploaded) {
     return (
-      <div className="border-2 border-green-500/30 bg-green-500/5 rounded-xl p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <CheckCircle className="h-6 w-6 text-green-500" />
-          <div>
-            <p className="font-medium text-foreground">{label}</p>
-            <p className="text-sm text-muted-foreground">{fileName}</p>
+      <div className="border border-green-500/30 bg-green-500/5 rounded-lg p-3 sm:p-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-sm truncate">{label}</p>
+            <p className="text-xs text-muted-foreground truncate">{fileName}</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClear}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClear}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -87,7 +87,7 @@ export function UploadZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       className={`
-        border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
+        border border-dashed rounded-lg p-4 sm:p-6 text-center cursor-pointer transition-all
         ${isDragging 
           ? 'border-primary bg-primary/5' 
           : 'border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/30'
@@ -103,21 +103,21 @@ export function UploadZone({
         id={`upload-${label}`}
       />
       <label htmlFor={`upload-${label}`} className="cursor-pointer block">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-2">
           {isProcessing ? (
-            <div className="h-12 w-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           ) : (
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <Upload className="h-6 w-6 text-muted-foreground" />
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+              <Upload className="h-4 w-4 text-muted-foreground" />
             </div>
           )}
           <div>
-            <p className="font-medium text-foreground">{label}</p>
-            <p className="text-sm text-muted-foreground mt-1">{description}</p>
+            <p className="font-medium text-foreground text-sm">{label}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <FileText className="h-3 w-3" />
-            <span>CSV files only</span>
+            <span>CSV only</span>
           </div>
         </div>
       </label>

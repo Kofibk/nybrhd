@@ -77,7 +77,7 @@ const mockClientData: Record<string, any> = {
     developments: [],
     recentActivity: [
       { date: "2024-03-14", action: "New listing", details: "Added 5 new properties" },
-      { date: "2024-03-08", action: "Campaign optimized", details: "CTR improved by 25%" }
+      { date: "2024-03-08", action: "Campaign optimised", details: "CTR improved by 25%" }
     ]
   },
   "3": {
