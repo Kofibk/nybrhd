@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
+import { InventoryProvider } from "@/contexts/InventoryContext";
 import { SplashScreen } from "./components/SplashScreen";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
@@ -19,6 +20,9 @@ import Dashboard from "./pages/Dashboard";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import BrokerDashboard from "./pages/BrokerDashboard";
+import DevelopmentsPage from "./pages/DevelopmentsPage";
+import PropertiesPage from "./pages/PropertiesPage";
+import ProductsPage from "./pages/ProductsPage";
 import CampaignsList from "./pages/CampaignsList";
 import CampaignWizard from "./pages/CampaignWizard";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -57,6 +61,7 @@ const AppRoutes = () => {
       
       {/* Developer Routes */}
       <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
+      <Route path="/developer/developments" element={<ProtectedRoute><DevelopmentsPage /></ProtectedRoute>} />
       <Route path="/developer/campaigns" element={<ProtectedRoute><CampaignsList userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="developer" /></ProtectedRoute>} />
@@ -78,6 +83,7 @@ const AppRoutes = () => {
 
       {/* Agent Routes */}
       <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+      <Route path="/agent/properties" element={<ProtectedRoute><PropertiesPage /></ProtectedRoute>} />
       <Route path="/agent/campaigns" element={<ProtectedRoute><CampaignsList userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="agent" /></ProtectedRoute>} />
@@ -99,6 +105,7 @@ const AppRoutes = () => {
 
       {/* Broker Routes */}
       <Route path="/broker" element={<ProtectedRoute><BrokerDashboard /></ProtectedRoute>} />
+      <Route path="/broker/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
       <Route path="/broker/campaigns" element={<ProtectedRoute><CampaignsList userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="broker" /></ProtectedRoute>} />
@@ -171,16 +178,18 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <DataProvider>
-          <TooltipProvider>
-            {showSplash && !hasShownSplash && (
-              <SplashScreen onComplete={handleSplashComplete} />
-            )}
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
+          <InventoryProvider>
+            <TooltipProvider>
+              {showSplash && !hasShownSplash && (
+                <SplashScreen onComplete={handleSplashComplete} />
+              )}
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </TooltipProvider>
+          </InventoryProvider>
         </DataProvider>
       </AuthProvider>
     </QueryClientProvider>
