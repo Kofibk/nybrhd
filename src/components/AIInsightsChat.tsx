@@ -1,13 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Phone, Mail, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface Lead {
+  name: string;
+  email?: string;
+  phone?: string;
+  score?: number;
+}
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  leads?: Lead[];
 }
 
 interface AIInsightsChatProps {
@@ -42,7 +51,7 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
           campaigns: campaignData,
           leads: leadData,
           chatMessage: userMessage,
-          chatHistory: messages,
+          chatHistory: messages.map(m => ({ role: m.role, content: m.content })),
           analysisContext
         }
       });
@@ -50,7 +59,13 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
       if (error) throw error;
 
       const assistantMessage = data.chatResponse || data.summary || 'I apologise, I couldn\'t generate a response. Please try again.';
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      const extractedLeads = data.leads || [];
+      
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: assistantMessage,
+        leads: extractedLeads.length > 0 ? extractedLeads : undefined
+      }]);
     } catch (error) {
       console.error('Chat error:', error);
       setMessages(prev => [...prev, { 
@@ -69,6 +84,34 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
     }
   };
 
+  const handleCall = (lead: Lead) => {
+    if (lead.phone) {
+      window.open(`tel:${lead.phone}`, '_self');
+      toast.success(`Calling ${lead.name}...`);
+    } else {
+      toast.error('No phone number available');
+    }
+  };
+
+  const handleEmail = (lead: Lead) => {
+    if (lead.email) {
+      window.open(`mailto:${lead.email}`, '_blank');
+      toast.success(`Opening email to ${lead.name}...`);
+    } else {
+      toast.error('No email address available');
+    }
+  };
+
+  const handleWhatsApp = (lead: Lead) => {
+    if (lead.phone) {
+      const cleanPhone = lead.phone.replace(/[^0-9+]/g, '');
+      window.open(`https://wa.me/${cleanPhone}`, '_blank');
+      toast.success(`Opening WhatsApp to ${lead.name}...`);
+    } else {
+      toast.error('No phone number available');
+    }
+  };
+
   const hasData = campaignData.length > 0 || leadData.length > 0;
 
   const suggestedQuestions = hasData ? [
@@ -83,7 +126,7 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
   ];
 
   return (
-    <div className="flex flex-col h-[400px]">
+    <div className="flex flex-col h-[450px]">
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="space-y-4">
@@ -113,27 +156,81 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
         ) : (
           <div className="space-y-4">
             {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.role === 'assistant' && (
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary" />
-                  </div>
-                )}
+              <div key={i} className="space-y-2">
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 text-sm whitespace-pre-wrap ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground'
-                  }`}
+                  className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.content}
+                  {msg.role === 'assistant' && (
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 text-sm whitespace-pre-wrap ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-foreground'
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                  {msg.role === 'user' && (
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-                {msg.role === 'user' && (
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                
+                {/* Lead Action Buttons */}
+                {msg.leads && msg.leads.length > 0 && (
+                  <div className="ml-11 space-y-2">
+                    {msg.leads.map((lead, j) => (
+                      <div 
+                        key={j} 
+                        className="flex items-center justify-between gap-2 p-2 rounded-lg bg-background border text-sm"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium truncate">{lead.name}</span>
+                          {lead.score !== undefined && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              Score: {lead.score}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleCall(lead)}
+                            disabled={!lead.phone}
+                            title={lead.phone ? `Call ${lead.phone}` : 'No phone'}
+                          >
+                            <Phone className="h-4 w-4 text-green-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEmail(lead)}
+                            disabled={!lead.email}
+                            title={lead.email ? `Email ${lead.email}` : 'No email'}
+                          >
+                            <Mail className="h-4 w-4 text-blue-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleWhatsApp(lead)}
+                            disabled={!lead.phone}
+                            title={lead.phone ? `WhatsApp ${lead.phone}` : 'No phone'}
+                          >
+                            <MessageCircle className="h-4 w-4 text-green-600" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

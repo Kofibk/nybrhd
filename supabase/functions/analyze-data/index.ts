@@ -20,6 +20,9 @@ serve(async (req) => {
 
     // If this is a chat request, handle it differently
     if (chatMessage) {
+      // Check if this is a lead-related query
+      const isLeadQuery = /lead|hottest|top\s*\d+|priorit|score|contact|call|email|whatsapp/i.test(chatMessage);
+      
       const chatSystemPrompt = `You are an expert marketing data analyst and assistant for property marketing campaigns.
 You have access to the user's campaign and lead data. You can answer questions, provide insights, and help with actions.
 
@@ -38,8 +41,18 @@ You can help with:
 - Actionable recommendations (e.g., "who should I call first", "prioritise leads for today")
 - Data queries (e.g., "show all leads with budget over £500k", "count leads by status")
 
-When showing leads or data, format them clearly with relevant details.
-Be specific, use actual data from the CSV, and provide actionable advice.`;
+IMPORTANT: When the user asks about leads (top leads, hottest leads, leads to contact, etc.), you MUST respond with a JSON object in this exact format:
+{
+  "message": "Your natural language response explaining the leads",
+  "leads": [
+    {"name": "Lead Name", "email": "email@example.com", "phone": "+44123456789", "score": 85}
+  ]
+}
+
+The leads array should contain the actual lead data from the CSV including name, email, phone, and score (if available).
+Look for fields like: name, full_name, first_name+last_name, email, phone, mobile, telephone, score, lead_score, quality_score, intent_score.
+
+For non-lead queries, just respond with plain text - no JSON needed.`;
 
       const messages = [
         { role: 'system', content: chatSystemPrompt },
@@ -69,9 +82,32 @@ Be specific, use actual data from the CSV, and provide actionable advice.`;
       }
 
       const aiResponse = await response.json();
-      const chatResponse = aiResponse.choices?.[0]?.message?.content || 'I apologise, I could not generate a response.';
+      const rawContent = aiResponse.choices?.[0]?.message?.content || 'I apologise, I could not generate a response.';
 
-      return new Response(JSON.stringify({ chatResponse }), {
+      // Try to parse as JSON if it's a lead query
+      let chatResponse = rawContent;
+      let extractedLeads: any[] = [];
+
+      try {
+        const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.message && Array.isArray(parsed.leads)) {
+            chatResponse = parsed.message;
+            extractedLeads = parsed.leads.map((lead: any) => ({
+              name: lead.name || lead.full_name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Unknown',
+              email: lead.email || null,
+              phone: lead.phone || lead.mobile || lead.telephone || null,
+              score: lead.score || lead.lead_score || lead.quality_score || lead.intent_score || null
+            }));
+          }
+        }
+      } catch (e) {
+        // Not JSON, use raw content as response
+        console.log('Response is plain text, not JSON');
+      }
+
+      return new Response(JSON.stringify({ chatResponse, leads: extractedLeads }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
