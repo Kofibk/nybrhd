@@ -78,6 +78,7 @@ import { demoLeads, demoCampaigns } from "@/lib/demoData";
 import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
+import { formatBudget } from "@/lib/utils";
 
 interface AdminLeadsTableProps {
   searchQuery: string;
@@ -1029,7 +1030,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Budget</p>
-                        <p className="font-medium">{selectedLead.budget}</p>
+                        <p className="font-medium">{formatBudget(selectedLead.budget)}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Bedrooms</p>
