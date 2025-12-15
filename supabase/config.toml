@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.campaign-analysis]
 verify_jwt = false
+
+[functions.master-agent]
+verify_jwt = false
