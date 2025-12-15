@@ -75,7 +75,7 @@ const AppRoutes = () => {
       <Route path="/developer/analytics" element={
         <ProtectedRoute>
           <DashboardLayout title="Analytics" userType="developer">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard userType="developer" />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -97,7 +97,7 @@ const AppRoutes = () => {
       <Route path="/agent/analytics" element={
         <ProtectedRoute>
           <DashboardLayout title="Analytics" userType="agent">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard userType="agent" />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -119,7 +119,7 @@ const AppRoutes = () => {
       <Route path="/broker/analytics" element={
         <ProtectedRoute>
           <DashboardLayout title="Analytics" userType="broker">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard userType="broker" />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -140,7 +140,7 @@ const AppRoutes = () => {
       <Route path="/admin/analytics" element={
         <AdminRoute>
           <DashboardLayout title="Analytics" userType="admin">
-            <AnalyticsDashboard />
+            <AnalyticsDashboard userType="admin" />
           </DashboardLayout>
         </AdminRoute>
       } />
