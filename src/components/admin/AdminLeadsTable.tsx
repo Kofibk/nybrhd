@@ -808,7 +808,8 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                   <ColumnHeader field="name" label="Name" />
                   <ColumnHeader field="email" label="Email" className="hidden md:table-cell" />
                   <ColumnHeader field="country" label="Country" className="hidden lg:table-cell" />
-                  <ColumnHeader field="campaign" label="Campaign" className="hidden sm:table-cell" />
+                  <ColumnHeader field="budget" label="Budget" className="hidden sm:table-cell" />
+                  <ColumnHeader field="campaign" label="Campaign" className="hidden lg:table-cell" />
                   <ColumnHeader field="score" label="Score" />
                   <ColumnHeader field="status" label="Status" />
                   <ColumnHeader field="createdAt" label="Date" className="hidden md:table-cell" />
@@ -845,7 +846,13 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                       {lead.country}
                     </TableCell>
                     <TableCell 
-                      className="text-sm hidden sm:table-cell max-w-[150px] truncate" 
+                      className="text-sm hidden sm:table-cell" 
+                      onClick={() => setSelectedLead(lead)}
+                    >
+                      {formatBudget(lead.budget)}
+                    </TableCell>
+                    <TableCell 
+                      className="text-sm hidden lg:table-cell max-w-[150px] truncate" 
                       onClick={() => setSelectedLead(lead)}
                     >
                       {lead.campaignName}
