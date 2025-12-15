@@ -1,6 +1,5 @@
 import { CheckCircle, Lightbulb } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 
 interface InsightsSummaryProps {
   recommendations: string[];
@@ -8,49 +7,43 @@ interface InsightsSummaryProps {
   compact?: boolean;
 }
 
+// Helper to truncate text to ~50 chars
+const truncate = (text: string, maxLength = 60) => {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trim() + '...';
+};
+
 export function InsightsSummary({ recommendations, whatsWorking, compact = false }: InsightsSummaryProps) {
   if (compact) {
     return (
-      <div className="grid md:grid-cols-2 gap-3">
-        {/* What's Working - Compact */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-green-500">
-            <CheckCircle className="h-4 w-4" />
-            What's Working
+      <div className="space-y-2">
+        {/* What's Working */}
+        {whatsWorking.length > 0 && (
+          <div className="space-y-1">
+            <span className="text-[10px] font-medium text-green-500 uppercase tracking-wide">Working</span>
+            {whatsWorking.slice(0, 2).map((item, i) => (
+              <p key={i} className="text-[11px] text-muted-foreground pl-2 border-l-2 border-green-500/30">
+                {truncate(item)}
+              </p>
+            ))}
           </div>
-          <div className="space-y-1.5">
-            {whatsWorking.length > 0 ? (
-              whatsWorking.slice(0, 3).map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs p-2 rounded bg-green-500/5 border border-green-500/20">
-                  <span className="font-medium text-green-500 shrink-0">{i + 1}.</span>
-                  <span className="text-foreground">{item}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground">No insights yet</p>
-            )}
-          </div>
-        </div>
+        )}
 
-        {/* Recommendations - Compact */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-primary">
-            <Lightbulb className="h-4 w-4" />
-            Recommendations
+        {/* Recommendations */}
+        {recommendations.length > 0 && (
+          <div className="space-y-1">
+            <span className="text-[10px] font-medium text-primary uppercase tracking-wide">Actions</span>
+            {recommendations.slice(0, 2).map((item, i) => (
+              <p key={i} className="text-[11px] text-muted-foreground pl-2 border-l-2 border-primary/30">
+                {truncate(item)}
+              </p>
+            ))}
           </div>
-          <div className="space-y-1.5">
-            {recommendations.length > 0 ? (
-              recommendations.slice(0, 3).map((item, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs p-2 rounded bg-primary/5 border border-primary/20">
-                  <span className="font-medium text-primary shrink-0">{i + 1}.</span>
-                  <span className="text-foreground">{item}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground">No recommendations yet</p>
-            )}
-          </div>
-        </div>
+        )}
+
+        {whatsWorking.length === 0 && recommendations.length === 0 && (
+          <p className="text-[11px] text-muted-foreground">No insights yet</p>
+        )}
       </div>
     );
   }
@@ -59,52 +52,42 @@ export function InsightsSummary({ recommendations, whatsWorking, compact = false
     <div className="grid md:grid-cols-2 gap-4">
       {/* What's Working */}
       <Card className="border-green-500/30">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            What's Working
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            Working
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2">
           {whatsWorking.length > 0 ? (
             whatsWorking.slice(0, 3).map((item, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
-                <div className="h-6 w-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-medium text-green-500">{i + 1}</span>
-                </div>
-                <p className="text-sm text-foreground">{item}</p>
-              </div>
+              <p key={i} className="text-xs text-muted-foreground pl-2 border-l-2 border-green-500/30">
+                {truncate(item, 80)}
+              </p>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Upload data to see what's working
-            </p>
+            <p className="text-xs text-muted-foreground">Upload data to see insights</p>
           )}
         </CardContent>
       </Card>
 
       {/* Recommendations */}
       <Card className="border-primary/30">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-primary" />
-            Recommendations
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-primary" />
+            Actions
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2">
           {recommendations.length > 0 ? (
             recommendations.slice(0, 3).map((item, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-medium text-primary">{i + 1}</span>
-                </div>
-                <p className="text-sm text-foreground">{item}</p>
-              </div>
+              <p key={i} className="text-xs text-muted-foreground pl-2 border-l-2 border-primary/30">
+                {truncate(item, 80)}
+              </p>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Upload data to get recommendations
-            </p>
+            <p className="text-xs text-muted-foreground">Upload data to get recommendations</p>
           )}
         </CardContent>
       </Card>
