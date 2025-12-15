@@ -25,22 +25,49 @@ export function formatCompactCurrency(value: number): string {
  */
 export function formatBudget(budget: string | undefined | null): string {
   if (!budget) return "Not specified";
-  
-  // Extract all numbers from the string
-  const numbers = budget.match(/[\d,]+/g);
-  if (!numbers || numbers.length === 0) return budget;
-  
-  // Parse numbers (remove commas)
-  const parsedNumbers = numbers.map(n => parseInt(n.replace(/,/g, ""), 10));
-  
-  // Format each number
-  const formatted = parsedNumbers.map(formatCompactCurrency);
-  
-  // If it's a range (2 numbers), return as range
-  if (formatted.length >= 2) {
-    return `${formatted[0]} - ${formatted[1]}`;
-  }
-  
-  // Single value
-  return formatted[0];
+
+  const raw = budget.trim();
+  const hasPlus = /\+\s*$/.test(raw);
+
+  // Normalise separators and strip currency symbols/commas for parsing.
+  const normalised = raw
+    .replace(/[£$,]/g, "")
+    .replace(/–|—/g, "-")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
+  const globalMillion = /\b(million|mn)\b/.test(normalised) || /\b\d+(?:\.\d+)?\s*m\b/.test(normalised);
+  const globalThousand = /\b(thousand)\b/.test(normalised) || /\b\d+(?:\.\d+)?\s*k\b/.test(normalised);
+
+  // Extract all numeric tokens with optional unit suffix.
+  const matches = Array.from(
+    normalised.matchAll(/(\d+(?:\.\d+)?)(?:\s*)(m|million|mn|k|thousand)?/g)
+  );
+
+  if (matches.length === 0) return budget;
+
+  const values = matches
+    .map((m) => {
+      const num = Number.parseFloat(m[1]);
+      const unit = m[2];
+
+      if (!Number.isFinite(num)) return null;
+
+      if (unit === "m" || unit === "mn" || unit === "million") return num * 1_000_000;
+      if (unit === "k" || unit === "thousand") return num * 1_000;
+
+      // Handle formats like "£1 - £2 million" where the unit is global, not per-number.
+      if (globalMillion && num < 1000) return num * 1_000_000;
+      if (globalThousand && num < 1000) return num * 1_000;
+
+      return num;
+    })
+    .filter((v): v is number => typeof v === "number");
+
+  if (values.length === 0) return budget;
+
+  const formatted = values.map((v) => formatCompactCurrency(Math.round(v)));
+
+  if (formatted.length >= 2) return `${formatted[0]} - ${formatted[1]}`;
+  return hasPlus ? `${formatted[0]}+` : formatted[0];
 }
