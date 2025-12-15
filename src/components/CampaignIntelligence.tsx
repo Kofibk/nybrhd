@@ -1,162 +1,235 @@
 import { useState } from 'react';
 import { UploadZone } from '@/components/UploadZone';
-import { DataAnalysis, AnalysisResult } from '@/components/DataAnalysis';
 import { AIInsightsChat } from '@/components/AIInsightsChat';
 import { InsightsSummary } from '@/components/InsightsSummary';
-import { analyzeWithClaude } from '@/lib/analyzeWithClaude';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Sparkles, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sparkles, TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface DataInsights {
+  recommendations: string[];
+  whatsWorking: string[];
+  summary: string;
+}
 
 export function CampaignIntelligence() {
   const [campaignData, setCampaignData] = useState<any[]>([]);
   const [campaignFileName, setCampaignFileName] = useState<string>('');
+  const [campaignInsights, setCampaignInsights] = useState<DataInsights | null>(null);
+  const [isAnalyzingCampaigns, setIsAnalyzingCampaigns] = useState(false);
+
   const [leadData, setLeadData] = useState<any[]>([]);
   const [leadFileName, setLeadFileName] = useState<string>('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [leadInsights, setLeadInsights] = useState<DataInsights | null>(null);
+  const [isAnalyzingLeads, setIsAnalyzingLeads] = useState(false);
+
+  const analyzeCampaigns = async (data: any[]) => {
+    setIsAnalyzingCampaigns(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke('analyze-data', {
+        body: {
+          campaigns: data,
+          leads: [],
+          analysisType: 'campaigns'
+        }
+      });
+
+      if (error) throw error;
+
+      setCampaignInsights({
+        recommendations: result.nextActions?.slice(0, 3).map((a: any) => a.action) || [],
+        whatsWorking: result.opportunities?.slice(0, 3).map((o: any) => `${o.title}: ${o.description}`) || [],
+        summary: result.summary || ''
+      });
+    } catch (error) {
+      console.error('Campaign analysis error:', error);
+      toast.error('Campaign analysis failed');
+    } finally {
+      setIsAnalyzingCampaigns(false);
+    }
+  };
+
+  const analyzeLeads = async (data: any[]) => {
+    setIsAnalyzingLeads(true);
+    try {
+      const { data: result, error } = await supabase.functions.invoke('analyze-data', {
+        body: {
+          campaigns: [],
+          leads: data,
+          analysisType: 'leads'
+        }
+      });
+
+      if (error) throw error;
+
+      setLeadInsights({
+        recommendations: result.nextActions?.slice(0, 3).map((a: any) => a.action) || [],
+        whatsWorking: result.opportunities?.slice(0, 3).map((o: any) => `${o.title}: ${o.description}`) || [],
+        summary: result.summary || ''
+      });
+    } catch (error) {
+      console.error('Lead analysis error:', error);
+      toast.error('Lead analysis failed');
+    } finally {
+      setIsAnalyzingLeads(false);
+    }
+  };
 
   const handleCampaignData = (data: any[], fileName: string) => {
     setCampaignData(data);
     setCampaignFileName(fileName);
     toast.success(`Loaded ${data.length} campaigns`);
+    analyzeCampaigns(data);
   };
 
   const handleLeadData = (data: any[], fileName: string) => {
     setLeadData(data);
     setLeadFileName(fileName);
     toast.success(`Loaded ${data.length} leads`);
+    analyzeLeads(data);
   };
 
-  const handleAnalyze = async () => {
-    if (campaignData.length === 0 && leadData.length === 0) {
-      toast.error('Please upload at least one CSV file');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const result = await analyzeWithClaude(campaignData, leadData);
-      setAnalysis(result);
-      toast.success('Analysis complete');
-    } catch (error) {
-      console.error('Analysis error:', error);
-      toast.error('Analysis failed. Please try again.');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleReset = () => {
+  const handleClearCampaigns = () => {
     setCampaignData([]);
     setCampaignFileName('');
-    setLeadData([]);
-    setLeadFileName('');
-    setAnalysis(null);
+    setCampaignInsights(null);
   };
 
-  const hasData = campaignData.length > 0 || leadData.length > 0;
+  const handleClearLeads = () => {
+    setLeadData([]);
+    setLeadFileName('');
+    setLeadInsights(null);
+  };
 
-  // Extract recommendations and what's working from analysis
-  const recommendations = analysis?.nextActions?.map(a => a.action) || [];
-  const whatsWorking = analysis?.opportunities?.map(o => o.title + ': ' + o.description) || [];
+  const hasAnyData = campaignData.length > 0 || leadData.length > 0;
 
   return (
     <div className="space-y-6">
-      {/* Upload Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Campaign Intelligence</h2>
-            <p className="text-sm text-muted-foreground">
-              Upload your data for AI-powered analysis
-            </p>
-          </div>
-          {analysis && (
-            <Button variant="outline" size="sm" onClick={handleReset}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              New Analysis
-            </Button>
-          )}
-        </div>
+      {/* Header */}
+      <div>
+        <h2 className="text-xl font-semibold text-foreground">Campaign Intelligence</h2>
+        <p className="text-sm text-muted-foreground">
+          Upload your data for AI-powered analysis and insights
+        </p>
+      </div>
 
-        {/* Upload Zones */}
-        <div className="grid md:grid-cols-2 gap-4">
+      {/* Campaign Data Section */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Campaign Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <UploadZone
             label="Campaign Data"
             description="Export from Meta, Google Ads, etc."
             onDataParsed={handleCampaignData}
             isUploaded={campaignData.length > 0}
             fileName={campaignFileName}
-            onClear={() => { setCampaignData([]); setCampaignFileName(''); }}
+            onClear={handleClearCampaigns}
           />
+          
+          {isAnalyzingCampaigns && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Analysing campaigns...</span>
+            </div>
+          )}
+
+          {campaignInsights && !isAnalyzingCampaigns && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">{campaignInsights.summary}</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => analyzeCampaigns(campaignData)}
+                  className="shrink-0"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+              <InsightsSummary
+                recommendations={campaignInsights.recommendations}
+                whatsWorking={campaignInsights.whatsWorking}
+                compact
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Lead Data Section */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Lead Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <UploadZone
             label="Lead Data"
             description="Your CRM export or lead list"
             onDataParsed={handleLeadData}
             isUploaded={leadData.length > 0}
             fileName={leadFileName}
-            onClear={() => { setLeadData([]); setLeadFileName(''); }}
+            onClear={handleClearLeads}
           />
-        </div>
-
-        {/* Data Summary & Analyze Button */}
-        {hasData && !analysis && (
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-sm text-muted-foreground">
-              {campaignData.length > 0 && <span>{campaignData.length} campaigns</span>}
-              {campaignData.length > 0 && leadData.length > 0 && <span> • </span>}
-              {leadData.length > 0 && <span>{leadData.length} leads</span>}
-            </div>
-            <Button
-              size="lg"
-              onClick={handleAnalyze}
-              disabled={!hasData || isAnalyzing}
-              className="min-w-[200px]"
-            >
-              {isAnalyzing ? (
-                <>
-                  <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-                  Analysing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Analyse Data
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Analysis Results */}
-      {analysis && (
-        <>
-          <DataAnalysis analysis={analysis} />
           
-          {/* Insights Summary - What's Working & Recommendations */}
-          <InsightsSummary 
-            recommendations={recommendations}
-            whatsWorking={whatsWorking}
-          />
+          {isAnalyzingLeads && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted-foreground">Analysing leads...</span>
+            </div>
+          )}
 
-          {/* AI Chat */}
+          {leadInsights && !isAnalyzingLeads && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">{leadInsights.summary}</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => analyzeLeads(leadData)}
+                  className="shrink-0"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+              <InsightsSummary
+                recommendations={leadInsights.recommendations}
+                whatsWorking={leadInsights.whatsWorking}
+                compact
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Persistent AI Chat */}
+      <Card>
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI Assistant
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Ask questions, get insights, or take actions on your data
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
           <AIInsightsChat
             campaignData={campaignData}
             leadData={leadData}
-            analysisContext={analysis.summary}
+            analysisContext={[campaignInsights?.summary, leadInsights?.summary].filter(Boolean).join(' ')}
           />
-        </>
-      )}
-
-      {/* Show chat even without analysis if data is uploaded */}
-      {hasData && !analysis && (
-        <AIInsightsChat
-          campaignData={campaignData}
-          leadData={leadData}
-        />
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
