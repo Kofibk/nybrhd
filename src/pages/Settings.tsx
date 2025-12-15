@@ -21,7 +21,7 @@ import {
 import { useState } from "react";
 
 interface SettingsProps {
-  userType: "developer" | "agent" | "broker";
+  userType: "developer" | "agent" | "broker" | "admin";
 }
 
 const Settings = ({ userType }: SettingsProps) => {

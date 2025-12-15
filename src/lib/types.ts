@@ -1,6 +1,6 @@
 // Core types for the Naybourhood.ai platform
 
-export type UserRole = "developer" | "agent" | "broker";
+export type UserRole = "developer" | "agent" | "broker" | "admin";
 
 export interface User {
   id: string;
