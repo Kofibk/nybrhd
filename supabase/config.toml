@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.lead-scoring]
 verify_jwt = false
+
+[functions.campaign-analysis]
+verify_jwt = false
