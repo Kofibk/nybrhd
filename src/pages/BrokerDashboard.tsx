@@ -1,5 +1,5 @@
 import DashboardLayout from '@/components/DashboardLayout';
-import { CampaignIntelligence } from '@/components/CampaignIntelligence';
+import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
 import WhatsAppLeadNurturing from '@/components/WhatsAppLeadNurturing';
 import EmailAutomation from '@/components/EmailAutomation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,7 +33,7 @@ const BrokerDashboard = () => {
         </TabsList>
         
         <TabsContent value="overview">
-          <CampaignIntelligence />
+          <AIAgentDashboard />
         </TabsContent>
         
         <TabsContent value="whatsapp">

@@ -1,5 +1,5 @@
 import DashboardLayout from '@/components/DashboardLayout';
-import { CampaignIntelligence } from '@/components/CampaignIntelligence';
+import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AgentDashboard = () => {
@@ -12,7 +12,7 @@ const AgentDashboard = () => {
       userType="agent"
       userName={userName}
     >
-      <CampaignIntelligence />
+      <AIAgentDashboard />
     </DashboardLayout>
   );
 };
