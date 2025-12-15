@@ -117,7 +117,7 @@ export const useAICampaignIntelligence = () => {
       if (fnError) throw fnError;
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to optimize budget");
+      setError(err instanceof Error ? err.message : "Failed to optimise budget");
       return null;
     } finally {
       setIsLoading(false);

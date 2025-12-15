@@ -101,12 +101,10 @@ export function MasterAgent() {
   };
 
   const suggestedQueries = [
-    "Who are my hottest leads right now?",
+    "Who are my hottest leads?",
     "Which campaigns need attention?",
-    "What's my pipeline looking like?",
-    "Who should I contact first today?",
-    "Show me underperforming ads",
-    "What are buyers looking for?"
+    "Who should I contact first?",
+    "Show underperforming ads",
   ];
 
   return (

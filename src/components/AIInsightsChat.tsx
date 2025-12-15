@@ -58,7 +58,7 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
 
       if (error) throw error;
 
-      const assistantMessage = data.chatResponse || data.summary || 'I apologise, I couldn\'t generate a response. Please try again.';
+      const assistantMessage = data.chatResponse || data.summary || "I apologise, I couldn't generate a response. Please try again.";
       const extractedLeads = data.leads || [];
       
       setMessages(prev => [...prev, { 
@@ -115,34 +115,32 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
   const hasData = campaignData.length > 0 || leadData.length > 0;
 
   const suggestedQuestions = hasData ? [
-    campaignData.length > 0 ? "What's causing the highest CPL?" : null,
-    leadData.length > 0 ? "Who are the top 5 hottest leads?" : null,
-    leadData.length > 0 ? "Show all leads above 80/100 score" : null,
-    campaignData.length > 0 ? "How can I reduce wasted spend?" : null,
-    leadData.length > 0 ? "Which leads should I prioritise today?" : null,
-    "What's working best right now?"
+    campaignData.length > 0 ? "What's causing high CPL?" : null,
+    leadData.length > 0 ? "Top 5 hottest leads?" : null,
+    leadData.length > 0 ? "Leads above 80 score?" : null,
+    campaignData.length > 0 ? "Reduce wasted spend?" : null,
   ].filter(Boolean) : [
-    "Upload campaign or lead data to get started",
+    "Upload data to start",
   ];
 
   return (
-    <div className="flex flex-col h-[450px]">
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+    <div className="flex flex-col h-[350px] sm:h-[400px]">
+      <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef}>
         {messages.length === 0 ? (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground text-center">
               {hasData 
-                ? "Ask questions about your data, get insights, or request actions"
-                : "Upload data above to start asking questions"
+                ? "Ask questions about your data"
+                : "Upload data to start"
               }
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {suggestedQuestions.slice(0, 4).map((q, i) => (
                 <Button
                   key={i}
                   variant="outline"
                   size="sm"
-                  className="text-xs h-auto py-2 px-3 whitespace-normal text-left justify-start"
+                  className="text-[11px] h-auto py-1.5 px-2 whitespace-normal text-left justify-start"
                   onClick={() => {
                     if (hasData && q) setInput(q);
                   }}
@@ -249,20 +247,21 @@ export function AIInsightsChat({ campaignData, leadData, analysisContext }: AIIn
         )}
       </ScrollArea>
       
-      <div className="p-4 border-t">
+      <div className="p-3 sm:p-4 border-t">
         <div className="flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={hasData ? "Ask about your data, e.g. 'Who are my top 10 leads?'" : "Upload data to start chatting..."}
+            placeholder={hasData ? "Ask about your data..." : "Upload data first..."}
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 text-sm"
           />
           <Button 
             onClick={sendMessage} 
             disabled={!input.trim() || isLoading || !hasData}
             size="icon"
+            className="shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>

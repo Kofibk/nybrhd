@@ -84,7 +84,7 @@ export const useAILeadAnalysis = () => {
       if (fnError) throw fnError;
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to analyze quality");
+      setError(err instanceof Error ? err.message : "Failed to analyse quality");
       return null;
     } finally {
       setIsLoading(false);

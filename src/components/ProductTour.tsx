@@ -101,6 +101,32 @@ const tourSteps: Record<string, TourStep[]> = {
       position: "right",
     },
   ],
+  admin: [
+    {
+      target: "[data-tour='dashboard']",
+      title: "Welcome to Admin Dashboard",
+      description: "Your command centre for managing all client campaigns, leads, and platform performance.",
+      position: "bottom",
+    },
+    {
+      target: "[data-tour='campaigns']",
+      title: "Campaign Management",
+      description: "Create and manage Meta campaigns for clients. Monitor performance and optimise spend.",
+      position: "right",
+    },
+    {
+      target: "[data-tour='leads']",
+      title: "Lead Management",
+      description: "View all leads across clients with scoring, classification, and bulk actions.",
+      position: "right",
+    },
+    {
+      target: "[data-tour='analytics']",
+      title: "Platform Analytics",
+      description: "Deep dive into performance metrics, attribution insights, and client reporting.",
+      position: "right",
+    },
+  ],
 };
 
 export function ProductTour({ userType, onComplete }: ProductTourProps) {

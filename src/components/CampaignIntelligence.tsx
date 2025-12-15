@@ -95,8 +95,6 @@ export function CampaignIntelligence() {
     analyzeLeads(data);
   };
 
-  const hasAnyData = campaignData.length > 0 || leadData.length > 0;
-
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {/* Campaign Data */}
