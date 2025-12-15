@@ -12,10 +12,11 @@ import {
   DollarSign, Home, MessageSquare, Search, Download, X,
   Building2, Clock, Sparkles, Lightbulb, CreditCard, Timer, Filter
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline, LeadSource, LEAD_SOURCES } from "@/lib/types";
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
 import { classifyLead } from "@/lib/leadClassification";
+import { useUploadedData } from "@/contexts/DataContext";
 
 interface Lead {
   id: string;
@@ -53,6 +54,7 @@ const LeadsManagement = () => {
   const [developmentFilter, setDevelopmentFilter] = useState("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { leadData } = useUploadedData();
 
   const mockLeads: Lead[] = [
     {
@@ -240,6 +242,38 @@ const LeadsManagement = () => {
     }
   ];
 
+  // Merge uploaded lead data with mock leads
+  const allLeads = useMemo(() => {
+    if (leadData.length === 0) return mockLeads;
+    
+    // Convert uploaded CSV data to Lead format
+    const uploadedLeads: Lead[] = leadData.map((row, index) => ({
+      id: `uploaded_${index}`,
+      name: row.name || row.Name || row.full_name || row['Full Name'] || `Lead ${index + 1}`,
+      email: row.email || row.Email || '',
+      phone: row.phone || row.Phone || row.telephone || '',
+      country: row.country || row.Country || row.location || '',
+      budget: row.budget || row.Budget || row.budget_range || '£0',
+      bedrooms: row.bedrooms || row.Bedrooms || '',
+      paymentMethod: (row.payment_method || row.paymentMethod || 'undecided') as PaymentMethod,
+      buyerStatus: (row.buyer_status || row.buyerStatus || 'browsing') as BuyerStatus,
+      purchaseTimeline: (row.timeline || row.purchaseTimeline || '3_6_months') as PurchaseTimeline,
+      intentScore: Number(row.intent_score || row.intentScore || row.score || 50),
+      qualityScore: Number(row.quality_score || row.qualityScore || 50),
+      status: (row.status || 'new').toLowerCase() as Lead['status'],
+      source: (row.source || 'manual_upload') as LeadSource,
+      sourceDetail: row.source_detail || 'CSV Upload',
+      lastActivity: row.last_activity || 'Just now',
+      assignedAgent: row.assigned_agent || null,
+      matchedUnits: [],
+      timeline: [],
+      notes: row.notes || '',
+      aiRecommendations: [],
+    }));
+
+    return [...mockLeads, ...uploadedLeads];
+  }, [leadData]);
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-success";
     if (score >= 60) return "text-warning";
@@ -283,7 +317,7 @@ const LeadsManagement = () => {
     }
   };
 
-  const filteredLeads = mockLeads.filter(lead => {
+  const filteredLeads = allLeads.filter(lead => {
     const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lead.country.toLowerCase().includes(searchTerm.toLowerCase());
@@ -295,11 +329,11 @@ const LeadsManagement = () => {
   });
 
   const stats = [
-    { label: "Total", value: mockLeads.length, color: "text-foreground" },
-    { label: "New", value: mockLeads.filter(l => l.status === "new").length, color: "text-blue-600" },
-    { label: "Engaged", value: mockLeads.filter(l => l.status === "engaged").length, color: "text-warning" },
-    { label: "Viewing", value: mockLeads.filter(l => l.status === "viewing").length, color: "text-accent" },
-    { label: "Offer", value: mockLeads.filter(l => l.status === "offer").length, color: "text-success" },
+    { label: "Total", value: allLeads.length, color: "text-foreground" },
+    { label: "New", value: allLeads.filter(l => l.status === "new").length, color: "text-blue-600" },
+    { label: "Engaged", value: allLeads.filter(l => l.status === "engaged").length, color: "text-warning" },
+    { label: "Viewing", value: allLeads.filter(l => l.status === "viewing").length, color: "text-accent" },
+    { label: "Offer", value: allLeads.filter(l => l.status === "offer").length, color: "text-success" },
   ];
 
   const handleLeadClick = (lead: Lead) => {
