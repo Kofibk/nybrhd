@@ -1,5 +1,6 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { CampaignIntelligence } from '@/components/CampaignIntelligence';
+import { MasterAgent } from '@/components/MasterAgent';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
@@ -12,7 +13,10 @@ const AdminDashboard = () => {
       userType="admin"
       userName={userName}
     >
-      <CampaignIntelligence />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MasterAgent />
+        <CampaignIntelligence />
+      </div>
     </DashboardLayout>
   );
 };
