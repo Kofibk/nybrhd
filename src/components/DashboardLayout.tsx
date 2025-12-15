@@ -30,7 +30,7 @@ import { ProductTour } from "./ProductTour";
 interface DashboardLayoutProps {
   children: ReactNode;
   title: string;
-  userType: "developer" | "agent" | "broker";
+  userType: "developer" | "agent" | "broker" | "admin";
   userName?: string;
 }
 

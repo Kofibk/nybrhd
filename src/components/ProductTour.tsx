@@ -12,7 +12,7 @@ interface TourStep {
 }
 
 interface ProductTourProps {
-  userType: "developer" | "agent" | "broker";
+  userType: "developer" | "agent" | "broker" | "admin";
   onComplete?: () => void;
 }
 
