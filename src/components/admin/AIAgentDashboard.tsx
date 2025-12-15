@@ -47,7 +47,11 @@ interface QuickStat {
   href?: string;
 }
 
-export function AIAgentDashboard() {
+interface AIAgentDashboardProps {
+  userType?: 'developer' | 'agent' | 'broker' | 'admin';
+}
+
+export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasLoadedBriefing, setHasLoadedBriefing] = useState(false);
@@ -132,28 +136,48 @@ export function AIAgentDashboard() {
     }
   };
 
-  const handleQuickAction = async (action: string) => {
-    let queryText = '';
-    switch (action) {
-      case 'hot-leads':
-        queryText = "Show me all hot leads that need immediate attention. Include their scores, recommended actions, and contact details.";
-        break;
-      case 'campaign-performance':
-        queryText = "Give me a detailed breakdown of campaign performance. Show CPL vs benchmark, what's working, what's not, and specific optimisation recommendations.";
-        break;
-      case 'who-to-contact':
-        queryText = "Who should I contact next? Prioritise by SLA urgency and include draft messages for each lead.";
-        break;
-      case 'daily-summary':
-        queryText = "Give me today's daily briefing: urgent leads, campaign alerts, pipeline summary, and top 3 priorities.";
-        break;
-      case 'needs-attention':
-        queryText = "What needs my attention right now? Flag any problems, overdue SLAs, underperforming campaigns, and at-risk leads.";
-        break;
-      default:
-        return;
-    }
+  // Role-specific quick actions
+  const getQuickActions = () => {
+    const baseActions = [
+      { key: 'hot-leads', label: 'Hot leads', icon: <Flame className="h-3 w-3 mr-1.5 text-orange-500" />, query: "Show me all hot leads that need immediate attention. Include their scores, recommended actions, and contact details." },
+      { key: 'daily-summary', label: 'Daily summary', icon: <MessageSquare className="h-3 w-3 mr-1.5 text-green-500" />, query: "Give me today's daily briefing: urgent leads, campaign alerts, pipeline summary, and top 3 priorities." },
+    ];
 
+    switch (userType) {
+      case 'developer':
+        return [
+          ...baseActions,
+          { key: 'development-performance', label: 'Development performance', icon: <TrendingUp className="h-3 w-3 mr-1.5 text-primary" />, query: "How are my developments performing? Show lead volume, interest levels, and which developments are generating the most qualified buyers." },
+          { key: 'buyer-insights', label: 'Buyer insights', icon: <Users className="h-3 w-3 mr-1.5 text-blue-500" />, query: "What are the key buyer insights from my leads? Show budget ranges, bedroom preferences, location interests, and investment vs owner-occupier split." },
+          { key: 'campaign-roi', label: 'Campaign ROI', icon: <PoundSterling className="h-3 w-3 mr-1.5 text-green-500" />, query: "Analyse my campaign ROI. Show cost per qualified lead by development, best performing channels, and budget optimisation recommendations." },
+        ];
+      case 'agent':
+        return [
+          ...baseActions,
+          { key: 'viewing-ready', label: 'Viewing ready', icon: <CheckCircle className="h-3 w-3 mr-1.5 text-green-500" />, query: "Which leads are ready for viewings? Show qualified buyers with high intent scores who haven't booked a viewing yet, with recommended properties to show them." },
+          { key: 'follow-up-due', label: 'Follow-up due', icon: <Clock className="h-3 w-3 mr-1.5 text-amber-500" />, query: "Show all leads needing follow-up today. Prioritise by SLA urgency and include suggested talking points for each." },
+          { key: 'market-activity', label: 'Market activity', icon: <TrendingUp className="h-3 w-3 mr-1.5 text-primary" />, query: "What's the market activity like? Show enquiry trends, popular property types, and areas with most interest." },
+        ];
+      case 'broker':
+        return [
+          ...baseActions,
+          { key: 'mortgage-ready', label: 'Mortgage ready', icon: <PoundSterling className="h-3 w-3 mr-1.5 text-green-500" />, query: "Which leads are mortgage-ready? Show buyers with verified deposit, credit-checked, or who've shown strong borrowing intent. Include their property value and borrowing amount." },
+          { key: 'consultation-queue', label: 'Consultation queue', icon: <Users className="h-3 w-3 mr-1.5 text-blue-500" />, query: "Show my consultation queue. Who needs a callback today? Prioritise by timeline to borrow and borrowing amount." },
+          { key: 'product-recommendations', label: 'Product match', icon: <CheckCircle className="h-3 w-3 mr-1.5 text-primary" />, query: "Recommend products for my top leads. Match residential, BTL, or insurance products based on their profile and requirements." },
+        ];
+      default: // admin
+        return [
+          ...baseActions,
+          { key: 'campaign-performance', label: 'Campaign performance', icon: <TrendingUp className="h-3 w-3 mr-1.5 text-primary" />, query: "Give me a detailed breakdown of campaign performance. Show CPL vs benchmark, what's working, what's not, and specific optimisation recommendations." },
+          { key: 'who-to-contact', label: 'Who to contact', icon: <Users className="h-3 w-3 mr-1.5 text-blue-500" />, query: "Who should I contact next? Prioritise by SLA urgency and include draft messages for each lead." },
+          { key: 'needs-attention', label: 'Needs attention', icon: <AlertCircle className="h-3 w-3 mr-1.5 text-amber-500" />, query: "What needs my attention right now? Flag any problems, overdue SLAs, underperforming campaigns, and at-risk leads." },
+        ];
+    }
+  };
+
+  const quickActions = getQuickActions();
+
+  const handleQuickAction = async (queryText: string) => {
     const userMessage: Message = {
       role: 'user',
       content: queryText,
@@ -442,56 +466,19 @@ export function AIAgentDashboard() {
 
             {/* Quick Action Buttons */}
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => handleQuickAction('hot-leads')}
-                disabled={isLoading}
-              >
-                <Flame className="h-3 w-3 mr-1.5 text-orange-500" />
-                Hot leads
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => handleQuickAction('campaign-performance')}
-                disabled={isLoading}
-              >
-                <TrendingUp className="h-3 w-3 mr-1.5 text-primary" />
-                Campaign performance
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => handleQuickAction('who-to-contact')}
-                disabled={isLoading}
-              >
-                <Users className="h-3 w-3 mr-1.5 text-blue-500" />
-                Who to contact
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => handleQuickAction('daily-summary')}
-                disabled={isLoading}
-              >
-                <MessageSquare className="h-3 w-3 mr-1.5 text-green-500" />
-                Daily summary
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => handleQuickAction('needs-attention')}
-                disabled={isLoading}
-              >
-                <AlertCircle className="h-3 w-3 mr-1.5 text-amber-500" />
-                Needs attention
-              </Button>
+              {quickActions.map((action) => (
+                <Button
+                  key={action.key}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8"
+                  onClick={() => handleQuickAction(action.query)}
+                  disabled={isLoading}
+                >
+                  {action.icon}
+                  {action.label}
+                </Button>
+              ))}
             </div>
           </div>
         </Card>

@@ -12,7 +12,7 @@ const DeveloperDashboard = () => {
       userType="developer"
       userName={userName}
     >
-      <AIAgentDashboard />
+      <AIAgentDashboard userType="developer" />
     </DashboardLayout>
   );
 };
