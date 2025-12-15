@@ -15,6 +15,9 @@ import CaseStudies from "./pages/CaseStudies";
 import Resources from "./pages/Resources";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import DeveloperDashboard from "./pages/DeveloperDashboard";
+import AgentDashboard from "./pages/AgentDashboard";
+import BrokerDashboard from "./pages/BrokerDashboard";
 import CampaignsList from "./pages/CampaignsList";
 import CampaignWizard from "./pages/CampaignWizard";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -52,7 +55,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       
       {/* Developer Routes */}
-      <Route path="/developer" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
       <Route path="/developer/campaigns" element={<ProtectedRoute><CampaignsList userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="developer" /></ProtectedRoute>} />
@@ -73,7 +76,7 @@ const AppRoutes = () => {
       <Route path="/developer/settings" element={<ProtectedRoute><Settings userType="developer" /></ProtectedRoute>} />
 
       {/* Agent Routes */}
-      <Route path="/agent" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
       <Route path="/agent/campaigns" element={<ProtectedRoute><CampaignsList userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="agent" /></ProtectedRoute>} />
@@ -94,7 +97,7 @@ const AppRoutes = () => {
       <Route path="/agent/settings" element={<ProtectedRoute><Settings userType="agent" /></ProtectedRoute>} />
 
       {/* Broker Routes */}
-      <Route path="/broker" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/broker" element={<ProtectedRoute><BrokerDashboard /></ProtectedRoute>} />
       <Route path="/broker/campaigns" element={<ProtectedRoute><CampaignsList userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="broker" /></ProtectedRoute>} />
