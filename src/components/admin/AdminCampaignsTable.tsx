@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
+import { useUploadedData } from "@/contexts/DataContext";
 
 interface AdminCampaignsTableProps {
   searchQuery: string;
@@ -162,8 +163,37 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "startDate", direction: "desc" });
   
+  // Get uploaded campaign data from context
+  const { campaignData } = useUploadedData();
+  
   // Local campaigns state (mockCampaigns + imported campaigns)
   const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>(mockCampaigns);
+
+  // Merge uploaded campaign data with local campaigns
+  useEffect(() => {
+    if (campaignData && campaignData.length > 0) {
+      const mappedCampaigns: Campaign[] = campaignData.map((c, index) => ({
+        id: `uploaded-${index}`,
+        name: c['Campaign name'] || c.name || 'Unknown Campaign',
+        client: c.client || 'Uploaded',
+        clientType: c.clientType || 'developer',
+        status: c['Campaign delivery'] === 'archived' ? 'paused' : 
+                c['Campaign delivery'] === 'inactive' ? 'paused' : 'live',
+        budget: parseFloat(c['Amount spent (GBP)'] || c.budget || '0') * 1.5 || 1000,
+        spent: parseFloat(c['Amount spent (GBP)'] || c.spent || '0'),
+        leads: parseInt(c.Results || c.leads || '0', 10),
+        cpl: parseFloat(c['Amount spent (GBP)'] || '0') / Math.max(parseInt(c.Results || '1', 10), 1),
+        startDate: c['Reporting starts'] || c.startDate || new Date().toISOString().split('T')[0],
+      }));
+      
+      // Combine mock + uploaded, removing duplicates by name
+      const combined = [...mappedCampaigns, ...mockCampaigns];
+      const unique = combined.filter((c, i, arr) => 
+        arr.findIndex(x => x.name === c.name) === i
+      );
+      setLocalCampaigns(unique);
+    }
+  }, [campaignData]);
 
   // Handle importing campaigns from file upload
   const handleCampaignsImport = (importedCampaigns: Campaign[]) => {
