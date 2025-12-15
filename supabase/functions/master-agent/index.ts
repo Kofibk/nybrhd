@@ -279,10 +279,16 @@ serve(async (req) => {
     });
 
     if (response.status === 429) {
+      const errorText = await response.text();
+      console.warn('Anthropic rate limit hit for Master Agent:', errorText);
+
+      // Return a graceful fallback response instead of propagating 429
       return new Response(JSON.stringify({ 
-        error: 'Rate limited - please try again in a moment' 
+        response: "I'm temporarily at capacity due to AI rate limits. Please wait 30–60 seconds and try again.",
+        model: 'claude-3-haiku-20240307',
+        rateLimited: true
       }), {
-        status: 429,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
