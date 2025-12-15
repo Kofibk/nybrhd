@@ -118,7 +118,7 @@ const RatingBadge = ({ rating }: { rating: 'excellent' | 'good' | 'acceptable' |
 
 const CampaignsList = ({ userType }: CampaignsListProps) => {
   const navigate = useNavigate();
-  const { campaignData } = useUploadedData();
+  const { campaignData } = useUploadedData(userType);
   
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [ratingFilter, setRatingFilter] = useState<string>("all");
