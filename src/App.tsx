@@ -14,6 +14,7 @@ import About from "./pages/About";
 import CaseStudies from "./pages/CaseStudies";
 import Resources from "./pages/Resources";
 import Onboarding from "./pages/Onboarding";
+import Dashboard from "./pages/Dashboard";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import BrokerDashboard from "./pages/BrokerDashboard";
@@ -51,6 +52,7 @@ const AppRoutes = () => {
       <Route path="/resources" element={<Resources />} />
       <Route path="/login" element={<Login />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       
       {/* Developer Routes */}
       <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
