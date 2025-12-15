@@ -47,7 +47,11 @@ interface Lead {
   aiRecommendations: AIRecommendation[];
 }
 
-const LeadsManagement = () => {
+interface LeadsManagementProps {
+  userType?: 'developer' | 'agent' | 'broker' | 'admin';
+}
+
+const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -55,7 +59,7 @@ const LeadsManagement = () => {
   const [developmentFilter, setDevelopmentFilter] = useState("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { leadData } = useUploadedData();
+  const { leadData } = useUploadedData(userType);
 
   // Convert uploaded lead data to Lead format - handle ANY column format dynamically
   const allLeads = useMemo(() => {

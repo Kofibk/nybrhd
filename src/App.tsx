@@ -68,7 +68,7 @@ const AppRoutes = () => {
       <Route path="/developer/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="developer">
-            <LeadsManagement />
+            <LeadsManagement userType="developer" />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -90,7 +90,7 @@ const AppRoutes = () => {
       <Route path="/agent/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="agent">
-            <LeadsManagement />
+            <LeadsManagement userType="agent" />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -112,7 +112,7 @@ const AppRoutes = () => {
       <Route path="/broker/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="broker">
-            <LeadsManagement />
+            <LeadsManagement userType="broker" />
           </DashboardLayout>
         </ProtectedRoute>
       } />
@@ -133,7 +133,7 @@ const AppRoutes = () => {
       <Route path="/admin/leads" element={
         <AdminRoute>
           <DashboardLayout title="Leads" userType="admin">
-            <LeadsManagement />
+            <LeadsManagement userType="admin" />
           </DashboardLayout>
         </AdminRoute>
       } />
