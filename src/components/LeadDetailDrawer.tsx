@@ -24,6 +24,7 @@ import { Lead, LEAD_SOURCES } from "@/lib/types";
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
 import { classifyLead } from "@/lib/leadClassification";
 import { format } from "date-fns";
+import { formatBudget } from "@/lib/utils";
 
 interface LeadDetailDrawerProps {
   lead: Lead | null;
@@ -163,7 +164,7 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-muted-foreground">Budget:</span>
-                <p className="font-medium">{lead.budget || "Not specified"}</p>
+                <p className="font-medium">{formatBudget(lead.budget)}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Timeline:</span>

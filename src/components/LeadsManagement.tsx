@@ -17,6 +17,7 @@ import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline, LeadSou
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
 import { classifyLead } from "@/lib/leadClassification";
 import { useUploadedData } from "@/contexts/DataContext";
+import { formatBudget } from "@/lib/utils";
 
 interface Lead {
   id: string;
@@ -356,7 +357,7 @@ const LeadsManagement = () => {
                     <div className="text-[10px] md:text-xs text-muted-foreground truncate max-w-[150px]">{lead.email}</div>
                   </td>
                   <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-sm hidden sm:table-cell">{lead.country}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{lead.budget}</td>
+                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{formatBudget(lead.budget)}</td>
                   <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs hidden md:table-cell">{getTimelineLabel(lead.purchaseTimeline)}</td>
                   <td className="px-3 md:px-4 py-2 md:py-3">
                     <span className={`font-semibold text-sm ${getScoreColor((lead.intentScore + lead.qualityScore) / 2)}`}>
@@ -426,7 +427,7 @@ const LeadsManagement = () => {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-muted-foreground text-xs">Budget</span>
-                        <div className="font-medium">{selectedLead.budget}</div>
+                        <div className="font-medium">{formatBudget(selectedLead.budget)}</div>
                       </div>
                       <div>
                         <span className="text-muted-foreground text-xs">Bedrooms</span>
