@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { UploadZone } from '@/components/UploadZone';
-import { AIInsightsChat } from '@/components/AIInsightsChat';
 import { InsightsSummary } from '@/components/InsightsSummary';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sparkles, TrendingUp, Users, RefreshCw } from 'lucide-react';
+import { TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUploadedData } from '@/contexts/DataContext';
 
@@ -99,27 +98,19 @@ export function CampaignIntelligence() {
   const hasAnyData = campaignData.length > 0 || leadData.length > 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Campaign Intelligence</h2>
-        <p className="text-sm text-muted-foreground">
-          Upload your data for AI-powered analysis and insights
-        </p>
-      </div>
-
-      {/* Campaign Data Section */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+    <div className="grid md:grid-cols-2 gap-4">
+      {/* Campaign Data */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
             Campaign Data
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           <UploadZone
             label="Campaign Data"
-            description="Export from Meta, Google Ads, etc."
+            description="Meta, Google Ads export"
             onDataParsed={handleCampaignData}
             isUploaded={campaignData.length > 0}
             fileName={campaignFileName}
@@ -127,23 +118,23 @@ export function CampaignIntelligence() {
           />
           
           {isAnalyzingCampaigns && (
-            <div className="flex items-center justify-center gap-2 py-4">
-              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm text-muted-foreground">Analysing campaigns...</span>
+            <div className="flex items-center gap-2 py-2">
+              <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-muted-foreground">Analysing...</span>
             </div>
           )}
 
           {campaignInsights && !isAnalyzingCampaigns && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{campaignInsights.summary}</p>
+            <div className="space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs text-muted-foreground line-clamp-2">{campaignInsights.summary}</p>
                 <Button 
                   variant="ghost" 
-                  size="sm" 
+                  size="icon"
+                  className="h-6 w-6 shrink-0"
                   onClick={() => analyzeCampaigns(campaignData)}
-                  className="shrink-0"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-3 w-3" />
                 </Button>
               </div>
               <InsightsSummary
@@ -156,18 +147,18 @@ export function CampaignIntelligence() {
         </CardContent>
       </Card>
 
-      {/* Lead Data Section */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
+      {/* Lead Data */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
             Lead Data
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           <UploadZone
             label="Lead Data"
-            description="Your CRM export or lead list"
+            description="CRM export or lead list"
             onDataParsed={handleLeadData}
             isUploaded={leadData.length > 0}
             fileName={leadFileName}
@@ -175,23 +166,23 @@ export function CampaignIntelligence() {
           />
           
           {isAnalyzingLeads && (
-            <div className="flex items-center justify-center gap-2 py-4">
-              <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm text-muted-foreground">Analysing leads...</span>
+            <div className="flex items-center gap-2 py-2">
+              <div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-muted-foreground">Analysing...</span>
             </div>
           )}
 
           {leadInsights && !isAnalyzingLeads && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{leadInsights.summary}</p>
+            <div className="space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs text-muted-foreground line-clamp-2">{leadInsights.summary}</p>
                 <Button 
                   variant="ghost" 
-                  size="sm" 
+                  size="icon"
+                  className="h-6 w-6 shrink-0"
                   onClick={() => analyzeLeads(leadData)}
-                  className="shrink-0"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-3 w-3" />
                 </Button>
               </div>
               <InsightsSummary
@@ -201,26 +192,6 @@ export function CampaignIntelligence() {
               />
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Persistent AI Chat */}
-      <Card>
-        <CardHeader className="pb-3 border-b">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Assistant
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Ask questions, get insights, or take actions on your data
-          </p>
-        </CardHeader>
-        <CardContent className="p-0">
-          <AIInsightsChat
-            campaignData={campaignData}
-            leadData={leadData}
-            analysisContext={[campaignInsights?.summary, leadInsights?.summary].filter(Boolean).join(' ')}
-          />
         </CardContent>
       </Card>
     </div>

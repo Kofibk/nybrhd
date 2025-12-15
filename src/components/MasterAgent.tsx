@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Brain, 
   Send, 
   Loader2, 
   AlertCircle, 
-  Zap, 
   TrendingUp, 
-  Users, 
   Calendar,
   Target,
-  PieChart,
-  MessageSquare
+  PieChart
 } from 'lucide-react';
 import { useMasterAgent, MasterAgentContext } from '@/hooks/useMasterAgent';
 import { useUploadedData } from '@/contexts/DataContext';
@@ -114,186 +110,139 @@ export function MasterAgent() {
   ];
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-4">
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Brain className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Master Agent</CardTitle>
-              <CardDescription>Powered by Claude Opus 4.5</CardDescription>
-            </div>
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-primary" />
+            <CardTitle className="text-base">Master Agent</CardTitle>
           </div>
-          <Badge variant="outline" className="text-xs">
-            AI Intelligence
+          <Badge variant="secondary" className="text-[10px] font-normal">
+            Claude Opus
           </Badge>
         </div>
       </CardHeader>
 
-      <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-        <TabsList className="mx-6">
-          <TabsTrigger value="chat" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Chat
-          </TabsTrigger>
-          <TabsTrigger value="actions" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Quick Actions
-          </TabsTrigger>
-        </TabsList>
+      <CardContent className="pt-0">
+        {/* Quick Actions Row */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 text-xs h-8"
+            onClick={() => handleQuickAction('briefing')}
+            disabled={isLoading}
+          >
+            <Calendar className="h-3.5 w-3.5 mr-1.5" />
+            Briefing
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 text-xs h-8"
+            onClick={() => handleQuickAction('pipeline')}
+            disabled={isLoading}
+          >
+            <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+            Pipeline
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 text-xs h-8"
+            onClick={() => handleQuickAction('insights')}
+            disabled={isLoading}
+          >
+            <Target className="h-3.5 w-3.5 mr-1.5" />
+            Insights
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 text-xs h-8"
+            onClick={() => handleQuickAction('budget')}
+            disabled={isLoading}
+          >
+            <PieChart className="h-3.5 w-3.5 mr-1.5" />
+            Budget
+          </Button>
+        </div>
 
-        <TabsContent value="chat" className="flex-1 flex flex-col px-6 pb-6 mt-4">
-          <ScrollArea className="flex-1 pr-4 min-h-[300px]">
-            {messages.length === 0 ? (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Ask me anything about your leads, campaigns, or pipeline. I can score leads, analyse performance, and recommend specific actions.
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {suggestedQueries.map((suggestion, i) => (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs justify-start h-auto py-2 px-3"
-                      onClick={() => setQuery(suggestion)}
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message, i) => (
+        {/* Chat Area */}
+        <ScrollArea className="h-[200px] mb-3">
+          {messages.length === 0 ? (
+            <div className="grid grid-cols-2 gap-1.5">
+              {suggestedQueries.slice(0, 4).map((suggestion, i) => (
+                <Button
+                  key={i}
+                  variant="ghost"
+                  size="sm"
+                  className="text-[11px] justify-start h-auto py-1.5 px-2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setQuery(suggestion)}
+                >
+                  {suggestion}
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {messages.map((message, i) => (
+                <div
+                  key={i}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
                   <div
-                    key={i}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`max-w-[90%] rounded-lg px-3 py-2 ${
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
                   >
-                    <div
-                      className={`max-w-[85%] rounded-lg px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      <p className="text-[10px] opacity-60 mt-1">
-                        {message.timestamp.toLocaleTimeString()}
-                      </p>
-                    </div>
+                    <p className="text-xs whitespace-pre-wrap">{message.content}</p>
                   </div>
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Thinking...</span>
-                    </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-muted rounded-lg px-3 py-2 flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="text-xs">Thinking...</span>
                   </div>
-                )}
-              </div>
-            )}
-          </ScrollArea>
-
-          {error && (
-            <div className="flex items-center gap-2 text-destructive text-sm mt-2">
-              <AlertCircle className="h-4 w-4" />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
-            <Textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask about leads, campaigns, performance..."
-              className="min-h-[44px] max-h-[120px] resize-none"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
-            />
-            <Button type="submit" size="icon" disabled={isLoading || !query.trim()}>
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
+                </div>
               )}
-            </Button>
-          </form>
-        </TabsContent>
+            </div>
+          )}
+        </ScrollArea>
 
-        <TabsContent value="actions" className="flex-1 px-6 pb-6 mt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => handleQuickAction('briefing')}
-              disabled={isLoading}
-            >
-              <Calendar className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Daily Briefing</span>
-              <span className="text-xs text-muted-foreground">Urgent leads & alerts</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => handleQuickAction('pipeline')}
-              disabled={isLoading}
-            >
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Pipeline Forecast</span>
-              <span className="text-xs text-muted-foreground">Conversions & revenue</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => handleQuickAction('insights')}
-              disabled={isLoading}
-            >
-              <Target className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Market Insights</span>
-              <span className="text-xs text-muted-foreground">Trends & patterns</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex flex-col items-center gap-2"
-              onClick={() => handleQuickAction('budget')}
-              disabled={isLoading}
-            >
-              <PieChart className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Budget Optimisation</span>
-              <span className="text-xs text-muted-foreground">Spend recommendations</span>
-            </Button>
+        {error && (
+          <div className="flex items-center gap-2 text-destructive text-xs mb-2">
+            <AlertCircle className="h-3 w-3" />
+            {error}
           </div>
+        )}
 
-          {isLoading && (
-            <div className="mt-4 flex items-center justify-center gap-2 text-muted-foreground">
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Textarea
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Ask anything..."
+            className="min-h-[36px] max-h-[80px] resize-none text-sm"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+          />
+          <Button type="submit" size="icon" className="h-9 w-9 shrink-0" disabled={isLoading || !query.trim()}>
+            {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Processing...</span>
-            </div>
-          )}
-
-          {messages.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Latest Response</h4>
-              <ScrollArea className="h-[200px] border rounded-lg p-3">
-                <p className="text-sm whitespace-pre-wrap">
-                  {messages[messages.length - 1]?.content}
-                </p>
-              </ScrollArea>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </form>
+      </CardContent>
     </Card>
   );
 }

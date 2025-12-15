@@ -13,8 +13,11 @@ const AdminDashboard = () => {
       userType="admin"
       userName={userName}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        {/* Master Agent - Full Width */}
         <MasterAgent />
+        
+        {/* Campaign Intelligence Below */}
         <CampaignIntelligence />
       </div>
     </DashboardLayout>
