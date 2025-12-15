@@ -18,13 +18,17 @@ import {
 import { useState, useMemo } from "react";
 import { useUploadedData } from "@/contexts/DataContext";
 
-const AnalyticsDashboard = () => {
+interface AnalyticsDashboardProps {
+  userType?: 'developer' | 'agent' | 'broker' | 'admin';
+}
+
+const AnalyticsDashboard = ({ userType = 'admin' }: AnalyticsDashboardProps) => {
   const [dateRange, setDateRange] = useState("30d");
   const [campaign, setCampaign] = useState("all");
   const [region, setRegion] = useState("all");
   const [scoreThreshold, setScoreThreshold] = useState([0]);
   
-  const { campaignData, leadData } = useUploadedData();
+  const { campaignData, leadData } = useUploadedData(userType);
 
   // Helper to extract numeric value from string
   const extractNumber = (value: any): number => {
