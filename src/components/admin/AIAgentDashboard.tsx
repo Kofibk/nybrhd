@@ -69,7 +69,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     leadData, 
     setLeadData,
     setLeadFileName 
-  } = useUploadedData();
+  } = useUploadedData(userType);
 
   const userName = user?.name || 'Admin';
 

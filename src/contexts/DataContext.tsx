@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
 interface DataInsights {
   recommendations: string[];
@@ -6,33 +6,39 @@ interface DataInsights {
   summary: string;
 }
 
-interface UploadedDataContextType {
+type UserType = 'developer' | 'agent' | 'broker' | 'admin';
+
+interface UserData {
   campaignData: any[];
-  setCampaignData: (data: any[]) => void;
   campaignFileName: string;
-  setCampaignFileName: (name: string) => void;
   campaignInsights: DataInsights | null;
-  setCampaignInsights: (insights: DataInsights | null) => void;
-  
   leadData: any[];
-  setLeadData: (data: any[]) => void;
   leadFileName: string;
-  setLeadFileName: (name: string) => void;
   leadInsights: DataInsights | null;
-  setLeadInsights: (insights: DataInsights | null) => void;
-  
-  clearCampaignData: () => void;
-  clearLeadData: () => void;
 }
 
-const STORAGE_KEYS = {
-  campaignData: 'naybourhood_campaign_data',
-  campaignFileName: 'naybourhood_campaign_filename',
-  campaignInsights: 'naybourhood_campaign_insights',
-  leadData: 'naybourhood_lead_data',
-  leadFileName: 'naybourhood_lead_filename',
-  leadInsights: 'naybourhood_lead_insights',
-};
+interface UploadedDataContextType {
+  // Per-user type data accessors
+  getCampaignData: (userType: UserType) => any[];
+  setCampaignData: (userType: UserType, data: any[]) => void;
+  getCampaignFileName: (userType: UserType) => string;
+  setCampaignFileName: (userType: UserType, name: string) => void;
+  getCampaignInsights: (userType: UserType) => DataInsights | null;
+  setCampaignInsights: (userType: UserType, insights: DataInsights | null) => void;
+  
+  getLeadData: (userType: UserType) => any[];
+  setLeadData: (userType: UserType, data: any[]) => void;
+  getLeadFileName: (userType: UserType) => string;
+  setLeadFileName: (userType: UserType, name: string) => void;
+  getLeadInsights: (userType: UserType) => DataInsights | null;
+  setLeadInsights: (userType: UserType, insights: DataInsights | null) => void;
+  
+  clearCampaignData: (userType: UserType) => void;
+  clearLeadData: (userType: UserType) => void;
+}
+
+const getStorageKey = (userType: UserType, dataType: string) => 
+  `naybourhood_${userType}_${dataType}`;
 
 const loadFromStorage = <T,>(key: string, fallback: T): T => {
   try {
@@ -53,85 +59,121 @@ const saveToStorage = (key: string, value: any) => {
 
 const DataContext = createContext<UploadedDataContextType | undefined>(undefined);
 
+const defaultUserData: UserData = {
+  campaignData: [],
+  campaignFileName: '',
+  campaignInsights: null,
+  leadData: [],
+  leadFileName: '',
+  leadInsights: null,
+};
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [campaignData, setCampaignDataState] = useState<any[]>(() => 
-    loadFromStorage(STORAGE_KEYS.campaignData, [])
-  );
-  const [campaignFileName, setCampaignFileNameState] = useState<string>(() => 
-    loadFromStorage(STORAGE_KEYS.campaignFileName, '')
-  );
-  const [campaignInsights, setCampaignInsightsState] = useState<DataInsights | null>(() => 
-    loadFromStorage(STORAGE_KEYS.campaignInsights, null)
-  );
+  // Store data per user type
+  const [dataByUser, setDataByUser] = useState<Record<UserType, UserData>>(() => {
+    const userTypes: UserType[] = ['developer', 'agent', 'broker', 'admin'];
+    const initial: Record<string, UserData> = {};
+    
+    userTypes.forEach(userType => {
+      initial[userType] = {
+        campaignData: loadFromStorage(getStorageKey(userType, 'campaign_data'), []),
+        campaignFileName: loadFromStorage(getStorageKey(userType, 'campaign_filename'), ''),
+        campaignInsights: loadFromStorage(getStorageKey(userType, 'campaign_insights'), null),
+        leadData: loadFromStorage(getStorageKey(userType, 'lead_data'), []),
+        leadFileName: loadFromStorage(getStorageKey(userType, 'lead_filename'), ''),
+        leadInsights: loadFromStorage(getStorageKey(userType, 'lead_insights'), null),
+      };
+    });
+    
+    return initial as Record<UserType, UserData>;
+  });
 
-  const [leadData, setLeadDataState] = useState<any[]>(() => 
-    loadFromStorage(STORAGE_KEYS.leadData, [])
-  );
-  const [leadFileName, setLeadFileNameState] = useState<string>(() => 
-    loadFromStorage(STORAGE_KEYS.leadFileName, '')
-  );
-  const [leadInsights, setLeadInsightsState] = useState<DataInsights | null>(() => 
-    loadFromStorage(STORAGE_KEYS.leadInsights, null)
-  );
+  const updateUserData = useCallback((userType: UserType, field: keyof UserData, value: any) => {
+    setDataByUser(prev => ({
+      ...prev,
+      [userType]: {
+        ...prev[userType],
+        [field]: value,
+      },
+    }));
+    
+    const storageKeyMap: Record<keyof UserData, string> = {
+      campaignData: 'campaign_data',
+      campaignFileName: 'campaign_filename',
+      campaignInsights: 'campaign_insights',
+      leadData: 'lead_data',
+      leadFileName: 'lead_filename',
+      leadInsights: 'lead_insights',
+    };
+    
+    saveToStorage(getStorageKey(userType, storageKeyMap[field]), value);
+  }, []);
 
-  // Persist campaign data
-  const setCampaignData = (data: any[]) => {
-    setCampaignDataState(data);
-    saveToStorage(STORAGE_KEYS.campaignData, data);
-  };
+  // Campaign data accessors
+  const getCampaignData = useCallback((userType: UserType) => 
+    dataByUser[userType]?.campaignData || [], [dataByUser]);
+  
+  const setCampaignData = useCallback((userType: UserType, data: any[]) => 
+    updateUserData(userType, 'campaignData', data), [updateUserData]);
+  
+  const getCampaignFileName = useCallback((userType: UserType) => 
+    dataByUser[userType]?.campaignFileName || '', [dataByUser]);
+  
+  const setCampaignFileName = useCallback((userType: UserType, name: string) => 
+    updateUserData(userType, 'campaignFileName', name), [updateUserData]);
+  
+  const getCampaignInsights = useCallback((userType: UserType) => 
+    dataByUser[userType]?.campaignInsights || null, [dataByUser]);
+  
+  const setCampaignInsights = useCallback((userType: UserType, insights: DataInsights | null) => 
+    updateUserData(userType, 'campaignInsights', insights), [updateUserData]);
 
-  const setCampaignFileName = (name: string) => {
-    setCampaignFileNameState(name);
-    saveToStorage(STORAGE_KEYS.campaignFileName, name);
-  };
+  // Lead data accessors
+  const getLeadData = useCallback((userType: UserType) => 
+    dataByUser[userType]?.leadData || [], [dataByUser]);
+  
+  const setLeadData = useCallback((userType: UserType, data: any[]) => 
+    updateUserData(userType, 'leadData', data), [updateUserData]);
+  
+  const getLeadFileName = useCallback((userType: UserType) => 
+    dataByUser[userType]?.leadFileName || '', [dataByUser]);
+  
+  const setLeadFileName = useCallback((userType: UserType, name: string) => 
+    updateUserData(userType, 'leadFileName', name), [updateUserData]);
+  
+  const getLeadInsights = useCallback((userType: UserType) => 
+    dataByUser[userType]?.leadInsights || null, [dataByUser]);
+  
+  const setLeadInsights = useCallback((userType: UserType, insights: DataInsights | null) => 
+    updateUserData(userType, 'leadInsights', insights), [updateUserData]);
 
-  const setCampaignInsights = (insights: DataInsights | null) => {
-    setCampaignInsightsState(insights);
-    saveToStorage(STORAGE_KEYS.campaignInsights, insights);
-  };
+  // Clear functions
+  const clearCampaignData = useCallback((userType: UserType) => {
+    setCampaignData(userType, []);
+    setCampaignFileName(userType, '');
+    setCampaignInsights(userType, null);
+  }, [setCampaignData, setCampaignFileName, setCampaignInsights]);
 
-  // Persist lead data
-  const setLeadData = (data: any[]) => {
-    setLeadDataState(data);
-    saveToStorage(STORAGE_KEYS.leadData, data);
-  };
-
-  const setLeadFileName = (name: string) => {
-    setLeadFileNameState(name);
-    saveToStorage(STORAGE_KEYS.leadFileName, name);
-  };
-
-  const setLeadInsights = (insights: DataInsights | null) => {
-    setLeadInsightsState(insights);
-    saveToStorage(STORAGE_KEYS.leadInsights, insights);
-  };
-
-  const clearCampaignData = () => {
-    setCampaignData([]);
-    setCampaignFileName('');
-    setCampaignInsights(null);
-  };
-
-  const clearLeadData = () => {
-    setLeadData([]);
-    setLeadFileName('');
-    setLeadInsights(null);
-  };
+  const clearLeadData = useCallback((userType: UserType) => {
+    setLeadData(userType, []);
+    setLeadFileName(userType, '');
+    setLeadInsights(userType, null);
+  }, [setLeadData, setLeadFileName, setLeadInsights]);
 
   return (
     <DataContext.Provider
       value={{
-        campaignData,
+        getCampaignData,
         setCampaignData,
-        campaignFileName,
+        getCampaignFileName,
         setCampaignFileName,
-        campaignInsights,
+        getCampaignInsights,
         setCampaignInsights,
-        leadData,
+        getLeadData,
         setLeadData,
-        leadFileName,
+        getLeadFileName,
         setLeadFileName,
-        leadInsights,
+        getLeadInsights,
         setLeadInsights,
         clearCampaignData,
         clearLeadData,
@@ -142,10 +184,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useUploadedData() {
+export function useUploadedData(userType: UserType = 'admin') {
   const context = useContext(DataContext);
   if (context === undefined) {
     throw new Error('useUploadedData must be used within a DataProvider');
   }
-  return context;
+  
+  // Return a simplified interface for the specific user type
+  return {
+    campaignData: context.getCampaignData(userType),
+    setCampaignData: (data: any[]) => context.setCampaignData(userType, data),
+    campaignFileName: context.getCampaignFileName(userType),
+    setCampaignFileName: (name: string) => context.setCampaignFileName(userType, name),
+    campaignInsights: context.getCampaignInsights(userType),
+    setCampaignInsights: (insights: DataInsights | null) => context.setCampaignInsights(userType, insights),
+    leadData: context.getLeadData(userType),
+    setLeadData: (data: any[]) => context.setLeadData(userType, data),
+    leadFileName: context.getLeadFileName(userType),
+    setLeadFileName: (name: string) => context.setLeadFileName(userType, name),
+    leadInsights: context.getLeadInsights(userType),
+    setLeadInsights: (insights: DataInsights | null) => context.setLeadInsights(userType, insights),
+    clearCampaignData: () => context.clearCampaignData(userType),
+    clearLeadData: () => context.clearLeadData(userType),
+  };
 }
