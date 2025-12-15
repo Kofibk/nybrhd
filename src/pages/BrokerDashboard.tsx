@@ -33,7 +33,7 @@ const BrokerDashboard = () => {
         </TabsList>
         
         <TabsContent value="overview">
-          <AIAgentDashboard />
+          <AIAgentDashboard userType="broker" />
         </TabsContent>
         
         <TabsContent value="whatsapp">

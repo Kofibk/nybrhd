@@ -12,7 +12,7 @@ const AgentDashboard = () => {
       userType="agent"
       userName={userName}
     >
-      <AIAgentDashboard />
+      <AIAgentDashboard userType="agent" />
     </DashboardLayout>
   );
 };
