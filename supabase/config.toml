@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.ai-image-analysis]
 verify_jwt = false
+
+[functions.lead-scoring]
+verify_jwt = false
