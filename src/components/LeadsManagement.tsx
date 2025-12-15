@@ -56,210 +56,41 @@ const LeadsManagement = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { leadData } = useUploadedData();
 
-  const mockLeads: Lead[] = [
-    {
-      id: "1",
-      name: "James Okonkwo",
-      email: "james.o@example.com",
-      phone: "+234 801 234 5678",
-      country: "Nigeria",
-      budget: "£800k - £1.2M",
-      bedrooms: "3-4 bed",
-      paymentMethod: "mortgage",
-      buyerStatus: "actively_looking",
-      purchaseTimeline: "0_3_months",
-      intentScore: 78,
-      qualityScore: 85,
-      status: "engaged",
-      source: "meta_campaign",
-      sourceDetail: "Lagos HNW Campaign",
-      lastActivity: "2 hours ago",
-      assignedAgent: "Sarah Johnson",
-      matchedUnits: ["Marina Heights - Unit 405", "Skyline Tower - Unit 1201"],
-      timeline: [
-        { date: "2 hours ago", action: "Viewed listing", detail: "Marina Heights - Unit 405" },
-        { date: "1 day ago", action: "Downloaded brochure", detail: "Development Overview PDF" },
-        { date: "3 days ago", action: "Submitted inquiry", detail: "Website form" },
-      ],
-      notes: "Interested in waterfront properties. Looking to relocate from Lagos.",
-      aiRecommendations: [
-        {
-          id: "rec_1",
-          type: "follow_up",
-          title: "Schedule a call",
-          description: "Lead engagement is high. Best time to call: 2-4pm GMT based on activity patterns.",
-          confidence: 88,
-          priority: "high",
-        },
-        {
-          id: "rec_2",
-          type: "next_action",
-          title: "Send virtual tour",
-          description: "This lead responds well to visual content. Share Marina Heights virtual tour.",
-          confidence: 75,
-          priority: "medium",
-        },
-      ],
-    },
-    {
-      id: "2",
-      name: "Sarah Mitchell",
-      email: "sarah.m@example.com",
-      phone: "+44 7700 900123",
-      country: "United Kingdom",
-      budget: "£500k - £750k",
-      bedrooms: "2 bed",
-      paymentMethod: "mortgage",
-      buyerStatus: "actively_looking",
-      purchaseTimeline: "within_28_days",
-      intentScore: 91,
-      qualityScore: 72,
-      status: "viewing",
-      source: "portal",
-      sourceDetail: "Rightmove",
-      lastActivity: "1 day ago",
-      assignedAgent: "Mike Chen",
-      matchedUnits: ["Garden Residences - Unit 12"],
-      timeline: [
-        { date: "1 day ago", action: "Viewing booked", detail: "Marina Heights - Dec 5" },
-        { date: "3 days ago", action: "Called", detail: "Discussed payment plans" },
-      ],
-      notes: "First-time buyer, very engaged.",
-      aiRecommendations: [
-        {
-          id: "rec_3",
-          type: "next_action",
-          title: "Prepare mortgage info",
-          description: "Lead is a first-time buyer. Send mortgage calculator and financing options.",
-          confidence: 82,
-          priority: "high",
-        },
-      ],
-    },
-    {
-      id: "3",
-      name: "Ahmed Al-Rashid",
-      email: "ahmed.r@example.com",
-      phone: "+971 50 123 4567",
-      country: "UAE",
-      budget: "£1.5M - £2M",
-      bedrooms: "Penthouse",
-      paymentMethod: "cash",
-      buyerStatus: "actively_looking",
-      purchaseTimeline: "0_3_months",
-      intentScore: 85,
-      qualityScore: 90,
-      status: "offer",
-      source: "introducer",
-      sourceDetail: "Dubai Partners Ltd",
-      lastActivity: "3 hours ago",
-      assignedAgent: "Sarah Johnson",
-      matchedUnits: ["Skyline Tower - Penthouse A"],
-      timeline: [
-        { date: "3 hours ago", action: "Offer submitted", detail: "£1.85M" },
-        { date: "5 days ago", action: "Viewing completed", detail: "Very interested" },
-      ],
-      notes: "Made offer on Skyline Tower penthouse. Awaiting developer response.",
-      aiRecommendations: [
-        {
-          id: "rec_4",
-          type: "next_action",
-          title: "Fast-track response",
-          description: "Cash buyer with high intent. Prioritize developer response within 24 hours.",
-          confidence: 92,
-          priority: "high",
-        },
-      ],
-    },
-    {
-      id: "4",
-      name: "Jennifer Wong",
-      email: "jenny.w@example.com",
-      phone: "+65 9123 4567",
-      country: "Singapore",
-      budget: "£600k - £900k",
-      bedrooms: "2-3 bed",
-      paymentMethod: "undecided",
-      buyerStatus: "browsing",
-      purchaseTimeline: "3_6_months",
-      intentScore: 82,
-      qualityScore: 68,
-      status: "new",
-      source: "direct_web",
-      sourceDetail: "Organic Search",
-      lastActivity: "5 hours ago",
-      assignedAgent: null,
-      matchedUnits: ["Marina Heights - Unit 302", "Riverside Plaza - Unit 15"],
-      timeline: [
-        { date: "5 hours ago", action: "Submitted inquiry", detail: "Investment opportunities" },
-      ],
-      notes: "Exploring investment opportunities in UK property market.",
-      aiRecommendations: [
-        {
-          id: "rec_5",
-          type: "follow_up",
-          title: "Nurture with content",
-          description: "Early-stage lead. Send investment ROI calculator and market insights.",
-          confidence: 70,
-          priority: "medium",
-        },
-      ],
-    },
-    {
-      id: "5",
-      name: "Marcus Thompson",
-      email: "marcus.t@example.com",
-      phone: "+1 555 0123",
-      country: "USA",
-      budget: "£700k - £1M",
-      bedrooms: "3 bed house",
-      paymentMethod: "mortgage",
-      buyerStatus: "actively_looking",
-      purchaseTimeline: "6_9_months",
-      intentScore: 76,
-      qualityScore: 79,
-      status: "engaged",
-      source: "manual_upload",
-      sourceDetail: "CRM Import - Jan 2025",
-      lastActivity: "1 day ago",
-      assignedAgent: null,
-      matchedUnits: ["Garden Residences - Unit 8"],
-      timeline: [
-        { date: "1 day ago", action: "Clicked email", detail: "Virtual tour invitation" },
-        { date: "4 days ago", action: "Downloaded brochure", detail: "Garden Residences" },
-      ],
-      notes: "Interested in areas with good schools. Family of 4.",
-      aiRecommendations: [
-        {
-          id: "rec_6",
-          type: "next_action",
-          title: "Highlight family amenities",
-          description: "Lead has family. Emphasize nearby schools and family-friendly features.",
-          confidence: 78,
-          priority: "medium",
-        },
-      ],
-    }
-  ];
-
-  // Merge uploaded lead data with mock leads
+  // Convert uploaded lead data to Lead format - handle ANY column format dynamically
   const allLeads = useMemo(() => {
-    if (leadData.length === 0) return mockLeads;
+    if (leadData.length === 0) return [];
     
-    // Convert uploaded CSV data to Lead format - handle various column name formats
-    const uploadedLeads: Lead[] = leadData.map((row, index) => {
-      // Parse score from various formats
-      const rawScore = row.Score || row.score || row.intent_score || row.intentScore || '50';
-      const scoreNum = parseInt(String(rawScore).replace(/[^0-9]/g, ''), 10) || 50;
+    return leadData.map((row, index) => {
+      // Find name from various possible columns
+      const name = row['Lead Name'] || row.name || row.Name || row.full_name || 
+        `${row.first_name || row['First Name'] || ''} ${row.last_name || row['Last Name'] || ''}`.trim() || 
+        `Lead ${index + 1}`;
       
-      // Parse intent from text like "Low ", "Warm", "High"
+      // Find email
+      const email = row.Email || row.email || row['Email Address'] || '';
+      
+      // Find phone
+      const phone = row['Phone Number'] || row.phone || row.Phone || row.Mobile || row.telephone || '';
+      
+      // Find country
+      const country = row.Country || row.country || row.Location || row.location || row.Region || '';
+      
+      // Find budget
+      const budget = row['Budget Range'] || row.budget || row.Budget || row['Budget'] || '';
+      
+      // Find bedrooms
+      const bedrooms = row['Preferred Bedrooms'] || row.bedrooms || row.Bedrooms || '';
+      
+      // Parse score/intent
+      const rawScore = row.Score || row.score || row['Lead Score'] || row.intent_score || '50';
+      const scoreNum = parseInt(String(rawScore).replace(/[^0-9]/g, ''), 10) || 50;
       const intentText = (row.Intent || row.intent || '').toString().toLowerCase().trim();
       let intentScore = scoreNum;
       if (intentText === 'low') intentScore = Math.min(scoreNum, 35);
       else if (intentText === 'warm') intentScore = Math.max(scoreNum, 40);
-      else if (intentText === 'high') intentScore = Math.max(scoreNum, 70);
+      else if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(scoreNum, 70);
 
-      // Map status from various formats
+      // Parse status
       const rawStatus = (row.Status || row.status || 'new').toString().toLowerCase();
       let mappedStatus: Lead['status'] = 'new';
       if (rawStatus.includes('pending')) mappedStatus = 'new';
@@ -268,33 +99,49 @@ const LeadsManagement = () => {
       else if (rawStatus.includes('offer')) mappedStatus = 'offer';
       else if (rawStatus.includes('closed') || rawStatus.includes('won')) mappedStatus = 'closed';
 
+      // Parse payment method
+      const paymentRaw = (row['Cash/Mortgage'] || row.payment_method || row.paymentMethod || 'undecided').toString().toLowerCase();
+      let paymentMethod: PaymentMethod = 'undecided';
+      if (paymentRaw.includes('cash')) paymentMethod = 'cash';
+      else if (paymentRaw.includes('mortgage')) paymentMethod = 'mortgage';
+
+      // Determine source
+      const channel = row.Channel || row.channel || '';
+      const platform = row['Source Platform'] || row.source_platform || '';
+      const enquiryType = row['Enquiry Type'] || row.enquiry_type || '';
+      let source: LeadSource = 'manual_upload';
+      if (channel.toLowerCase().includes('meta') || platform === 'meta' || platform === 'ig' || platform === 'fb') {
+        source = 'meta_campaign';
+      } else if (enquiryType === 'WA') {
+        source = 'direct_web';
+      } else if (platform) {
+        source = 'portal';
+      }
+
       return {
-        id: row['Lead ID'] || row.lead_id || `uploaded_${index}`,
-        name: row['Lead Name'] || row.name || row.Name || row.full_name || `${row.first_name || ''} ${row.last_name || ''}`.trim() || `Lead ${index + 1}`,
-        email: row.Email || row.email || '',
-        phone: row['Phone Number'] || row.phone || row.Phone || row.telephone || '',
-        country: row.Country || row.country || row.location || '',
-        budget: row['Budget Range'] || row.budget || row.Budget || '£0',
-        bedrooms: row['Preferred Bedrooms'] || row.bedrooms || row.Bedrooms || '',
-        paymentMethod: (row['Cash/Mortgage'] || row.payment_method || row.paymentMethod || 'undecided').toLowerCase() as PaymentMethod,
+        id: row['Lead ID'] || row.lead_id || row.id || `lead_${index}`,
+        name,
+        email,
+        phone,
+        country,
+        budget,
+        bedrooms,
+        paymentMethod,
         buyerStatus: (row['Are you ready to purchase within 28 days?'] === 'Yes' ? 'actively_looking' : 'browsing') as BuyerStatus,
-        purchaseTimeline: (row['Timeline to Purchase'] || row.timeline || row.purchaseTimeline || '3_6_months') as PurchaseTimeline,
-        intentScore: intentScore,
-        qualityScore: row['Budget Match'] === 'Yes' ? 70 : 50,
+        purchaseTimeline: (row['Timeline to Purchase'] || row.timeline || '3_6_months') as PurchaseTimeline,
+        intentScore,
+        qualityScore: row['Budget Match'] === 'Yes' ? 70 : scoreNum,
         status: mappedStatus,
-        source: (row.Channel?.toLowerCase().includes('meta') || row['Source Platform'] === 'meta' ? 'meta_campaign' : 
-                row['Enquiry Type'] === 'WA' ? 'direct_web' : 'manual_upload') as LeadSource,
-        sourceDetail: row['Source Campaign'] || row['Source Creative'] || 'CSV Upload',
-        lastActivity: row['Date Added'] || row.last_activity || 'Just now',
+        source,
+        sourceDetail: row['Source Campaign'] || row['Source Creative'] || row.source_detail || '',
+        lastActivity: row['Date Added'] || row['Status Last Modified'] || row.last_activity || 'Recently',
         assignedAgent: row['Assigned Caller'] || row.assigned_agent || null,
         matchedUnits: row['Recommended Properties'] ? [row['Recommended Properties']] : [],
         timeline: [],
-        notes: row['Buyer Summary'] || row.notes || '',
+        notes: row['Buyer Summary'] || row.notes || row['Agent Full Transcript'] || '',
         aiRecommendations: [],
       };
     });
-
-    return [...mockLeads, ...uploadedLeads];
   }, [leadData]);
 
   const getScoreColor = (score: number) => {
@@ -364,13 +211,36 @@ const LeadsManagement = () => {
     setDrawerOpen(true);
   };
 
+  // Empty state when no leads uploaded
+  if (allLeads.length === 0) {
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
+          <div>
+            <h2 className="text-lg md:text-xl font-semibold">Lead Management</h2>
+            <p className="text-muted-foreground text-xs md:text-sm">Track and manage your buyer pipeline</p>
+          </div>
+        </div>
+        <Card className="p-8 md:p-12 text-center">
+          <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No Lead Data</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Upload your lead data CSV from the main dashboard to view and manage your leads here.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Header & Filters */}
       <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-lg md:text-xl font-semibold">Lead Management</h2>
-          <p className="text-muted-foreground text-xs md:text-sm">Track and manage your buyer pipeline</p>
+          <p className="text-muted-foreground text-xs md:text-sm">
+            {allLeads.length} leads loaded from your data
+          </p>
         </div>
         <Button size="sm" className="w-full sm:w-auto">
           <Download className="mr-2 h-4 w-4" />
