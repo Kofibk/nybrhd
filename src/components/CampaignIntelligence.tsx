@@ -7,22 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface DataInsights {
-  recommendations: string[];
-  whatsWorking: string[];
-  summary: string;
-}
+import { useUploadedData } from '@/contexts/DataContext';
 
 export function CampaignIntelligence() {
-  const [campaignData, setCampaignData] = useState<any[]>([]);
-  const [campaignFileName, setCampaignFileName] = useState<string>('');
-  const [campaignInsights, setCampaignInsights] = useState<DataInsights | null>(null);
-  const [isAnalyzingCampaigns, setIsAnalyzingCampaigns] = useState(false);
+  const {
+    campaignData,
+    setCampaignData,
+    campaignFileName,
+    setCampaignFileName,
+    campaignInsights,
+    setCampaignInsights,
+    leadData,
+    setLeadData,
+    leadFileName,
+    setLeadFileName,
+    leadInsights,
+    setLeadInsights,
+    clearCampaignData,
+    clearLeadData,
+  } = useUploadedData();
 
-  const [leadData, setLeadData] = useState<any[]>([]);
-  const [leadFileName, setLeadFileName] = useState<string>('');
-  const [leadInsights, setLeadInsights] = useState<DataInsights | null>(null);
+  const [isAnalyzingCampaigns, setIsAnalyzingCampaigns] = useState(false);
   const [isAnalyzingLeads, setIsAnalyzingLeads] = useState(false);
 
   const analyzeCampaigns = async (data: any[]) => {
@@ -91,18 +96,6 @@ export function CampaignIntelligence() {
     analyzeLeads(data);
   };
 
-  const handleClearCampaigns = () => {
-    setCampaignData([]);
-    setCampaignFileName('');
-    setCampaignInsights(null);
-  };
-
-  const handleClearLeads = () => {
-    setLeadData([]);
-    setLeadFileName('');
-    setLeadInsights(null);
-  };
-
   const hasAnyData = campaignData.length > 0 || leadData.length > 0;
 
   return (
@@ -130,7 +123,7 @@ export function CampaignIntelligence() {
             onDataParsed={handleCampaignData}
             isUploaded={campaignData.length > 0}
             fileName={campaignFileName}
-            onClear={handleClearCampaigns}
+            onClear={clearCampaignData}
           />
           
           {isAnalyzingCampaigns && (
@@ -178,7 +171,7 @@ export function CampaignIntelligence() {
             onDataParsed={handleLeadData}
             isUploaded={leadData.length > 0}
             fileName={leadFileName}
-            onClear={handleClearLeads}
+            onClear={clearLeadData}
           />
           
           {isAnalyzingLeads && (

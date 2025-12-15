@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { getCampaigns, saveCampaigns } from "@/lib/api";
 import { UserRole, Campaign } from "@/lib/types";
 import { toast } from "sonner";
+import { useUploadedData } from "@/contexts/DataContext";
 import {
   Plus,
   MoreHorizontal,
@@ -29,6 +30,33 @@ interface CampaignsListProps {
 const CampaignsList = ({ userType }: CampaignsListProps) => {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>(getCampaigns());
+  const { campaignData } = useUploadedData();
+
+  // Merge uploaded campaign data with existing campaigns
+  const allCampaigns = useMemo(() => {
+    if (campaignData.length === 0) return campaigns;
+    
+    // Convert uploaded CSV data to Campaign format
+    const uploadedCampaigns: Campaign[] = campaignData.map((row, index) => ({
+      id: `uploaded_${index}`,
+      name: row.name || row.campaign_name || row.Name || row['Campaign Name'] || `Campaign ${index + 1}`,
+      developmentId: row.development_id || '',
+      developmentName: row.development || row.Development || row.development_name || '',
+      objective: (row.objective || row.Objective || 'leads') as 'leads' | 'awareness',
+      status: (row.status || row.Status || 'live').toLowerCase() as Campaign['status'],
+      budget: Number(row.budget || row.Budget || 0),
+      startDate: row.start_date || row.startDate || row['Start Date'] || new Date().toISOString(),
+      endDate: row.end_date || row.endDate || row['End Date'] || '',
+      createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+      isOngoing: true,
+      roleType: userType,
+      channel: 'meta' as const,
+      targetCountries: [],
+      targetCities: [],
+    }));
+
+    return [...campaigns, ...uploadedCampaigns];
+  }, [campaigns, campaignData, userType]);
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -120,7 +148,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {campaigns.map((campaign) => (
+              {allCampaigns.map((campaign) => (
                 <tr
                   key={campaign.id}
                   className="hover:bg-muted/30 transition-colors cursor-pointer"
@@ -197,7 +225,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
         </div>
       </Card>
 
-      {campaigns.length === 0 && (
+      {allCampaigns.length === 0 && (
         <div className="text-center py-8 md:py-12">
           <p className="text-muted-foreground mb-4 text-sm">No campaigns yet</p>
           <Button onClick={() => navigate(`/${userType}/campaigns/new`)}>
