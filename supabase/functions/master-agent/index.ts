@@ -240,17 +240,65 @@ serve(async (req) => {
     }
 
 
-    // Build user message with context
+    // Build user message with optimised context (reduce token usage)
     let userMessage = query;
+    
     if (context) {
-      if (context.leads) {
-        userMessage += `\n\nLEAD DATA:\n${JSON.stringify(context.leads, null, 2)}`;
+      // Helper to extract only relevant lead fields
+      const simplifyLead = (lead: Record<string, any>) => ({
+        name: lead['Lead Name'] || lead.name,
+        email: lead.Email || lead.email,
+        phone: lead['Phone Number'] || lead.phone,
+        budget: lead['Budget Range'] || lead.budget,
+        status: lead.Status || lead.status,
+        intent: lead.Intent || lead.intent,
+        score: lead.Score || lead.score,
+        country: lead.Country || lead.country,
+        source: lead['Source Platform'] || lead.source,
+        dateAdded: lead['Date Added'] || lead.dateAdded,
+        daysInStatus: lead['Days in Status'] || lead.daysInStatus
+      });
+
+      // Helper to extract only relevant campaign fields
+      const simplifyCampaign = (campaign: Record<string, any>) => ({
+        name: campaign['Campaign name'] || campaign.name,
+        platform: campaign.Platform || campaign.platform,
+        spend: campaign['Amount spent (GBP)'] || campaign.spend,
+        results: campaign.Results || campaign.results,
+        ctr: campaign['CTR (link click-through rate)'] || campaign.ctr,
+        cpm: campaign['CPM (cost per 1,000 impressions) (GBP)'] || campaign.cpm,
+        reach: campaign.Reach || campaign.reach,
+        status: campaign['Campaign delivery'] || campaign.status,
+        startDate: campaign['Reporting starts'] || campaign.startDate,
+        endDate: campaign['Reporting ends'] || campaign.endDate
+      });
+
+      // Filter leads: max 20 most recent
+      if (context.leads && Array.isArray(context.leads)) {
+        const recentLeads = context.leads.slice(0, 20).map(simplifyLead);
+        userMessage += `\n\nLEAD DATA (${context.leads.length} total, showing 20 most recent):\n${JSON.stringify(recentLeads)}`;
       }
-      if (context.campaigns) {
-        userMessage += `\n\nCAMPAIGN DATA:\n${JSON.stringify(context.campaigns, null, 2)}`;
+
+      // Filter campaigns: last 30 days only, simplified
+      if (context.campaigns && Array.isArray(context.campaigns)) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentCampaigns = context.campaigns
+          .filter((c: Record<string, any>) => {
+            const endDate = c['Reporting ends'] || c.endDate;
+            if (!endDate) return true;
+            return new Date(endDate) >= thirtyDaysAgo;
+          })
+          .slice(0, 15)
+          .map(simplifyCampaign);
+        
+        userMessage += `\n\nCAMPAIGN DATA (${context.campaigns.length} total, showing recent 15):\n${JSON.stringify(recentCampaigns)}`;
       }
+
+      // Metrics: send as-is but compact
       if (context.metrics) {
-        userMessage += `\n\nMETRICS:\n${JSON.stringify(context.metrics, null, 2)}`;
+        userMessage += `\n\nMETRICS:\n${JSON.stringify(context.metrics)}`;
       }
     }
 
@@ -270,7 +318,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-3-haiku-20240307',
-        max_tokens: 2048,
+        max_tokens: 1500,
         system: SYSTEM_PROMPT,
         messages: [
           { role: 'user', content: userMessage }
