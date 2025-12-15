@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface DataInsights {
   recommendations: string[];
@@ -25,16 +25,86 @@ interface UploadedDataContextType {
   clearLeadData: () => void;
 }
 
+const STORAGE_KEYS = {
+  campaignData: 'naybourhood_campaign_data',
+  campaignFileName: 'naybourhood_campaign_filename',
+  campaignInsights: 'naybourhood_campaign_insights',
+  leadData: 'naybourhood_lead_data',
+  leadFileName: 'naybourhood_lead_filename',
+  leadInsights: 'naybourhood_lead_insights',
+};
+
+const loadFromStorage = <T,>(key: string, fallback: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const saveToStorage = (key: string, value: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('Failed to save to localStorage:', e);
+  }
+};
+
 const DataContext = createContext<UploadedDataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [campaignData, setCampaignData] = useState<any[]>([]);
-  const [campaignFileName, setCampaignFileName] = useState<string>('');
-  const [campaignInsights, setCampaignInsights] = useState<DataInsights | null>(null);
+  const [campaignData, setCampaignDataState] = useState<any[]>(() => 
+    loadFromStorage(STORAGE_KEYS.campaignData, [])
+  );
+  const [campaignFileName, setCampaignFileNameState] = useState<string>(() => 
+    loadFromStorage(STORAGE_KEYS.campaignFileName, '')
+  );
+  const [campaignInsights, setCampaignInsightsState] = useState<DataInsights | null>(() => 
+    loadFromStorage(STORAGE_KEYS.campaignInsights, null)
+  );
 
-  const [leadData, setLeadData] = useState<any[]>([]);
-  const [leadFileName, setLeadFileName] = useState<string>('');
-  const [leadInsights, setLeadInsights] = useState<DataInsights | null>(null);
+  const [leadData, setLeadDataState] = useState<any[]>(() => 
+    loadFromStorage(STORAGE_KEYS.leadData, [])
+  );
+  const [leadFileName, setLeadFileNameState] = useState<string>(() => 
+    loadFromStorage(STORAGE_KEYS.leadFileName, '')
+  );
+  const [leadInsights, setLeadInsightsState] = useState<DataInsights | null>(() => 
+    loadFromStorage(STORAGE_KEYS.leadInsights, null)
+  );
+
+  // Persist campaign data
+  const setCampaignData = (data: any[]) => {
+    setCampaignDataState(data);
+    saveToStorage(STORAGE_KEYS.campaignData, data);
+  };
+
+  const setCampaignFileName = (name: string) => {
+    setCampaignFileNameState(name);
+    saveToStorage(STORAGE_KEYS.campaignFileName, name);
+  };
+
+  const setCampaignInsights = (insights: DataInsights | null) => {
+    setCampaignInsightsState(insights);
+    saveToStorage(STORAGE_KEYS.campaignInsights, insights);
+  };
+
+  // Persist lead data
+  const setLeadData = (data: any[]) => {
+    setLeadDataState(data);
+    saveToStorage(STORAGE_KEYS.leadData, data);
+  };
+
+  const setLeadFileName = (name: string) => {
+    setLeadFileNameState(name);
+    saveToStorage(STORAGE_KEYS.leadFileName, name);
+  };
+
+  const setLeadInsights = (insights: DataInsights | null) => {
+    setLeadInsightsState(insights);
+    saveToStorage(STORAGE_KEYS.leadInsights, insights);
+  };
 
   const clearCampaignData = () => {
     setCampaignData([]);
