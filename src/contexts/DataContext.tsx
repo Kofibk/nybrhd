@@ -59,6 +59,25 @@ const saveToStorage = (key: string, value: any) => {
 
 const DataContext = createContext<UploadedDataContextType | undefined>(undefined);
 
+// Clear old shared localStorage keys (one-time migration)
+const clearOldSharedKeys = () => {
+  const oldKeys = [
+    'naybourhood_campaign_data',
+    'naybourhood_campaign_filename', 
+    'naybourhood_campaign_insights',
+    'naybourhood_lead_data',
+    'naybourhood_lead_filename',
+    'naybourhood_lead_insights',
+  ];
+  
+  const migrationKey = 'naybourhood_data_migration_v2';
+  if (!localStorage.getItem(migrationKey)) {
+    oldKeys.forEach(key => localStorage.removeItem(key));
+    localStorage.setItem(migrationKey, 'true');
+    console.log('Cleared old shared localStorage keys');
+  }
+};
+
 const defaultUserData: UserData = {
   campaignData: [],
   campaignFileName: '',
@@ -69,7 +88,8 @@ const defaultUserData: UserData = {
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  // Store data per user type
+  // Run migration on mount
+  clearOldSharedKeys();
   const [dataByUser, setDataByUser] = useState<Record<UserType, UserData>>(() => {
     const userTypes: UserType[] = ['developer', 'agent', 'broker', 'admin'];
     const initial: Record<string, UserData> = {};
