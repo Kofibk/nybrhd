@@ -246,30 +246,53 @@ const LeadsManagement = () => {
   const allLeads = useMemo(() => {
     if (leadData.length === 0) return mockLeads;
     
-    // Convert uploaded CSV data to Lead format
-    const uploadedLeads: Lead[] = leadData.map((row, index) => ({
-      id: `uploaded_${index}`,
-      name: row.name || row.Name || row.full_name || row['Full Name'] || `Lead ${index + 1}`,
-      email: row.email || row.Email || '',
-      phone: row.phone || row.Phone || row.telephone || '',
-      country: row.country || row.Country || row.location || '',
-      budget: row.budget || row.Budget || row.budget_range || '£0',
-      bedrooms: row.bedrooms || row.Bedrooms || '',
-      paymentMethod: (row.payment_method || row.paymentMethod || 'undecided') as PaymentMethod,
-      buyerStatus: (row.buyer_status || row.buyerStatus || 'browsing') as BuyerStatus,
-      purchaseTimeline: (row.timeline || row.purchaseTimeline || '3_6_months') as PurchaseTimeline,
-      intentScore: Number(row.intent_score || row.intentScore || row.score || 50),
-      qualityScore: Number(row.quality_score || row.qualityScore || 50),
-      status: (row.status || 'new').toLowerCase() as Lead['status'],
-      source: (row.source || 'manual_upload') as LeadSource,
-      sourceDetail: row.source_detail || 'CSV Upload',
-      lastActivity: row.last_activity || 'Just now',
-      assignedAgent: row.assigned_agent || null,
-      matchedUnits: [],
-      timeline: [],
-      notes: row.notes || '',
-      aiRecommendations: [],
-    }));
+    // Convert uploaded CSV data to Lead format - handle various column name formats
+    const uploadedLeads: Lead[] = leadData.map((row, index) => {
+      // Parse score from various formats
+      const rawScore = row.Score || row.score || row.intent_score || row.intentScore || '50';
+      const scoreNum = parseInt(String(rawScore).replace(/[^0-9]/g, ''), 10) || 50;
+      
+      // Parse intent from text like "Low ", "Warm", "High"
+      const intentText = (row.Intent || row.intent || '').toString().toLowerCase().trim();
+      let intentScore = scoreNum;
+      if (intentText === 'low') intentScore = Math.min(scoreNum, 35);
+      else if (intentText === 'warm') intentScore = Math.max(scoreNum, 40);
+      else if (intentText === 'high') intentScore = Math.max(scoreNum, 70);
+
+      // Map status from various formats
+      const rawStatus = (row.Status || row.status || 'new').toString().toLowerCase();
+      let mappedStatus: Lead['status'] = 'new';
+      if (rawStatus.includes('pending')) mappedStatus = 'new';
+      else if (rawStatus.includes('progress') || rawStatus.includes('contacted')) mappedStatus = 'engaged';
+      else if (rawStatus.includes('viewing')) mappedStatus = 'viewing';
+      else if (rawStatus.includes('offer')) mappedStatus = 'offer';
+      else if (rawStatus.includes('closed') || rawStatus.includes('won')) mappedStatus = 'closed';
+
+      return {
+        id: row['Lead ID'] || row.lead_id || `uploaded_${index}`,
+        name: row['Lead Name'] || row.name || row.Name || row.full_name || `${row.first_name || ''} ${row.last_name || ''}`.trim() || `Lead ${index + 1}`,
+        email: row.Email || row.email || '',
+        phone: row['Phone Number'] || row.phone || row.Phone || row.telephone || '',
+        country: row.Country || row.country || row.location || '',
+        budget: row['Budget Range'] || row.budget || row.Budget || '£0',
+        bedrooms: row['Preferred Bedrooms'] || row.bedrooms || row.Bedrooms || '',
+        paymentMethod: (row['Cash/Mortgage'] || row.payment_method || row.paymentMethod || 'undecided').toLowerCase() as PaymentMethod,
+        buyerStatus: (row['Are you ready to purchase within 28 days?'] === 'Yes' ? 'actively_looking' : 'browsing') as BuyerStatus,
+        purchaseTimeline: (row['Timeline to Purchase'] || row.timeline || row.purchaseTimeline || '3_6_months') as PurchaseTimeline,
+        intentScore: intentScore,
+        qualityScore: row['Budget Match'] === 'Yes' ? 70 : 50,
+        status: mappedStatus,
+        source: (row.Channel?.toLowerCase().includes('meta') || row['Source Platform'] === 'meta' ? 'meta_campaign' : 
+                row['Enquiry Type'] === 'WA' ? 'direct_web' : 'manual_upload') as LeadSource,
+        sourceDetail: row['Source Campaign'] || row['Source Creative'] || 'CSV Upload',
+        lastActivity: row['Date Added'] || row.last_activity || 'Just now',
+        assignedAgent: row['Assigned Caller'] || row.assigned_agent || null,
+        matchedUnits: row['Recommended Properties'] ? [row['Recommended Properties']] : [],
+        timeline: [],
+        notes: row['Buyer Summary'] || row.notes || '',
+        aiRecommendations: [],
+      };
+    });
 
     return [...mockLeads, ...uploadedLeads];
   }, [leadData]);
