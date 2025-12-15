@@ -11,13 +11,64 @@ serve(async (req) => {
   }
 
   try {
-    const { campaigns, leads } = await req.json();
+    const { campaigns, leads, chatMessage, chatHistory, analysisContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    // If this is a chat request, handle it differently
+    if (chatMessage) {
+      const chatSystemPrompt = `You are a helpful marketing data analyst for property marketing campaigns.
+You have access to the user's campaign and lead data. Answer their questions concisely and actionably.
+
+Data context:
+- ${campaigns?.length || 0} campaigns loaded
+- ${leads?.length || 0} leads loaded
+${analysisContext ? `\nPrevious analysis summary: ${analysisContext}` : ''}
+
+Campaign data sample: ${JSON.stringify(campaigns?.slice(0, 10) || [], null, 2)}
+Lead data sample: ${JSON.stringify(leads?.slice(0, 20) || [], null, 2)}
+
+Be specific, use numbers from the data, and provide actionable advice.`;
+
+      const messages = [
+        { role: 'system', content: chatSystemPrompt },
+        ...(chatHistory || []).map((msg: { role: string; content: string }) => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        { role: 'user', content: chatMessage }
+      ];
+
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('AI gateway error:', response.status, errorText);
+        throw new Error(`AI gateway error: ${response.status}`);
+      }
+
+      const aiResponse = await response.json();
+      const chatResponse = aiResponse.choices?.[0]?.message?.content || 'I apologise, I could not generate a response.';
+
+      return new Response(JSON.stringify({ chatResponse }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Original analysis logic
     const systemPrompt = `You are a marketing data analyst specializing in property marketing campaigns. 
 Analyze the provided campaign and lead data to identify issues, opportunities, and actionable insights.
 
