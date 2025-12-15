@@ -254,23 +254,25 @@ serve(async (req) => {
       }
     }
 
-    console.log('Calling Lovable AI for Master Agent query:', query.substring(0, 100));
+    console.log('Calling Claude Sonnet for Master Agent query:', query.substring(0, 100));
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicApiKey) {
+      throw new Error('ANTHROPIC_API_KEY not configured');
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'claude-sonnet-4-5-20250514',
+        max_tokens: 2048,
+        system: SYSTEM_PROMPT,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userMessage }
         ]
       })
@@ -285,23 +287,14 @@ serve(async (req) => {
       });
     }
 
-    if (response.status === 402) {
-      return new Response(JSON.stringify({ 
-        error: 'AI credits exhausted - please add funds' 
-      }), {
-        status: 402,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', response.status, errorText);
+      console.error('Anthropic API error:', response.status, errorText);
       throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = data.content?.[0]?.text;
 
     if (!content) {
       throw new Error('No response from AI');
@@ -309,7 +302,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       response: content,
-      model: 'google/gemini-2.5-flash'
+      model: 'claude-sonnet-4-5-20250514'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
