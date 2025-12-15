@@ -239,10 +239,6 @@ serve(async (req) => {
       throw new Error('Query is required');
     }
 
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!anthropicApiKey) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
-    }
 
     // Build user message with context
     let userMessage = query;
@@ -258,66 +254,65 @@ serve(async (req) => {
       }
     }
 
-    console.log('Calling Claude Sonnet for Master Agent query:', query.substring(0, 100));
+    console.log('Calling Lovable AI for Master Agent query:', query.substring(0, 100));
 
-    // Retry logic with exponential backoff for rate limits
-    const maxRetries = 3;
-    let lastError: Error | null = null;
-    
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      if (attempt > 0) {
-        const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-        console.log(`Retry attempt ${attempt + 1}, waiting ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicApiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250514',
-          max_tokens: 2048,
-          system: SYSTEM_PROMPT,
-          messages: [
-            { role: 'user', content: userMessage }
-          ]
-        })
-      });
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMessage }
+        ]
+      })
+    });
 
-      if (response.status === 429) {
-        const errorText = await response.text();
-        console.warn(`Rate limited (attempt ${attempt + 1}):`, errorText);
-        lastError = new Error('Rate limited - please try again in a moment');
-        continue;
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Anthropic API error:', response.status, errorText);
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.content[0]?.text;
-
-      if (!content) {
-        throw new Error('No response from AI');
-      }
-
+    if (response.status === 429) {
       return new Response(JSON.stringify({ 
-        response: content,
-        model: 'claude-sonnet-4-5-20250514'
+        error: 'Rate limited - please try again in a moment' 
       }), {
+        status: 429,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // All retries exhausted
-    throw lastError || new Error('Failed after retries');
+    if (response.status === 402) {
+      return new Response(JSON.stringify({ 
+        error: 'AI credits exhausted - please add funds' 
+      }), {
+        status: 402,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Lovable AI error:', response.status, errorText);
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('No response from AI');
+    }
+
+    return new Response(JSON.stringify({ 
+      response: content,
+      model: 'google/gemini-2.5-flash'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
     console.error('Master Agent error:', error);
