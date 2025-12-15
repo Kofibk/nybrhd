@@ -119,6 +119,24 @@ const AppRoutes = () => {
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/campaigns" element={<AdminRoute><CampaignsList userType="admin" /></AdminRoute>} />
+      <Route path="/admin/campaigns/new" element={<AdminRoute><CampaignWizard userType="admin" /></AdminRoute>} />
+      <Route path="/admin/campaigns/:id" element={<AdminRoute><CampaignDetail userType="admin" /></AdminRoute>} />
+      <Route path="/admin/leads" element={
+        <AdminRoute>
+          <DashboardLayout title="Leads" userType="admin">
+            <LeadsManagement />
+          </DashboardLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/analytics" element={
+        <AdminRoute>
+          <DashboardLayout title="Analytics" userType="admin">
+            <AnalyticsDashboard />
+          </DashboardLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/settings" element={<AdminRoute><Settings userType="admin" /></AdminRoute>} />
       <Route path="/admin/clients/:clientId" element={<AdminRoute><ClientDetail /></AdminRoute>} />
 
       {/* Test Routes */}
