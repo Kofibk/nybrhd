@@ -23,6 +23,7 @@ const HowItWorks = () => {
     { label: "Case Studies", href: "/case-studies" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
+    { label: "Admin", href: "/admin" },
   ];
 
   const steps = [
