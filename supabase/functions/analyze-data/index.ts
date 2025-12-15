@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { campaigns, leads, chatMessage, chatHistory, analysisContext } = await req.json();
+    const { campaigns, leads, chatMessage, chatHistory, analysisContext, analysisType } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -20,18 +20,26 @@ serve(async (req) => {
 
     // If this is a chat request, handle it differently
     if (chatMessage) {
-      const chatSystemPrompt = `You are a helpful marketing data analyst for property marketing campaigns.
-You have access to the user's campaign and lead data. Answer their questions concisely and actionably.
+      const chatSystemPrompt = `You are an expert marketing data analyst and assistant for property marketing campaigns.
+You have access to the user's campaign and lead data. You can answer questions, provide insights, and help with actions.
 
 Data context:
 - ${campaigns?.length || 0} campaigns loaded
 - ${leads?.length || 0} leads loaded
 ${analysisContext ? `\nPrevious analysis summary: ${analysisContext}` : ''}
 
-Campaign data sample: ${JSON.stringify(campaigns?.slice(0, 10) || [], null, 2)}
-Lead data sample: ${JSON.stringify(leads?.slice(0, 20) || [], null, 2)}
+${campaigns?.length > 0 ? `FULL Campaign data:\n${JSON.stringify(campaigns, null, 2)}` : ''}
 
-Be specific, use numbers from the data, and provide actionable advice.`;
+${leads?.length > 0 ? `FULL Lead data:\n${JSON.stringify(leads, null, 2)}` : ''}
+
+You can help with:
+- Finding specific leads (e.g., "top 5 hottest leads", "leads above 80 score", "leads from London")
+- Campaign analysis (e.g., "which campaign has highest CPL", "what's working")
+- Actionable recommendations (e.g., "who should I call first", "prioritise leads for today")
+- Data queries (e.g., "show all leads with budget over £500k", "count leads by status")
+
+When showing leads or data, format them clearly with relevant details.
+Be specific, use actual data from the CSV, and provide actionable advice.`;
 
       const messages = [
         { role: 'system', content: chatSystemPrompt },
