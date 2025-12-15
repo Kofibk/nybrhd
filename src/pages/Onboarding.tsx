@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, BarChart3, ArrowRight, ArrowLeft, Check, Plus, X, Sparkles, Calendar, MapPin, Upload, Image, FileText, Link2 } from "lucide-react";
+import { Building2, Users, BarChart3, ArrowRight, ArrowLeft, Check, Plus, X, Sparkles, Calendar, MapPin, Upload, Image, FileText, Link2, FileUp, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 import { toast } from "sonner";
 import { LeadUploadModal } from "@/components/LeadUploadModal";
+import { useInventory } from "@/contexts/InventoryContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type UserType = "developer" | "agent" | "broker" | null;
 
@@ -23,16 +25,16 @@ interface TeamMember {
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { addDevelopment, addProperty, addProduct } = useInventory();
   const [currentStep, setCurrentStep] = useState(1);
   const [userType, setUserType] = useState<UserType>(null);
   
-  // Step 1: Account Setup
-  const [companyName, setCompanyName] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [website, setWebsite] = useState("");
-  const [subscriptionTier, setSubscriptionTier] = useState("professional");
+  // Step 1: PDF Upload & Extraction
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [extractedItems, setExtractedItems] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingIndex, setProcessingIndex] = useState<number | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   
   // Step 2: Team Setup
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -40,8 +42,7 @@ const Onboarding = () => {
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newMemberRole, setNewMemberRole] = useState<"admin" | "manager" | "agent">("agent");
   
-  // Step 3: First Development/Property/Product (varies by user type)
-  // Developer fields
+  // Legacy Step 3 fields (kept for backwards compatibility but not used in step 1)
   const [developmentName, setDevelopmentName] = useState("");
   const [devCountry, setDevCountry] = useState("");
   const [devCity, setDevCity] = useState("");
@@ -163,7 +164,131 @@ const Onboarding = () => {
     return true;
   };
 
+  const handlePdfUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !userType) return;
+    
+    const newFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+    if (newFiles.length === 0) {
+      toast.error("Please upload PDF files only");
+      return;
+    }
+    
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    
+    // Process each file
+    for (let i = 0; i < newFiles.length; i++) {
+      const file = newFiles[i];
+      setProcessingIndex(uploadedFiles.length + i);
+      setIsProcessing(true);
+      
+      try {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const result = reader.result as string;
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        const { data, error } = await supabase.functions.invoke('extract-pdf-data', {
+          body: { pdfBase64: base64, pdfName: file.name, userType }
+        });
+        
+        if (error) throw error;
+        
+        if (data?.success && data?.data) {
+          setExtractedItems(prev => [...prev, { ...data.data, fileName: file.name }]);
+          toast.success(`Extracted data from ${file.name}`);
+        } else {
+          toast.error(`Failed to extract from ${file.name}`);
+        }
+      } catch (err) {
+        console.error('PDF extraction error:', err);
+        toast.error(`Error processing ${file.name}`);
+      }
+    }
+    
+    setIsProcessing(false);
+    setProcessingIndex(null);
+  };
+
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setExtractedItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const saveExtractedItems = () => {
+    extractedItems.forEach(item => {
+      if (userType === 'developer') {
+        addDevelopment({
+          developmentName: item.developmentName || 'Untitled Development',
+          developerName: item.developerName || '',
+          country: item.country || '',
+          city: item.city || '',
+          area: item.area || '',
+          propertyType: item.propertyType || '',
+          minPrice: item.minPrice || 0,
+          maxPrice: item.maxPrice || 0,
+          currency: item.currency || 'GBP',
+          bedrooms: item.bedrooms || [],
+          totalUnits: item.totalUnits || 0,
+          availableUnits: item.availableUnits,
+          amenities: item.amenities || [],
+          keyFeatures: item.keyFeatures || [],
+          completionDate: item.completionDate,
+          summary: item.summary || ''
+        });
+      } else if (userType === 'agent') {
+        addProperty({
+          propertyName: item.propertyName || 'Untitled Property',
+          propertyType: item.propertyType || '',
+          country: item.country || '',
+          city: item.city || '',
+          area: item.area || '',
+          postcode: item.postcode,
+          price: item.price || 0,
+          currency: item.currency || 'GBP',
+          priceType: item.priceType || 'sale',
+          bedrooms: item.bedrooms || 0,
+          bathrooms: item.bathrooms || 0,
+          squareFootage: item.squareFootage,
+          features: item.features || [],
+          description: item.description || '',
+          status: item.status || 'Available'
+        });
+      } else if (userType === 'broker') {
+        addProduct({
+          productName: item.productName || 'Untitled Product',
+          productType: item.productType || '',
+          lender: item.lender || '',
+          interestRate: item.interestRate || '',
+          ltv: item.ltv || '',
+          termOptions: item.termOptions || [],
+          minLoan: item.minLoan || 0,
+          maxLoan: item.maxLoan || 0,
+          currency: item.currency || 'GBP',
+          eligibility: item.eligibility || [],
+          features: item.features || [],
+          fees: item.fees || [],
+          description: item.description || ''
+        });
+      }
+    });
+    
+    if (extractedItems.length > 0) {
+      toast.success(`Saved ${extractedItems.length} ${userType === 'developer' ? 'developments' : userType === 'agent' ? 'properties' : 'products'}`);
+    }
+  };
+
   const handleNext = () => {
+    // Save extracted items when leaving step 1
+    if (currentStep === 1 && extractedItems.length > 0) {
+      saveExtractedItems();
+    }
+    
     if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
@@ -204,115 +329,185 @@ const Onboarding = () => {
     </div>
   );
 
-  const renderStep1 = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">Welcome to Naybourhood</h2>
-        <p className="text-muted-foreground">Let's set up your account</p>
-      </div>
+  const getInventoryLabel = () => {
+    if (userType === 'developer') return { singular: 'Development', plural: 'Developments', description: 'brochures, price lists, or fact sheets' };
+    if (userType === 'agent') return { singular: 'Property', plural: 'Properties', description: 'property listings or portfolio documents' };
+    if (userType === 'broker') return { singular: 'Product', plural: 'Products', description: 'mortgage or financial product documents' };
+    return { singular: 'Item', plural: 'Items', description: 'documents' };
+  };
 
-      {/* User Type Selection */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium">What best describes you?</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {userTypes.map((type) => (
-            <Card
-              key={type.id}
-              className={`p-4 cursor-pointer transition-all hover:shadow-md ${
-                userType === type.id
-                  ? "border-2 border-primary shadow-lg"
-                  : "border border-border"
-              }`}
-              onClick={() => setUserType(type.id as UserType)}
+  const renderStep1 = () => {
+    const inventoryLabel = getInventoryLabel();
+    
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold mb-2">Welcome to Naybourhood</h2>
+          <p className="text-muted-foreground">Let's set up your inventory</p>
+        </div>
+
+        {/* User Type Selection */}
+        <div className="space-y-3">
+          <Label className="text-base font-medium">What best describes you?</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {userTypes.map((type) => (
+              <Card
+                key={type.id}
+                className={`p-4 cursor-pointer transition-all hover:shadow-md ${
+                  userType === type.id
+                    ? "border-2 border-primary shadow-lg"
+                    : "border border-border"
+                }`}
+                onClick={() => {
+                  setUserType(type.id as UserType);
+                  // Clear previous uploads when changing user type
+                  setUploadedFiles([]);
+                  setExtractedItems([]);
+                }}
+              >
+                <type.icon className={`h-8 w-8 mb-2 ${
+                  userType === type.id ? "text-primary" : "text-muted-foreground"
+                }`} />
+                <h3 className="font-semibold text-sm">{type.title}</h3>
+                <p className="text-xs text-muted-foreground">{type.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* PDF Upload Section - Only shown when user type is selected */}
+        {userType && (
+          <div className="space-y-4 pt-4 border-t">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-1">Upload Your {inventoryLabel.plural}</h3>
+              <p className="text-sm text-muted-foreground">
+                Upload PDFs ({inventoryLabel.description}) and we'll automatically extract the data
+              </p>
+            </div>
+
+            {/* Upload Zone */}
+            <div 
+              className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/20 transition-colors"
+              onClick={() => pdfInputRef.current?.click()}
             >
-              <type.icon className={`h-8 w-8 mb-2 ${
-                userType === type.id ? "text-primary" : "text-muted-foreground"
-              }`} />
-              <h3 className="font-semibold text-sm">{type.title}</h3>
-              <p className="text-xs text-muted-foreground">{type.description}</p>
-            </Card>
-          ))}
-        </div>
-      </div>
+              <input 
+                ref={pdfInputRef}
+                type="file" 
+                accept=".pdf"
+                multiple
+                className="hidden"
+                onChange={(e) => handlePdfUpload(e.target.files)}
+              />
+              <FileUp className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="font-medium">Click to upload PDFs</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload multiple {inventoryLabel.description.toLowerCase()}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">PDF files only, up to 20MB each</p>
+            </div>
 
-      {/* Company Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="companyName">Company Name *</Label>
-          <Input 
-            id="companyName" 
-            value={companyName} 
-            onChange={(e) => setCompanyName(e.target.value)}
-            placeholder="Your company name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="contactName">Primary Contact Name *</Label>
-          <Input 
-            id="contactName" 
-            value={contactName} 
-            onChange={(e) => setContactName(e.target.value)}
-            placeholder="Your full name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input 
-            id="email" 
-            type="email"
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone *</Label>
-          <Input 
-            id="phone" 
-            value={phone} 
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+44 7XXX XXXXXX"
-          />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="website">Company Website (optional)</Label>
-          <Input 
-            id="website" 
-            value={website} 
-            onChange={(e) => setWebsite(e.target.value)}
-            placeholder="https://yourcompany.com"
-          />
-        </div>
-      </div>
+            {/* Processing Indicator */}
+            {isProcessing && (
+              <div className="flex items-center justify-center gap-2 p-4 bg-primary/5 rounded-lg">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm">Extracting data from PDF...</span>
+              </div>
+            )}
 
-      {/* Subscription Tier */}
-      <div className="space-y-3">
-        <Label className="text-base font-medium">Select your plan</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {subscriptionTiers.map((tier) => (
-            <Card
-              key={tier.id}
-              className={`p-4 cursor-pointer transition-all relative ${
-                subscriptionTier === tier.id
-                  ? "border-2 border-primary shadow-lg"
-                  : "border border-border"
-              }`}
-              onClick={() => setSubscriptionTier(tier.id)}
-            >
-              {tier.recommended && (
-                <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
-                  Recommended
-                </span>
-              )}
-              <h3 className="font-semibold">{tier.name}</h3>
-              <p className="text-lg font-bold text-primary">{tier.price}</p>
-              <p className="text-xs text-muted-foreground">{tier.description}</p>
-            </Card>
-          ))}
-        </div>
+            {/* Uploaded Files List */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Uploaded Files ({uploadedFiles.length})</Label>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                        {processingIndex === index && (
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        )}
+                        {extractedItems[index] && (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => removeUploadedFile(index)}
+                        disabled={isProcessing}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Extracted Items Preview */}
+            {extractedItems.length > 0 && (
+              <div className="space-y-3 pt-4 border-t">
+                <Label className="text-sm font-medium">
+                  Extracted {inventoryLabel.plural} ({extractedItems.length})
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                  {extractedItems.map((item, index) => (
+                    <Card key={index} className="p-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          {userType === 'developer' && <Building2 className="h-5 w-5 text-primary" />}
+                          {userType === 'agent' && <MapPin className="h-5 w-5 text-primary" />}
+                          {userType === 'broker' && <BarChart3 className="h-5 w-5 text-primary" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {userType === 'developer' && (item.developmentName || 'Untitled Development')}
+                            {userType === 'agent' && (item.propertyName || 'Untitled Property')}
+                            {userType === 'broker' && (item.productName || 'Untitled Product')}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {userType === 'developer' && `${item.city || 'Unknown'} • ${item.propertyType || 'Mixed'}`}
+                            {userType === 'agent' && `${item.city || 'Unknown'} • ${item.bedrooms || 0} bed`}
+                            {userType === 'broker' && `${item.lender || 'Unknown'} • ${item.productType || 'Mortgage'}`}
+                          </p>
+                          {userType === 'developer' && item.minPrice && item.maxPrice && (
+                            <p className="text-xs text-primary font-medium mt-1">
+                              £{item.minPrice.toLocaleString()} - £{item.maxPrice.toLocaleString()}
+                            </p>
+                          )}
+                          {userType === 'agent' && item.price && (
+                            <p className="text-xs text-primary font-medium mt-1">
+                              £{item.price.toLocaleString()}
+                            </p>
+                          )}
+                          {userType === 'broker' && item.interestRate && (
+                            <p className="text-xs text-primary font-medium mt-1">
+                              {item.interestRate}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Data will be saved to your {inventoryLabel.plural} page where you can review and edit
+                </p>
+              </div>
+            )}
+
+            {/* Skip option */}
+            <div className="text-center pt-2">
+              <p className="text-xs text-muted-foreground">
+                You can also add {inventoryLabel.plural.toLowerCase()} manually later from your dashboard
+              </p>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderStep2 = () => (
     <div className="space-y-6">
