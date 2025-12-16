@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
+import { useMasterAgent } from "@/hooks/useMasterAgent";
 import { 
   Plus, Upload, Download, Calendar, ChevronDown, ChevronRight,
   TrendingUp, AlertCircle, CheckCircle, Pause, Play, Eye,
-  Lightbulb, Sparkles, Target, PoundSterling, Users, BarChart3
+  Lightbulb, Sparkles, Target, PoundSterling, Users, BarChart3,
+  Loader2, RefreshCw
 } from "lucide-react";
 import {
   Table,
@@ -128,12 +130,17 @@ const getRoleConfig = (userType: string) => {
 const CampaignsList = ({ userType }: CampaignsListProps) => {
   const navigate = useNavigate();
   const { campaignData } = useUploadedData(userType);
+  const { getCampaignRecommendations, isLoading: aiLoading } = useMasterAgent();
+  
   const [performingExpanded, setPerformingExpanded] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
   });
+  const [aiRecommendations, setAiRecommendations] = useState<Record<string, string>>({});
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [aiAnalysisRun, setAiAnalysisRun] = useState(false);
 
   const roleConfig = getRoleConfig(userType);
   const TARGET_CPL = 35;
@@ -230,6 +237,63 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     };
   }, [filteredCampaigns]);
 
+  // Fetch AI recommendations
+  const fetchAIRecommendations = async () => {
+    if (campaignData.length === 0 || isLoadingAI) return;
+    
+    setIsLoadingAI(true);
+    try {
+      const response = await getCampaignRecommendations({ campaigns: campaignData });
+      
+      if (response?.response) {
+        // Try to parse JSON from the response
+        try {
+          // Find JSON array in the response
+          const jsonMatch = response.response.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const recommendations = JSON.parse(jsonMatch[0]);
+            const recsMap: Record<string, string> = {};
+            recommendations.forEach((rec: any) => {
+              if (rec.development && rec.recommendation) {
+                recsMap[rec.development] = rec.recommendation + (rec.savings ? ` (Save ${rec.savings})` : '');
+              }
+            });
+            setAiRecommendations(recsMap);
+          } else {
+            // Fallback: use the full response for all groups
+            needsAttention.forEach(group => {
+              setAiRecommendations(prev => ({
+                ...prev,
+                [group.name]: response.response.slice(0, 300)
+              }));
+            });
+          }
+        } catch {
+          // If JSON parsing fails, use full response
+          console.log('AI response was not JSON, using as text');
+        }
+        setAiAnalysisRun(true);
+        toast.success('AI analysis complete');
+      }
+    } catch (error) {
+      console.error('Failed to get AI recommendations:', error);
+      toast.error('Failed to get AI recommendations');
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  // Auto-fetch AI recommendations when campaigns load (only once)
+  useEffect(() => {
+    if (campaignData.length > 0 && needsAttention.length > 0 && !aiAnalysisRun && !isLoadingAI) {
+      // Delay slightly to avoid immediate API call on mount
+      const timer = setTimeout(() => {
+        fetchAIRecommendations();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [campaignData.length, needsAttention.length, aiAnalysisRun]);
+
   const handleApplyRecommendation = (group: DevelopmentGroup) => {
     toast.success(`Applied AI recommendation for ${group.name}`);
   };
@@ -259,6 +323,11 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     link.download = `campaigns_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
     toast.success(`${rows.length} campaigns exported`);
+  };
+
+  // Get recommendation for a group (AI or fallback)
+  const getRecommendationForGroup = (group: DevelopmentGroup): string | undefined => {
+    return aiRecommendations[group.name] || group.aiRecommendation;
   };
 
   // Empty state
@@ -306,6 +375,19 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={fetchAIRecommendations}
+              disabled={isLoadingAI}
+            >
+              {isLoadingAI ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              {isLoadingAI ? 'Analysing...' : 'AI Analysis'}
+            </Button>
             <Button variant="outline" size="sm" onClick={exportToCSV}>
               <Download className="h-3.5 w-3.5 mr-1.5" />
               Export
@@ -417,14 +499,33 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                     </div>
 
                     {/* AI Recommendation */}
-                    {group.aiRecommendation && (
+                    {(getRecommendationForGroup(group) || isLoadingAI) && (
                       <div className="bg-muted/50 rounded-lg p-3 mb-3">
                         <div className="flex items-start gap-2">
-                          <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                          <div>
-                            <span className="text-xs font-medium text-amber-600">AI Recommendation:</span>
-                            <p className="text-sm mt-0.5">{group.aiRecommendation}</p>
-                          </div>
+                          {isLoadingAI && !aiRecommendations[group.name] ? (
+                            <>
+                              <Loader2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0 animate-spin" />
+                              <div>
+                                <span className="text-xs font-medium text-amber-600">AI Analysis:</span>
+                                <p className="text-sm mt-0.5 text-muted-foreground">Analysing campaign performance...</p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                              <div>
+                                <span className="text-xs font-medium text-amber-600 flex items-center gap-1">
+                                  AI Recommendation
+                                  {aiRecommendations[group.name] && (
+                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/30">
+                                      Live
+                                    </Badge>
+                                  )}
+                                </span>
+                                <p className="text-sm mt-0.5">{getRecommendationForGroup(group)}</p>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
