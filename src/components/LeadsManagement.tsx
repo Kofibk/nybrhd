@@ -7,10 +7,13 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   User, Mail, Phone, MapPin, TrendingUp, Target, Calendar, 
-  DollarSign, Home, MessageSquare, Search, Download, X,
-  Building2, Clock, Sparkles, Lightbulb, CreditCard, Timer, Filter
+  DollarSign, Home, MessageSquare, Search, Download, X, Upload,
+  Building2, Clock, Sparkles, Lightbulb, CreditCard, Timer, Filter,
+  Flame, Star, Zap, CheckCircle, AlertCircle, Snowflake, ChevronDown,
+  ChevronRight, ArrowRight, Eye, MessageCircle
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline, LeadSource, LEAD_SOURCES, LEAD_CLASSIFICATIONS } from "@/lib/types";
@@ -18,6 +21,7 @@ import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClass
 import { classifyLead, getClassificationConfig } from "@/lib/leadClassification";
 import { useUploadedData } from "@/contexts/DataContext";
 import { formatBudget } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Lead {
   id: string;
@@ -51,42 +55,71 @@ interface LeadsManagementProps {
   userType?: 'developer' | 'agent' | 'broker' | 'admin';
 }
 
+// Role-specific configuration
+const getRoleConfig = (userType: string) => {
+  switch (userType) {
+    case 'developer':
+      return {
+        leadLabel: 'Buyer',
+        leadLabelPlural: 'Buyers',
+        primaryAction: 'Book Viewing',
+        primaryActionIcon: Calendar,
+        assetLabel: 'Development',
+      };
+    case 'agent':
+      return {
+        leadLabel: 'Buyer',
+        leadLabelPlural: 'Buyers',
+        primaryAction: 'Book Viewing',
+        primaryActionIcon: Calendar,
+        assetLabel: 'Property',
+      };
+    case 'broker':
+      return {
+        leadLabel: 'Client',
+        leadLabelPlural: 'Clients',
+        primaryAction: 'Book Consultation',
+        primaryActionIcon: Calendar,
+        assetLabel: 'Product',
+      };
+    default:
+      return {
+        leadLabel: 'Lead',
+        leadLabelPlural: 'Leads',
+        primaryAction: 'Book Viewing',
+        primaryActionIcon: Calendar,
+        assetLabel: 'Development',
+      };
+  }
+};
+
 const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
-  const [classificationFilter, setClassificationFilter] = useState("all");
-  const [developmentFilter, setDevelopmentFilter] = useState("all");
+  const [warmExpanded, setWarmExpanded] = useState(false);
+  const [coldExpanded, setColdExpanded] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { leadData } = useUploadedData(userType);
 
-  // Convert uploaded lead data to Lead format - handle ANY column format dynamically
+  const roleConfig = getRoleConfig(userType);
+
+  // Convert uploaded lead data to Lead format
   const allLeads = useMemo(() => {
     if (leadData.length === 0) return [];
     
     return leadData.map((row, index) => {
-      // Find name from various possible columns
       const name = row['Lead Name'] || row.name || row.Name || row.full_name || 
         `${row.first_name || row['First Name'] || ''} ${row.last_name || row['Last Name'] || ''}`.trim() || 
         `Lead ${index + 1}`;
       
-      // Find email
       const email = row.Email || row.email || row['Email Address'] || '';
-      
-      // Find phone
       const phone = row['Phone Number'] || row.phone || row.Phone || row.Mobile || row.telephone || '';
-      
-      // Find country
       const country = row.Country || row.country || row.Location || row.location || row.Region || '';
-      
-      // Find budget
       const budget = row['Budget Range'] || row.budget || row.Budget || row['Budget'] || '';
-      
-      // Find bedrooms
       const bedrooms = row['Preferred Bedrooms'] || row.bedrooms || row.Bedrooms || '';
       
-      // Parse score/intent
       const rawScore = row.Score || row.score || row['Lead Score'] || row.intent_score || '50';
       const scoreNum = parseInt(String(rawScore).replace(/[^0-9]/g, ''), 10) || 50;
       const intentText = (row.Intent || row.intent || '').toString().toLowerCase().trim();
@@ -95,7 +128,6 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       else if (intentText === 'warm') intentScore = Math.max(scoreNum, 40);
       else if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(scoreNum, 70);
 
-      // Parse status
       const rawStatus = (row.Status || row.status || 'new').toString().toLowerCase();
       let mappedStatus: Lead['status'] = 'new';
       if (rawStatus.includes('pending')) mappedStatus = 'new';
@@ -104,21 +136,16 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       else if (rawStatus.includes('offer')) mappedStatus = 'offer';
       else if (rawStatus.includes('closed') || rawStatus.includes('won')) mappedStatus = 'closed';
 
-      // Parse payment method
       const paymentRaw = (row['Cash/Mortgage'] || row.payment_method || row.paymentMethod || 'undecided').toString().toLowerCase();
       let paymentMethod: PaymentMethod = 'undecided';
       if (paymentRaw.includes('cash')) paymentMethod = 'cash';
       else if (paymentRaw.includes('mortgage')) paymentMethod = 'mortgage';
 
-      // Determine source
       const channel = row.Channel || row.channel || '';
       const platform = row['Source Platform'] || row.source_platform || '';
-      const enquiryType = row['Enquiry Type'] || row.enquiry_type || '';
       let source: LeadSource = 'manual_upload';
       if (channel.toLowerCase().includes('meta') || platform === 'meta' || platform === 'ig' || platform === 'fb') {
         source = 'meta_campaign';
-      } else if (enquiryType === 'WA') {
-        source = 'direct_web';
       } else if (platform) {
         source = 'portal';
       }
@@ -149,265 +176,398 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
     });
   }, [leadData]);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-success";
-    if (score >= 60) return "text-warning";
-    return "text-destructive";
+  // Group leads by classification
+  const groupedLeads = useMemo(() => {
+    const hot: Lead[] = [];
+    const quality: Lead[] = [];
+    const warm: Lead[] = [];
+    const cold: Lead[] = [];
+
+    allLeads.forEach(lead => {
+      const classification = classifyLead(lead.intentScore, lead.qualityScore);
+      if (classification === 'hot') hot.push(lead);
+      else if (classification === 'star' || classification === 'lightning') quality.push(lead);
+      else if (classification === 'verified' || classification === 'warning') warm.push(lead);
+      else cold.push(lead);
+    });
+
+    return { hot, quality, warm, cold };
+  }, [allLeads]);
+
+  // Pipeline stats
+  const pipelineStats = useMemo(() => ({
+    hot: groupedLeads.hot.length,
+    contacted: allLeads.filter(l => l.status === 'engaged').length,
+    viewing: allLeads.filter(l => l.status === 'viewing').length,
+    offer: allLeads.filter(l => l.status === 'offer').length,
+    won: allLeads.filter(l => l.status === 'closed').length,
+  }), [allLeads, groupedLeads]);
+
+  // Calculate average scores
+  const getAverageScores = (leads: Lead[]) => {
+    if (leads.length === 0) return { quality: 0, intent: 0 };
+    const totalQuality = leads.reduce((acc, l) => acc + l.qualityScore, 0);
+    const totalIntent = leads.reduce((acc, l) => acc + l.intentScore, 0);
+    return {
+      quality: Math.round(totalQuality / leads.length),
+      intent: Math.round(totalIntent / leads.length),
+    };
   };
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case "new": return { label: "New", variant: "outline" as const, color: "border-blue-500 text-blue-600" };
-      case "engaged": return { label: "Engaged", variant: "secondary" as const, color: "" };
-      case "viewing": return { label: "Viewing Booked", variant: "default" as const, color: "bg-accent text-accent-foreground" };
-      case "offer": return { label: "Offer Made", variant: "default" as const, color: "bg-success" };
-      case "closed": return { label: "Closed", variant: "default" as const, color: "bg-primary" };
-      default: return { label: status, variant: "default" as const, color: "" };
+  const handleAction = (action: string, lead: Lead, e: React.MouseEvent) => {
+    e.stopPropagation();
+    switch (action) {
+      case 'call':
+        if (lead.phone) {
+          window.open(`tel:${lead.phone}`, '_blank');
+        }
+        toast.success(`Calling ${lead.name}...`);
+        break;
+      case 'whatsapp':
+        if (lead.phone) {
+          window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank');
+        }
+        toast.success(`Opening WhatsApp for ${lead.name}`);
+        break;
+      case 'booking':
+        toast.success(`${roleConfig.primaryAction} for ${lead.name}`);
+        break;
     }
   };
-
-  const getPaymentMethodLabel = (method: PaymentMethod) => {
-    switch (method) {
-      case "cash": return "Cash";
-      case "mortgage": return "Mortgage";
-      case "undecided": return "Undecided";
-    }
-  };
-
-  const getBuyerStatusLabel = (status: BuyerStatus) => {
-    switch (status) {
-      case "browsing": return "Just Browsing";
-      case "actively_looking": return "Actively Looking";
-    }
-  };
-
-  const getTimelineLabel = (timeline: PurchaseTimeline) => {
-    switch (timeline) {
-      case "within_28_days": return "Within 28 days";
-      case "0_3_months": return "0-3 months";
-      case "3_6_months": return "3-6 months";
-      case "6_9_months": return "6-9 months";
-      case "9_12_months": return "9-12 months";
-      case "12_months_plus": return "12+ months";
-    }
-  };
-
-  const getSlaColor = (sla: string) => {
-    switch (sla) {
-      case "1 hour": return "text-red-500 bg-red-500/10";
-      case "2 hours": return "text-orange-500 bg-orange-500/10";
-      case "4 hours": return "text-amber-500 bg-amber-500/10";
-      case "24 hours": return "text-blue-500 bg-blue-500/10";
-      case "1 week": return "text-gray-500 bg-gray-500/10";
-      case "Auto": return "text-slate-400 bg-slate-500/10";
-      default: return "text-muted-foreground";
-    }
-  };
-
-  const filteredLeads = allLeads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         lead.country.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    const matchesSource = sourceFilter === "all" || lead.source === sourceFilter;
-    const leadClassification = classifyLead(lead.intentScore, lead.qualityScore);
-    const matchesClassification = classificationFilter === "all" || leadClassification === classificationFilter;
-    return matchesSearch && matchesStatus && matchesSource && matchesClassification;
-  });
-
-  const stats = [
-    { label: "Total", value: allLeads.length, color: "text-foreground" },
-    { label: "New", value: allLeads.filter(l => l.status === "new").length, color: "text-blue-600" },
-    { label: "Engaged", value: allLeads.filter(l => l.status === "engaged").length, color: "text-warning" },
-    { label: "Viewing", value: allLeads.filter(l => l.status === "viewing").length, color: "text-accent" },
-    { label: "Offer", value: allLeads.filter(l => l.status === "offer").length, color: "text-success" },
-  ];
 
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
     setDrawerOpen(true);
   };
 
-  // Empty state when no leads uploaded
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-500";
+    if (score >= 60) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "new": return { label: "New", color: "border-blue-500 text-blue-600" };
+      case "engaged": return { label: "Engaged", color: "bg-secondary" };
+      case "viewing": return { label: "Viewing", color: "bg-accent text-accent-foreground" };
+      case "offer": return { label: "Offer", color: "bg-green-500/20 text-green-600" };
+      case "closed": return { label: "Won", color: "bg-primary" };
+      default: return { label: status, color: "" };
+    }
+  };
+
+  // Empty state
   if (allLeads.length === 0) {
     return (
-      <div className="space-y-4 md:space-y-6">
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg md:text-xl font-semibold">Lead Management</h2>
-            <p className="text-muted-foreground text-xs md:text-sm">Track and manage your buyer pipeline</p>
+            <h2 className="text-xl font-semibold">{roleConfig.leadLabelPlural}</h2>
+            <p className="text-muted-foreground text-sm">Track and manage your pipeline</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <Upload className="h-3.5 w-3.5 mr-1.5" />
+              Upload
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export
+            </Button>
           </div>
         </div>
-        <Card className="p-8 md:p-12 text-center">
-          <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Lead Data</h3>
+        <Card className="p-12 text-center">
+          <User className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No {roleConfig.leadLabel} Data</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Upload your lead data CSV from the main dashboard to view and manage your leads here.
+            Upload your {roleConfig.leadLabel.toLowerCase()} data CSV from the main dashboard to view and manage your pipeline here.
           </p>
         </Card>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-lg md:text-xl font-semibold">Lead Management</h2>
-          <p className="text-muted-foreground text-xs md:text-sm">
-            {allLeads.length} leads loaded from your data
-          </p>
-        </div>
-        <Button size="sm" className="w-full sm:w-auto">
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, email, or country..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+  // Lead row component with inline actions
+  const LeadRow = ({ lead, showActions = true }: { lead: Lead; showActions?: boolean }) => {
+    const classification = classifyLead(lead.intentScore, lead.qualityScore);
+    const config = getClassificationConfig(classification);
+    
+    return (
+      <div 
+        className="flex items-center justify-between p-3 hover:bg-muted/30 rounded-lg cursor-pointer transition-colors"
+        onClick={() => handleLeadClick(lead)}
+      >
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-medium truncate">{lead.name}</span>
+              {lead.sourceDetail && (
+                <span className="text-muted-foreground text-xs truncate hidden sm:inline">— {lead.sourceDetail}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>{formatBudget(lead.budget)}</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline">{lead.country}</span>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="engaged">Engaged</SelectItem>
-                <SelectItem value="viewing">Viewing</SelectItem>
-                <SelectItem value="offer">Offer Made</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sources</SelectItem>
-                {LEAD_SOURCES.map((source) => (
-                  <SelectItem key={source.value} value={source.value}>
-                    <span className="flex items-center gap-2">
-                      <span>{source.icon}</span>
-                      <span>{source.label}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={classificationFilter} onValueChange={setClassificationFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Classification" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classifications</SelectItem>
-                <SelectItem value="hot">🔥 Hot Lead</SelectItem>
-                <SelectItem value="star">⭐ Quality Lead</SelectItem>
-                <SelectItem value="lightning">⚡ Intent Lead</SelectItem>
-                <SelectItem value="verified">✓ Valid Lead</SelectItem>
-                <SelectItem value="dormant">💤 Cold Lead</SelectItem>
-                <SelectItem value="warning">⚠️ At Risk</SelectItem>
-                <SelectItem value="cold">❌ Disqualified</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={developmentFilter} onValueChange={setDevelopmentFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Development" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Developments</SelectItem>
-                <SelectItem value="marina">Marina Heights</SelectItem>
-                <SelectItem value="skyline">Skyline Tower</SelectItem>
-                <SelectItem value="garden">Garden Residences</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Overview - Responsive grid */}
-      <div className="grid grid-cols-5 gap-2 md:gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="p-2 md:p-4 shadow-card">
-            <div className={`text-lg md:text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-            <div className="text-[10px] md:text-sm text-muted-foreground truncate">{stat.label}</div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Leads Table - Mobile responsive */}
-      <Card className="shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead className="bg-muted/50">
-              <tr className="text-left text-xs md:text-sm text-muted-foreground">
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Name</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden sm:table-cell">Country</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Budget</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden md:table-cell">Timeline</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Score</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Classification</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">SLA</th>
-                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredLeads.map((lead) => {
-                const classification = classifyLead(lead.intentScore, lead.qualityScore);
-                const classConfig = getClassificationConfig(classification);
-                return (
-                <tr 
-                  key={lead.id} 
-                  className="hover:bg-muted/30 transition-colors cursor-pointer"
-                  onClick={() => handleLeadClick(lead)}
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="text-right hidden md:block">
+              <div className="flex items-center gap-2 text-sm">
+                <span className={getScoreColor(lead.qualityScore)}>{lead.qualityScore}</span>
+                <span className="text-muted-foreground">/</span>
+                <span className={getScoreColor(lead.intentScore)}>{lead.intentScore}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Q / I</span>
+            </div>
+            {showActions && (
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => handleAction('call', lead, e)}
                 >
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <div className="font-medium text-foreground text-sm">{lead.name}</div>
-                    <div className="text-[10px] md:text-xs text-muted-foreground truncate max-w-[150px]">{lead.email}</div>
-                  </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-sm hidden sm:table-cell">{lead.country}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs md:text-sm">{formatBudget(lead.budget)}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3 text-muted-foreground text-xs hidden md:table-cell">{getTimelineLabel(lead.purchaseTimeline)}</td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <span className={`font-semibold text-sm ${getScoreColor((lead.intentScore + lead.qualityScore) / 2)}`}>
-                      {Math.round((lead.intentScore + lead.qualityScore) / 2)}
-                    </span>
-                  </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <Badge className={`${classConfig.bgColor} ${classConfig.color} text-[10px] md:text-xs border-0`}>
-                      {classConfig.icon} {classConfig.label}
-                    </Badge>
-                  </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <Badge className={`${getSlaColor(classConfig.sla)} text-[10px] md:text-xs border-0`}>
-                      {classConfig.sla}
-                    </Badge>
-                  </td>
-                  <td className="px-3 md:px-4 py-2 md:py-3">
-                    <Badge className={`${getStatusConfig(lead.status).color} text-[10px] md:text-xs`}>
-                      {getStatusConfig(lead.status).label}
-                    </Badge>
-                  </td>
-                </tr>
-              )})}
-            </tbody>
-          </table>
+                  <Phone className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => handleAction('booking', lead, e)}
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => handleAction('whatsapp', lead, e)}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">{roleConfig.leadLabelPlural}</h2>
+          <p className="text-muted-foreground text-sm">{allLeads.length} {roleConfig.leadLabelPlural.toLowerCase()} in pipeline</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Upload className="h-3.5 w-3.5 mr-1.5" />
+            Upload
+          </Button>
+          <Button variant="outline" size="sm">
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm">
+            <Filter className="h-3.5 w-3.5 mr-1.5" />
+            Filter
+          </Button>
+        </div>
+      </div>
+
+      {/* Pipeline Funnel */}
+      <Card className="p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium text-sm">PIPELINE SUMMARY</span>
+        </div>
+        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Hot */}
+            <div className="flex flex-col items-center p-3 bg-orange-500/10 rounded-lg min-w-[80px]">
+              <div className="flex items-center gap-1">
+                <Flame className="h-4 w-4 text-orange-500" />
+                <span className="text-2xl font-bold">{pipelineStats.hot}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Hot</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            
+            {/* Contacted */}
+            <div className="flex flex-col items-center p-3 bg-blue-500/10 rounded-lg min-w-[80px]">
+              <div className="flex items-center gap-1">
+                <Phone className="h-4 w-4 text-blue-500" />
+                <span className="text-2xl font-bold">{pipelineStats.contacted}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Contacted</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            
+            {/* Viewing */}
+            <div className="flex flex-col items-center p-3 bg-purple-500/10 rounded-lg min-w-[80px]">
+              <div className="flex items-center gap-1">
+                <Eye className="h-4 w-4 text-purple-500" />
+                <span className="text-2xl font-bold">{pipelineStats.viewing}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Viewing</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            
+            {/* Offer */}
+            <div className="flex flex-col items-center p-3 bg-amber-500/10 rounded-lg min-w-[80px]">
+              <div className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4 text-amber-500" />
+                <span className="text-2xl font-bold">{pipelineStats.offer}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Offer</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            
+            {/* Won */}
+            <div className="flex flex-col items-center p-3 bg-green-500/10 rounded-lg min-w-[80px]">
+              <div className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-2xl font-bold">{pipelineStats.won}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">Won</span>
+            </div>
+          </div>
         </div>
       </Card>
 
-      {/* Lead Detail Drawer */}
+      {/* 🔥 PRIORITY - Hot Leads */}
+      {groupedLeads.hot.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <h3 className="font-semibold">PRIORITY</h3>
+              <Badge variant="destructive" className="ml-1">{groupedLeads.hot.length}</Badge>
+              <span className="text-xs text-muted-foreground ml-2">Contact within 1 hour</span>
+            </div>
+            <Badge variant="outline" className="text-orange-500 border-orange-500/30 bg-orange-500/10">
+              <Clock className="h-3 w-3 mr-1" />
+              SLA Active
+            </Badge>
+          </div>
+          <Card className="border-l-4 border-l-orange-500 divide-y divide-border">
+            {groupedLeads.hot.map(lead => (
+              <LeadRow key={lead.id} lead={lead} />
+            ))}
+          </Card>
+        </div>
+      )}
+
+      {/* ⭐ HIGH QUALITY */}
+      {groupedLeads.quality.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-amber-500" />
+            <h3 className="font-semibold">HIGH QUALITY</h3>
+            <Badge variant="secondary" className="ml-1 bg-amber-500/20 text-amber-600">{groupedLeads.quality.length}</Badge>
+            <span className="text-xs text-muted-foreground ml-2">Contact within 4 hours</span>
+          </div>
+          <Card className="border-l-4 border-l-amber-500 divide-y divide-border">
+            {groupedLeads.quality.map(lead => (
+              <LeadRow key={lead.id} lead={lead} />
+            ))}
+          </Card>
+        </div>
+      )}
+
+      {/* ✓ WARM - Collapsible */}
+      {groupedLeads.warm.length > 0 && (
+        <Collapsible open={warmExpanded} onOpenChange={setWarmExpanded}>
+          <div className="space-y-3">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between cursor-pointer group">
+                <div className="flex items-center gap-2">
+                  {warmExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-blue-500" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-blue-500" />
+                  )}
+                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <h3 className="font-semibold">WARM</h3>
+                  <Badge variant="secondary" className="ml-1 bg-blue-500/20 text-blue-600">{groupedLeads.warm.length}</Badge>
+                  <span className="text-xs text-muted-foreground ml-2">Contact within 24 hours</span>
+                </div>
+                <Button variant="ghost" size="sm" className="text-xs">
+                  {warmExpanded ? 'Collapse' : 'View all'}
+                </Button>
+              </div>
+            </CollapsibleTrigger>
+            
+            {!warmExpanded && (
+              <Card className="p-4 border-l-4 border-l-blue-500 bg-blue-500/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
+                    {groupedLeads.warm.length} {roleConfig.leadLabelPlural.toLowerCase()} — Average quality: {getAverageScores(groupedLeads.warm).quality}, Average intent: {getAverageScores(groupedLeads.warm).intent}
+                  </span>
+                </div>
+              </Card>
+            )}
+            
+            <CollapsibleContent>
+              <Card className="border-l-4 border-l-blue-500 divide-y divide-border">
+                {groupedLeads.warm.map(lead => (
+                  <LeadRow key={lead.id} lead={lead} />
+                ))}
+              </Card>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
+
+      {/* ❌ COLD - Collapsible */}
+      {groupedLeads.cold.length > 0 && (
+        <Collapsible open={coldExpanded} onOpenChange={setColdExpanded}>
+          <div className="space-y-3">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between cursor-pointer group">
+                <div className="flex items-center gap-2">
+                  {coldExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-slate-400" />
+                  )}
+                  <Snowflake className="h-5 w-5 text-slate-400" />
+                  <h3 className="font-semibold text-muted-foreground">COLD</h3>
+                  <Badge variant="outline" className="ml-1">{groupedLeads.cold.length}</Badge>
+                  <span className="text-xs text-muted-foreground ml-2">Automated nurture only</span>
+                </div>
+                <Button variant="ghost" size="sm" className="text-xs">
+                  {coldExpanded ? 'Collapse' : 'View all'}
+                </Button>
+              </div>
+            </CollapsibleTrigger>
+            
+            {!coldExpanded && (
+              <Card className="p-4 border-l-4 border-l-slate-300 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
+                    {groupedLeads.cold.length} {roleConfig.leadLabelPlural.toLowerCase()} — Receiving automated WhatsApp sequence
+                  </span>
+                </div>
+              </Card>
+            )}
+            
+            <CollapsibleContent>
+              <Card className="border-l-4 border-l-slate-300 divide-y divide-border">
+                {groupedLeads.cold.map(lead => (
+                  <LeadRow key={lead.id} lead={lead} showActions={false} />
+                ))}
+              </Card>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      )}
+
+      {/* Lead Detail Drawer - Keep existing functionality */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           {selectedLead && (
@@ -424,15 +584,13 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
               </SheetHeader>
 
               <Tabs defaultValue="profile" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
                   <TabsTrigger value="scoring" className="text-xs">Scoring</TabsTrigger>
                   <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
-                  <TabsTrigger value="ai" className="text-xs">AI</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-4">
-                  {/* Contact Info */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -446,13 +604,8 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                       <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <span>{selectedLead.country}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="truncate">{selectedLead.source}</span>
-                    </div>
                   </div>
 
-                  {/* Preferences */}
                   <div className="pt-3 border-t">
                     <h4 className="font-medium mb-3 text-sm">Preferences</h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
@@ -462,41 +615,11 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                       </div>
                       <div>
                         <span className="text-muted-foreground text-xs">Bedrooms</span>
-                        <div className="font-medium">{selectedLead.bedrooms}</div>
+                        <div className="font-medium">{selectedLead.bedrooms || 'Not specified'}</div>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs flex items-center gap-1">
-                          <CreditCard className="h-3 w-3" /> Payment
-                        </span>
-                        <div className="font-medium">{getPaymentMethodLabel(selectedLead.paymentMethod)}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs flex items-center gap-1">
-                          <Timer className="h-3 w-3" /> Timeline
-                        </span>
-                        <div className="font-medium">{getTimelineLabel(selectedLead.purchaseTimeline)}</div>
-                      </div>
-                    </div>
-                    <div className="mt-3">
-                      <span className="text-muted-foreground text-xs">Status</span>
-                      <div className="font-medium">{getBuyerStatusLabel(selectedLead.buyerStatus)}</div>
                     </div>
                   </div>
 
-                  {/* Matched Units */}
-                  <div className="pt-3 border-t">
-                    <h4 className="font-medium mb-2 text-sm">Matched Units</h4>
-                    <div className="space-y-1">
-                      {selectedLead.matchedUnits.map((unit, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Building2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate">{unit}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Notes */}
                   <div className="pt-3 border-t">
                     <h4 className="font-medium mb-2 text-sm">Notes</h4>
                     <Textarea 
@@ -506,77 +629,50 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                     />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                    <Button size="sm" className="flex-1">Mark Contacted</Button>
-                    <Button size="sm" variant="outline" className="flex-1">Book Viewing</Button>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button size="sm" variant="secondary" className="flex-1">Mark Won</Button>
-                    <Button size="sm" variant="destructive" className="flex-1">Mark Lost</Button>
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" className="flex-1 gap-1.5" onClick={() => handleAction('call', selectedLead, { stopPropagation: () => {} } as any)}>
+                      <Phone className="h-3.5 w-3.5" />
+                      Call
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => handleAction('booking', selectedLead, { stopPropagation: () => {} } as any)}>
+                      <Calendar className="h-3.5 w-3.5" />
+                      {roleConfig.primaryAction}
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => handleAction('whatsapp', selectedLead, { stopPropagation: () => {} } as any)}>
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      WhatsApp
+                    </Button>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="scoring" className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">Intent Score</span>
-                      <span className={`font-bold ${getScoreColor(selectedLead.intentScore)}`}>
-                        {selectedLead.intentScore}%
-                      </span>
-                    </div>
-                    <Progress value={selectedLead.intentScore} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-1">Based on engagement actions</p>
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">Quality Score</span>
                       <span className={`font-bold ${getScoreColor(selectedLead.qualityScore)}`}>
-                        {selectedLead.qualityScore}%
+                        {selectedLead.qualityScore}
                       </span>
                     </div>
                     <Progress value={selectedLead.qualityScore} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-1">Based on profile match data</p>
+                    <p className="text-xs text-muted-foreground mt-1">Financial fit & property match</p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Intent Score</span>
+                      <span className={`font-bold ${getScoreColor(selectedLead.intentScore)}`}>
+                        {selectedLead.intentScore}
+                      </span>
+                    </div>
+                    <Progress value={selectedLead.intentScore} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-1">Timeline & engagement level</p>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-3">
-                  {selectedLead.timeline.map((item, index) => (
-                    <div key={index} className="flex gap-3 pb-3 border-b last:border-0">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-xs text-muted-foreground">{item.date}</div>
-                        <div className="font-medium text-sm">{item.action}</div>
-                        <div className="text-xs text-muted-foreground truncate">{item.detail}</div>
-                      </div>
-                    </div>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="ai" className="space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="h-5 w-5 text-accent" />
-                    <h3 className="font-medium">AI Recommendations</h3>
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>Activity timeline coming soon</p>
                   </div>
-                  {selectedLead.aiRecommendations.map((rec) => (
-                    <Card key={rec.id} className={`p-3 ${rec.priority === "high" ? "border-accent/50 bg-accent/5" : ""}`}>
-                      <div className="flex items-start gap-2">
-                        <Lightbulb className={`h-4 w-4 mt-0.5 flex-shrink-0 ${rec.priority === "high" ? "text-accent" : "text-muted-foreground"}`} />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm">{rec.title}</span>
-                            <Badge variant={rec.priority === "high" ? "default" : "secondary"} className="text-[10px]">
-                              {rec.priority}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">{rec.description}</p>
-                          <div className="flex items-center gap-1 mt-2">
-                            <Progress value={rec.confidence} className="h-1 flex-1" />
-                            <span className="text-[10px] text-muted-foreground">{rec.confidence}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
                 </TabsContent>
               </Tabs>
             </>
