@@ -79,6 +79,92 @@ interface AIAgentDashboardProps {
   userType?: 'developer' | 'agent' | 'broker' | 'admin';
 }
 
+// Role-specific configuration
+const getRoleConfig = (userType: string) => {
+  switch (userType) {
+    case 'developer':
+      return {
+        assetLabel: 'Development',
+        assetLabelPlural: 'Developments',
+        leadLabel: 'Buyer',
+        leadLabelPlural: 'Buyers',
+        primaryAction: 'Book Viewing',
+        primaryActionIcon: Calendar,
+        secondaryAction: 'Send Brochure',
+        pipelineLabel: 'Pipeline',
+        leadsPath: '/developer/leads',
+        campaignsPath: '/developer/campaigns',
+        analyticsPath: '/developer/analytics',
+        performanceMetrics: {
+          col1: { label: 'Buyers', icon: Users },
+          col2: { label: 'Viewings', icon: Calendar },
+          col3: { label: 'Reservations', icon: CheckCircle },
+          col4: { label: 'Pipeline', icon: PoundSterling },
+        }
+      };
+    case 'agent':
+      return {
+        assetLabel: 'Property',
+        assetLabelPlural: 'Properties',
+        leadLabel: 'Buyer',
+        leadLabelPlural: 'Buyers',
+        primaryAction: 'Book Viewing',
+        primaryActionIcon: Calendar,
+        secondaryAction: 'Send Details',
+        pipelineLabel: 'Pipeline',
+        leadsPath: '/agent/leads',
+        campaignsPath: '/agent/campaigns',
+        analyticsPath: '/agent/analytics',
+        performanceMetrics: {
+          col1: { label: 'Leads', icon: Users },
+          col2: { label: 'Viewings', icon: Calendar },
+          col3: { label: 'Offers', icon: Target },
+          col4: { label: 'Pipeline', icon: PoundSterling },
+        }
+      };
+    case 'broker':
+      return {
+        assetLabel: 'Product',
+        assetLabelPlural: 'Products',
+        leadLabel: 'Client',
+        leadLabelPlural: 'Clients',
+        primaryAction: 'Book Consultation',
+        primaryActionIcon: Calendar,
+        secondaryAction: 'Send Quote',
+        pipelineLabel: 'Value',
+        leadsPath: '/broker/leads',
+        campaignsPath: '/broker/campaigns',
+        analyticsPath: '/broker/analytics',
+        performanceMetrics: {
+          col1: { label: 'Clients', icon: Users },
+          col2: { label: 'Consultations', icon: Calendar },
+          col3: { label: 'Applications', icon: CheckCircle },
+          col4: { label: 'Loan Value', icon: PoundSterling },
+        }
+      };
+    default: // admin
+      return {
+        assetLabel: 'Development',
+        assetLabelPlural: 'Developments',
+        leadLabel: 'Lead',
+        leadLabelPlural: 'Leads',
+        primaryAction: 'Book Viewing',
+        primaryActionIcon: Calendar,
+        secondaryAction: 'Send Brochure',
+        pipelineLabel: 'Pipeline',
+        leadsPath: '/admin/leads',
+        campaignsPath: '/admin/campaigns',
+        analyticsPath: '/admin/analytics',
+        performanceMetrics: {
+          col1: { label: 'Leads', icon: Users },
+          col2: { label: 'Viewings', icon: Calendar },
+          col3: { label: 'Offers', icon: Target },
+          col4: { label: 'Pipeline', icon: PoundSterling },
+        }
+      };
+  }
+};
+
 export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -99,6 +185,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     setLeadFileName 
   } = useUploadedData(userType);
 
+  const roleConfig = getRoleConfig(userType);
   const userName = user?.name?.split(' ')[0] || 'there';
   const currentDate = new Date();
   const greeting = currentDate.getHours() < 12 ? 'Good morning' : currentDate.getHours() < 18 ? 'Good afternoon' : 'Good evening';
@@ -229,7 +316,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         toast.success(`Opening WhatsApp for ${lead.name}`);
         break;
       case 'booking':
-        toast.success(`Opening booking for ${lead.name}`);
+        toast.success(`${roleConfig.primaryAction} for ${lead.name}`);
         break;
       case 'snooze':
         toast.info(`Snoozed ${lead.name} for 24 hours`);
@@ -243,7 +330,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         toast.success(`Applied recommendation for ${alert.name}`);
         break;
       case 'view':
-        navigate('/admin/campaigns');
+        navigate(roleConfig.campaignsPath);
         break;
       case 'dismiss':
         toast.info(`Dismissed alert for ${alert.name}`);
@@ -497,8 +584,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
                       Call Now
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleAction('booking', lead)} className="gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Book Viewing
+                      <roleConfig.primaryActionIcon className="h-3.5 w-3.5" />
+                      {roleConfig.primaryAction}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleAction('whatsapp', lead)} className="gap-1.5">
                       <MessageCircle className="h-3.5 w-3.5" />
@@ -572,8 +659,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Leads</span>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col1.label}</span>
+              <roleConfig.performanceMetrics.col1.icon className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold">{weeklyPerformance.leads.value}</span>
@@ -588,8 +675,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           
           <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Viewings</span>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col2.label}</span>
+              <roleConfig.performanceMetrics.col2.icon className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold">{weeklyPerformance.viewings.value}</span>
@@ -604,8 +691,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           
           <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Offers</span>
-              <Home className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col3.label}</span>
+              <roleConfig.performanceMetrics.col3.icon className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold">{weeklyPerformance.offers.value}</span>
@@ -620,8 +707,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           
           <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Pipeline</span>
-              <PoundSterling className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col4.label}</span>
+              <roleConfig.performanceMetrics.col4.icon className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold">{formatCurrency(weeklyPerformance.pipeline.value)}</span>
