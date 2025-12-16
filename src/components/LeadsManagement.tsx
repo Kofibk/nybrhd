@@ -142,12 +142,23 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       else if (paymentRaw.includes('mortgage')) paymentMethod = 'mortgage';
 
       const channel = row.Channel || row.channel || '';
-      const platform = row['Source Platform'] || row.source_platform || '';
-      let source: LeadSource = 'manual_upload';
-      if (channel.toLowerCase().includes('meta') || platform === 'meta' || platform === 'ig' || platform === 'fb') {
+      const platform = (row['Source Platform'] || row.source_platform || row.Source || '').toString().toLowerCase();
+      const emailLower = email.toLowerCase();
+      
+      // Auto-detect source from CSV data
+      let source: LeadSource = 'direct_web';
+      if (platform.includes('meta') || platform.includes('facebook') || platform.includes('fb') || platform.includes('instagram') || platform === 'ig') {
         source = 'meta_campaign';
-      } else if (platform) {
-        source = 'portal';
+      } else if (platform.includes('google') || platform.includes('gads')) {
+        source = 'google_ads';
+      } else if (platform.includes('rightmove') || emailLower.includes('rightmove')) {
+        source = 'rightmove';
+      } else if (platform.includes('zoopla') || emailLower.includes('zoopla')) {
+        source = 'zoopla';
+      } else if (platform.includes('onthemarket') || platform.includes('otm') || emailLower.includes('onthemarket')) {
+        source = 'onthemarket';
+      } else if (channel.toLowerCase().includes('agent') || channel.toLowerCase().includes('referral')) {
+        source = 'agent_referral';
       }
 
       return {
@@ -302,6 +313,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="font-medium truncate">{lead.name}</span>
+              <LeadSourceBadge source={lead.source} size="sm" />
               {lead.sourceDetail && (
                 <span className="text-muted-foreground text-xs truncate hidden sm:inline">— {lead.sourceDetail}</span>
               )}
@@ -355,6 +367,20 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
     );
   };
 
+  // Filter leads by source
+  const filteredLeads = useMemo(() => {
+    if (sourceFilter === 'all') return groupedLeads;
+    
+    const filterBySource = (leads: Lead[]) => leads.filter(l => l.source === sourceFilter);
+    
+    return {
+      hot: filterBySource(groupedLeads.hot),
+      quality: filterBySource(groupedLeads.quality),
+      warm: filterBySource(groupedLeads.warm),
+      cold: filterBySource(groupedLeads.cold),
+    };
+  }, [groupedLeads, sourceFilter]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -372,10 +398,23 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
             <Download className="h-3.5 w-3.5 mr-1.5" />
             Export
           </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="h-3.5 w-3.5 mr-1.5" />
-            Filter
-          </Button>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-[140px] h-8">
+              <Filter className="h-3.5 w-3.5 mr-1.5" />
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg z-50">
+              <SelectItem value="all">All Sources</SelectItem>
+              {LEAD_SOURCES.map((source) => (
+                <SelectItem key={source.value} value={source.value}>
+                  <span className="flex items-center gap-2">
+                    <span>{source.icon}</span>
+                    <span>{source.label}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -440,13 +479,13 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       </Card>
 
       {/* 🔥 PRIORITY - Hot Leads */}
-      {groupedLeads.hot.length > 0 && (
+      {filteredLeads.hot.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-orange-500" />
               <h3 className="font-semibold">PRIORITY</h3>
-              <Badge variant="destructive" className="ml-1">{groupedLeads.hot.length}</Badge>
+              <Badge variant="destructive" className="ml-1">{filteredLeads.hot.length}</Badge>
               <span className="text-xs text-muted-foreground ml-2">Contact within 1 hour</span>
             </div>
             <Badge variant="outline" className="text-orange-500 border-orange-500/30 bg-orange-500/10">
@@ -455,7 +494,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
             </Badge>
           </div>
           <Card className="border-l-4 border-l-orange-500 divide-y divide-border">
-            {groupedLeads.hot.map(lead => (
+            {filteredLeads.hot.map(lead => (
               <LeadRow key={lead.id} lead={lead} />
             ))}
           </Card>
@@ -463,16 +502,16 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       )}
 
       {/* ⭐ HIGH QUALITY */}
-      {groupedLeads.quality.length > 0 && (
+      {filteredLeads.quality.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-amber-500" />
             <h3 className="font-semibold">HIGH QUALITY</h3>
-            <Badge variant="secondary" className="ml-1 bg-amber-500/20 text-amber-600">{groupedLeads.quality.length}</Badge>
+            <Badge variant="secondary" className="ml-1 bg-amber-500/20 text-amber-600">{filteredLeads.quality.length}</Badge>
             <span className="text-xs text-muted-foreground ml-2">Contact within 4 hours</span>
           </div>
           <Card className="border-l-4 border-l-amber-500 divide-y divide-border">
-            {groupedLeads.quality.map(lead => (
+            {filteredLeads.quality.map(lead => (
               <LeadRow key={lead.id} lead={lead} />
             ))}
           </Card>
@@ -480,7 +519,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       )}
 
       {/* ✓ WARM - Collapsible */}
-      {groupedLeads.warm.length > 0 && (
+      {filteredLeads.warm.length > 0 && (
         <Collapsible open={warmExpanded} onOpenChange={setWarmExpanded}>
           <div className="space-y-3">
             <CollapsibleTrigger asChild>
@@ -493,7 +532,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                   )}
                   <CheckCircle className="h-5 w-5 text-blue-500" />
                   <h3 className="font-semibold">WARM</h3>
-                  <Badge variant="secondary" className="ml-1 bg-blue-500/20 text-blue-600">{groupedLeads.warm.length}</Badge>
+                  <Badge variant="secondary" className="ml-1 bg-blue-500/20 text-blue-600">{filteredLeads.warm.length}</Badge>
                   <span className="text-xs text-muted-foreground ml-2">Contact within 24 hours</span>
                 </div>
                 <Button variant="ghost" size="sm" className="text-xs">
@@ -506,7 +545,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
               <Card className="p-4 border-l-4 border-l-blue-500 bg-blue-500/5">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
-                    {groupedLeads.warm.length} {roleConfig.leadLabelPlural.toLowerCase()} — Average quality: {getAverageScores(groupedLeads.warm).quality}, Average intent: {getAverageScores(groupedLeads.warm).intent}
+                    {filteredLeads.warm.length} {roleConfig.leadLabelPlural.toLowerCase()} — Average quality: {getAverageScores(filteredLeads.warm).quality}, Average intent: {getAverageScores(filteredLeads.warm).intent}
                   </span>
                 </div>
               </Card>
@@ -514,7 +553,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
             
             <CollapsibleContent>
               <Card className="border-l-4 border-l-blue-500 divide-y divide-border">
-                {groupedLeads.warm.map(lead => (
+                {filteredLeads.warm.map(lead => (
                   <LeadRow key={lead.id} lead={lead} />
                 ))}
               </Card>
@@ -524,7 +563,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       )}
 
       {/* ❌ COLD - Collapsible */}
-      {groupedLeads.cold.length > 0 && (
+      {filteredLeads.cold.length > 0 && (
         <Collapsible open={coldExpanded} onOpenChange={setColdExpanded}>
           <div className="space-y-3">
             <CollapsibleTrigger asChild>
@@ -537,7 +576,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                   )}
                   <Snowflake className="h-5 w-5 text-slate-400" />
                   <h3 className="font-semibold text-muted-foreground">COLD</h3>
-                  <Badge variant="outline" className="ml-1">{groupedLeads.cold.length}</Badge>
+                  <Badge variant="outline" className="ml-1">{filteredLeads.cold.length}</Badge>
                   <span className="text-xs text-muted-foreground ml-2">Automated nurture only</span>
                 </div>
                 <Button variant="ghost" size="sm" className="text-xs">
@@ -550,7 +589,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
               <Card className="p-4 border-l-4 border-l-slate-300 bg-muted/30">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
-                    {groupedLeads.cold.length} {roleConfig.leadLabelPlural.toLowerCase()} — Receiving automated WhatsApp sequence
+                    {filteredLeads.cold.length} {roleConfig.leadLabelPlural.toLowerCase()} — Receiving automated WhatsApp sequence
                   </span>
                 </div>
               </Card>
@@ -558,7 +597,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
             
             <CollapsibleContent>
               <Card className="border-l-4 border-l-slate-300 divide-y divide-border">
-                {groupedLeads.cold.map(lead => (
+                {filteredLeads.cold.map(lead => (
                   <LeadRow key={lead.id} lead={lead} showActions={false} />
                 ))}
               </Card>

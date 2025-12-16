@@ -101,12 +101,13 @@ export type PurchaseTimeline = "within_28_days" | "0_3_months" | "3_6_months" | 
 // Lead sources
 export type LeadSource = 
   | "meta_campaign" 
-  | "portal" 
+  | "google_ads"
+  | "rightmove"
+  | "zoopla"
+  | "onthemarket"
+  | "agent_referral"
   | "direct_web" 
-  | "email_forward" 
-  | "introducer" 
-  | "crm_import" 
-  | "manual_upload";
+  | "other";
 
 // Lead classification based on dual scoring
 export type LeadClassification = 
@@ -120,12 +121,13 @@ export type LeadClassification =
 
 export const LEAD_SOURCES = [
   { value: "meta_campaign", label: "Meta Campaign", icon: "📱" },
-  { value: "portal", label: "Property Portal", icon: "🏠" },
-  { value: "direct_web", label: "Direct Website", icon: "🌐" },
-  { value: "email_forward", label: "Email Forward", icon: "📧" },
-  { value: "introducer", label: "Introducer/Agent", icon: "🤝" },
-  { value: "crm_import", label: "CRM Import (Zapier/Make)", icon: "🔄" },
-  { value: "manual_upload", label: "Manual Upload (CSV)", icon: "📤" },
+  { value: "google_ads", label: "Google Ads", icon: "🔍" },
+  { value: "rightmove", label: "Rightmove", icon: "🏠" },
+  { value: "zoopla", label: "Zoopla", icon: "🏠" },
+  { value: "onthemarket", label: "OnTheMarket", icon: "🏠" },
+  { value: "agent_referral", label: "Agent Referral", icon: "🏷" },
+  { value: "direct_web", label: "Direct/Web", icon: "🌐" },
+  { value: "other", label: "Other", icon: "➕" },
 ] as const;
 
 export const LEAD_CLASSIFICATIONS = [
