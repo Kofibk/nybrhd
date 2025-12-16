@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { 
   ArrowRight, 
   Menu, 
@@ -226,6 +226,7 @@ const Landing = () => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] bg-background border-l border-border">
+                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                   <nav className="flex flex-col gap-4 mt-8">
                     {navLinks.map((link) => (
                       link.href ? (
