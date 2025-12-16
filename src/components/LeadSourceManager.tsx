@@ -292,12 +292,13 @@ export const LeadSourceManager = ({ onImportComplete }: LeadSourceManagerProps) 
                           <p className="font-medium text-sm">{source.label}</p>
                           <p className="text-xs text-muted-foreground">
                             {source.value === "meta_campaign" && "Active campaigns"}
-                            {source.value === "portal" && "Connect portals"}
+                            {source.value === "google_ads" && "Search & Display"}
+                            {source.value === "rightmove" && "Portal leads"}
+                            {source.value === "zoopla" && "Portal leads"}
+                            {source.value === "onthemarket" && "Portal leads"}
+                            {source.value === "agent_referral" && "Partner leads"}
                             {source.value === "direct_web" && "Website forms"}
-                            {source.value === "email_forward" && "Auto-forward"}
-                            {source.value === "introducer" && "Partner leads"}
-                            {source.value === "crm_import" && "Zapier/Make/n8n"}
-                            {source.value === "manual_upload" && "CSV/Excel"}
+                            {source.value === "other" && "Other sources"}
                           </p>
                         </div>
                       </div>
