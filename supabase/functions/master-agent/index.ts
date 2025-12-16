@@ -317,7 +317,7 @@ serve(async (req) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250514',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         system: SYSTEM_PROMPT,
         messages: [
@@ -333,7 +333,7 @@ serve(async (req) => {
       // Return a graceful fallback response instead of propagating 429
       return new Response(JSON.stringify({ 
         response: "I'm temporarily at capacity due to AI rate limits. Please wait 30–60 seconds and try again.",
-        model: 'claude-sonnet-4-5-20250514',
+        model: 'claude-sonnet-4-20250514',
         rateLimited: true
       }), {
         status: 200,
@@ -356,7 +356,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       response: content,
-      model: 'claude-sonnet-4-5-20250514'
+      model: 'claude-sonnet-4-20250514'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
