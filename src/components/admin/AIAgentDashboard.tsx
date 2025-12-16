@@ -205,7 +205,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     setCampaignData(data);
     setCampaignFileName(fileName);
     setUploadDialogOpen(false);
-    toast.success(`Loaded ${data.length} campaigns`);
+    toast.success(`Loaded ${data.length} campaigns. Refreshing analysis...`);
 
     // Auto-comment from agent
     const agentMessage: Message = {
@@ -215,7 +215,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     };
     setMessages(prev => [...prev, agentMessage]);
 
-    // Trigger analysis
+    // Trigger analysis with new data
     const response = await askAgent(
       `I just uploaded ${data.length} campaigns. Analyse this data and tell me: overall performance vs benchmarks, top 3 performers, campaigns needing attention, and specific optimisation recommendations.`,
       { campaigns: data }
@@ -227,6 +227,9 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         content: response.response,
         timestamp: new Date()
       }]);
+      
+      // Refresh the daily briefing with new data context
+      setTimeout(() => loadDailyBriefing(), 500);
     }
   };
 
@@ -234,7 +237,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     setLeadData(data);
     setLeadFileName(fileName);
     setUploadDialogOpen(false);
-    toast.success(`Loaded ${data.length} leads`);
+    toast.success(`Loaded ${data.length} leads. Refreshing analysis...`);
 
     // Count lead classifications (simplified)
     const hotCount = Math.floor(data.length * 0.1);
@@ -249,7 +252,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     };
     setMessages(prev => [...prev, agentMessage]);
 
-    // Trigger analysis
+    // Trigger analysis with new data
     const response = await askAgent(
       `I just uploaded ${data.length} leads. Score and classify them all. Tell me: who are the hottest leads to contact immediately, who needs follow-up, any timewasters to flag, and draft contact messages for the top priorities.`,
       { leads: data }
@@ -261,6 +264,9 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         content: response.response,
         timestamp: new Date()
       }]);
+      
+      // Refresh the daily briefing with new data context
+      setTimeout(() => loadDailyBriefing(), 500);
     }
   };
 
@@ -345,7 +351,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           <div className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">AI Agent</h2>
-            <Badge variant="secondary" className="text-[10px]">Claude Haiku</Badge>
+            <Badge variant="secondary" className="text-[10px]">Claude Sonnet</Badge>
           </div>
           <div className="flex gap-2">
             <Dialog open={uploadDialogOpen && uploadType === 'campaigns'} onOpenChange={(open) => { if (!open) setUploadDialogOpen(false); }}>

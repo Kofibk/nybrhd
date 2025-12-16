@@ -13,9 +13,9 @@ import {
   Building2, Clock, Sparkles, Lightbulb, CreditCard, Timer, Filter
 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline, LeadSource, LEAD_SOURCES } from "@/lib/types";
+import { AIRecommendation, PaymentMethod, BuyerStatus, PurchaseTimeline, LeadSource, LEAD_SOURCES, LEAD_CLASSIFICATIONS } from "@/lib/types";
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
-import { classifyLead } from "@/lib/leadClassification";
+import { classifyLead, getClassificationConfig } from "@/lib/leadClassification";
 import { useUploadedData } from "@/contexts/DataContext";
 import { formatBudget } from "@/lib/utils";
 
@@ -192,6 +192,18 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
     }
   };
 
+  const getSlaColor = (sla: string) => {
+    switch (sla) {
+      case "1 hour": return "text-red-500 bg-red-500/10";
+      case "2 hours": return "text-orange-500 bg-orange-500/10";
+      case "4 hours": return "text-amber-500 bg-amber-500/10";
+      case "24 hours": return "text-blue-500 bg-blue-500/10";
+      case "1 week": return "text-gray-500 bg-gray-500/10";
+      case "Auto": return "text-slate-400 bg-slate-500/10";
+      default: return "text-muted-foreground";
+    }
+  };
+
   const filteredLeads = allLeads.filter(lead => {
     const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -338,7 +350,7 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       {/* Leads Table - Mobile responsive */}
       <Card className="shadow-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[700px]">
             <thead className="bg-muted/50">
               <tr className="text-left text-xs md:text-sm text-muted-foreground">
                 <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Name</th>
@@ -346,11 +358,16 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                 <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Budget</th>
                 <th className="px-3 md:px-4 py-2 md:py-3 font-medium hidden md:table-cell">Timeline</th>
                 <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Score</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Classification</th>
+                <th className="px-3 md:px-4 py-2 md:py-3 font-medium">SLA</th>
                 <th className="px-3 md:px-4 py-2 md:py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredLeads.map((lead) => (
+              {filteredLeads.map((lead) => {
+                const classification = classifyLead(lead.intentScore, lead.qualityScore);
+                const classConfig = getClassificationConfig(classification);
+                return (
                 <tr 
                   key={lead.id} 
                   className="hover:bg-muted/30 transition-colors cursor-pointer"
@@ -369,12 +386,22 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                     </span>
                   </td>
                   <td className="px-3 md:px-4 py-2 md:py-3">
+                    <Badge className={`${classConfig.bgColor} ${classConfig.color} text-[10px] md:text-xs border-0`}>
+                      {classConfig.icon} {classConfig.label}
+                    </Badge>
+                  </td>
+                  <td className="px-3 md:px-4 py-2 md:py-3">
+                    <Badge className={`${getSlaColor(classConfig.sla)} text-[10px] md:text-xs border-0`}>
+                      {classConfig.sla}
+                    </Badge>
+                  </td>
+                  <td className="px-3 md:px-4 py-2 md:py-3">
                     <Badge className={`${getStatusConfig(lead.status).color} text-[10px] md:text-xs`}>
                       {getStatusConfig(lead.status).label}
                     </Badge>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

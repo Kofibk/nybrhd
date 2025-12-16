@@ -129,13 +129,13 @@ export const LEAD_SOURCES = [
 ] as const;
 
 export const LEAD_CLASSIFICATIONS = [
-  { value: "hot", label: "Hot Lead", icon: "🔥", color: "text-red-500", bgColor: "bg-red-500/10" },
-  { value: "star", label: "Star Quality", icon: "⭐", color: "text-yellow-500", bgColor: "bg-yellow-500/10" },
-  { value: "lightning", label: "High Intent", icon: "⚡", color: "text-blue-500", bgColor: "bg-blue-500/10" },
-  { value: "verified", label: "Verified", icon: "✓", color: "text-green-500", bgColor: "bg-green-500/10" },
-  { value: "dormant", label: "Dormant", icon: "💤", color: "text-gray-500", bgColor: "bg-gray-500/10" },
-  { value: "warning", label: "Warning", icon: "⚠️", color: "text-orange-500", bgColor: "bg-orange-500/10" },
-  { value: "cold", label: "Cold", icon: "❌", color: "text-slate-400", bgColor: "bg-slate-500/10" },
+  { value: "hot", label: "Hot Lead", icon: "🔥", color: "text-red-500", bgColor: "bg-red-500/10", sla: "1 hour" },
+  { value: "star", label: "Star Quality", icon: "⭐", color: "text-yellow-500", bgColor: "bg-yellow-500/10", sla: "4 hours" },
+  { value: "lightning", label: "High Intent", icon: "⚡", color: "text-blue-500", bgColor: "bg-blue-500/10", sla: "2 hours" },
+  { value: "verified", label: "Verified", icon: "✓", color: "text-green-500", bgColor: "bg-green-500/10", sla: "24 hours" },
+  { value: "dormant", label: "Dormant", icon: "💤", color: "text-gray-500", bgColor: "bg-gray-500/10", sla: "1 week" },
+  { value: "warning", label: "Warning", icon: "⚠️", color: "text-orange-500", bgColor: "bg-orange-500/10", sla: "24 hours" },
+  { value: "cold", label: "Cold", icon: "❌", color: "text-slate-400", bgColor: "bg-slate-500/10", sla: "Auto" },
 ] as const;
 
 export interface Lead {
