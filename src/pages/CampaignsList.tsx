@@ -4,9 +4,14 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
-import { Plus, Upload, Download, Calendar, ChevronDown } from "lucide-react";
+import { 
+  Plus, Upload, Download, Calendar, ChevronDown, ChevronRight,
+  TrendingUp, AlertCircle, CheckCircle, Pause, Play, Eye,
+  Lightbulb, Sparkles, Target, PoundSterling, Users, BarChart3
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,16 +28,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface CampaignsListProps {
   userType: UserRole;
@@ -55,8 +59,8 @@ interface DevelopmentGroup {
   totalSpend: number;
   totalLeads: number;
   avgCpl: number;
-  avgCtr: number;
   rating: 'excellent' | 'good' | 'acceptable' | 'poor';
+  aiRecommendation?: string;
 }
 
 // Development name mapping
@@ -90,51 +94,56 @@ const getCplRating = (cpl: number): 'excellent' | 'good' | 'acceptable' | 'poor'
   return 'poor';
 };
 
-// CPL color classes
-const getCplColorClass = (cpl: number): string => {
-  if (cpl < 20) return 'text-green-600 dark:text-green-400';
-  if (cpl <= 35) return 'text-green-500 dark:text-green-300';
-  if (cpl <= 50) return 'text-amber-500 dark:text-amber-400';
-  return 'text-red-500 dark:text-red-400';
+// Generate AI recommendation based on performance
+const generateAIRecommendation = (group: DevelopmentGroup, campaigns: Campaign[]): string | undefined => {
+  if (group.rating === 'excellent' || group.rating === 'good') return undefined;
+  
+  // Find worst performing campaign
+  const sortedByCpl = [...campaigns].sort((a, b) => b.cpl - a.cpl);
+  const worstCampaign = sortedByCpl[0];
+  const bestCampaign = sortedByCpl[sortedByCpl.length - 1];
+  
+  if (worstCampaign && worstCampaign.cpl > 50) {
+    const savingsEstimate = Math.round(worstCampaign.spent * 0.3);
+    return `Pause "${worstCampaign.name.slice(0, 30)}..." (£${Math.round(worstCampaign.cpl)} CPL), shift £${savingsEstimate} budget to ${bestCampaign ? `"${bestCampaign.name.slice(0, 20)}..." which is performing at £${Math.round(bestCampaign.cpl)} CPL` : 'better performing campaigns'}`;
+  }
+  
+  return `Review targeting for underperforming campaigns. Consider pausing ads with CPL above £50 and reallocating budget.`;
 };
 
-// Rating badge component
-const RatingBadge = ({ rating }: { rating: 'excellent' | 'good' | 'acceptable' | 'poor' }) => {
-  const config = {
-    excellent: { emoji: '🟢', label: 'Excellent', class: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-    good: { emoji: '🟢', label: 'Good', class: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300' },
-    acceptable: { emoji: '🟡', label: 'Acceptable', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
-    poor: { emoji: '🔴', label: 'Poor', class: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  };
-  
-  const { emoji, label, class: className } = config[rating];
-  
-  return (
-    <Badge variant="outline" className={cn("text-xs font-medium", className)}>
-      {emoji} {label}
-    </Badge>
-  );
+// Role-specific configuration
+const getRoleConfig = (userType: string) => {
+  switch (userType) {
+    case 'developer':
+      return { assetLabel: 'Development', assetLabelPlural: 'Developments' };
+    case 'agent':
+      return { assetLabel: 'Property', assetLabelPlural: 'Properties' };
+    case 'broker':
+      return { assetLabel: 'Product', assetLabelPlural: 'Products' };
+    default:
+      return { assetLabel: 'Development', assetLabelPlural: 'Developments' };
+  }
 };
 
 const CampaignsList = ({ userType }: CampaignsListProps) => {
   const navigate = useNavigate();
   const { campaignData } = useUploadedData(userType);
-  
+  const [performingExpanded, setPerformingExpanded] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [ratingFilter, setRatingFilter] = useState<string>("all");
-  const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
   });
 
-  // Process uploaded campaign data - exclude Audience Network
+  const roleConfig = getRoleConfig(userType);
+  const TARGET_CPL = 35;
+
+  // Process uploaded campaign data
   const allCampaigns = useMemo(() => {
     if (campaignData.length === 0) return [];
     
     return campaignData
       .filter((row) => {
-        // Exclude Audience Network platform
         const platform = (row.Platform || row.platform || '').toLowerCase();
         return !platform.includes('audience network');
       })
@@ -157,16 +166,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
         
         const platform = row.Platform || row.platform || 'Facebook';
 
-        return {
-          id: row.id || row.campaign_id || row['Campaign ID'] || `campaign_${index}`,
-          name,
-          status,
-          spent,
-          leads,
-          cpl,
-          startDate,
-          platform,
-        };
+        return { id: `campaign_${index}`, name, status, spent, leads, cpl, startDate, platform };
       });
   }, [campaignData]);
 
@@ -174,85 +174,81 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
   const filteredCampaigns = useMemo(() => {
     return allCampaigns.filter((campaign) => {
       const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
-      const matchesPlatform = platformFilter === "all" || 
-        campaign.platform.toLowerCase().includes(platformFilter.toLowerCase());
-      
       let matchesDate = true;
       if (dateRange.from || dateRange.to) {
         const campaignDate = new Date(campaign.startDate);
         if (dateRange.from && campaignDate < dateRange.from) matchesDate = false;
         if (dateRange.to && campaignDate > dateRange.to) matchesDate = false;
       }
-      
-      return matchesStatus && matchesPlatform && matchesDate;
+      return matchesStatus && matchesDate;
     });
-  }, [allCampaigns, statusFilter, platformFilter, dateRange]);
+  }, [allCampaigns, statusFilter, dateRange]);
 
-  // Group campaigns by development
-  const developmentGroups = useMemo(() => {
+  // Group and categorize campaigns
+  const { needsAttention, performingWell, overallStats } = useMemo(() => {
     const groups: Record<string, Campaign[]> = {};
     
     filteredCampaigns.forEach((campaign) => {
       const devName = getDevelopmentName(campaign.name);
-      if (devName === 'Thornton Road') return; // Exclude Thornton Road
-      
-      if (!groups[devName]) {
-        groups[devName] = [];
-      }
+      if (devName === 'Thornton Road') return;
+      if (!groups[devName]) groups[devName] = [];
       groups[devName].push(campaign);
     });
     
-    const groupedData: DevelopmentGroup[] = Object.entries(groups).map(([name, campaigns]) => {
+    const allGroups: DevelopmentGroup[] = Object.entries(groups).map(([name, campaigns]) => {
       const totalSpend = campaigns.reduce((sum, c) => sum + c.spent, 0);
       const totalLeads = campaigns.reduce((sum, c) => sum + c.leads, 0);
       const avgCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
-      const avgCtr = 1.5; // Placeholder CTR
+      const rating = getCplRating(avgCpl);
       
-      return {
-        name,
-        campaigns,
+      const group: DevelopmentGroup = { name, campaigns, totalSpend, totalLeads, avgCpl, rating };
+      group.aiRecommendation = generateAIRecommendation(group, campaigns);
+      
+      return group;
+    });
+
+    const needsAttention = allGroups.filter(g => g.rating === 'poor' || g.rating === 'acceptable').sort((a, b) => b.avgCpl - a.avgCpl);
+    const performingWell = allGroups.filter(g => g.rating === 'excellent' || g.rating === 'good').sort((a, b) => a.avgCpl - b.avgCpl);
+    
+    const totalSpend = allGroups.reduce((sum, g) => sum + g.totalSpend, 0);
+    const totalLeads = allGroups.reduce((sum, g) => sum + g.totalLeads, 0);
+    const avgCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
+    const efficiency = Math.min(100, Math.round((TARGET_CPL / Math.max(avgCpl, 1)) * 100));
+    
+    return {
+      needsAttention,
+      performingWell,
+      overallStats: {
         totalSpend,
         totalLeads,
         avgCpl,
-        avgCtr,
-        rating: getCplRating(avgCpl),
-      };
-    });
-    
-    // Filter by rating
-    const filteredByRating = ratingFilter === 'all' 
-      ? groupedData 
-      : groupedData.filter(g => g.rating === ratingFilter);
-    
-    // Sort by spend (highest first)
-    return filteredByRating.sort((a, b) => b.totalSpend - a.totalSpend);
-  }, [filteredCampaigns, ratingFilter]);
+        efficiency,
+        onTrack: performingWell.length,
+        attention: needsAttention.filter(g => g.rating === 'acceptable').length,
+        paused: needsAttention.filter(g => g.rating === 'poor').length,
+      }
+    };
+  }, [filteredCampaigns]);
 
-  // Get unique platforms for filter
-  const uniquePlatforms = useMemo(() => {
-    const platforms = new Set<string>();
-    allCampaigns.forEach(c => {
-      if (c.platform) platforms.add(c.platform);
-    });
-    return Array.from(platforms);
-  }, [allCampaigns]);
+  const handleApplyRecommendation = (group: DevelopmentGroup) => {
+    toast.success(`Applied AI recommendation for ${group.name}`);
+  };
+
+  const handlePauseAll = (group: DevelopmentGroup) => {
+    toast.success(`Paused all campaigns for ${group.name}`);
+  };
+
+  const handleViewDetails = (group: DevelopmentGroup) => {
+    toast.info(`Viewing details for ${group.name}`);
+  };
 
   const exportToCSV = () => {
-    const headers = ["Development", "Campaign", "Platform", "Spend", "Leads", "CPL", "Status", "Start Date"];
+    const headers = ["Development", "Campaign", "Platform", "Spend", "Leads", "CPL", "Status"];
     const rows: string[][] = [];
     
-    developmentGroups.forEach(group => {
+    [...needsAttention, ...performingWell].forEach(group => {
       group.campaigns.forEach(c => {
-        rows.push([
-          group.name,
-          c.name,
-          c.platform,
-          c.spent.toString(),
-          c.leads.toString(),
-          c.cpl.toFixed(2),
-          c.status,
-          c.startDate
-        ]);
+        rows.push([group.name, c.name, c.platform, c.spent.toString(), c.leads.toString(), c.cpl.toFixed(2), c.status]);
       });
     });
     
@@ -260,222 +256,342 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `campaigns_by_development_${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `campaigns_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
-    toast({ title: "Export successful", description: `${rows.length} campaigns exported.` });
+    toast.success(`${rows.length} campaigns exported`);
   };
 
-  const clearDateRange = () => {
-    setDateRange({ from: undefined, to: undefined });
-  };
+  // Empty state
+  if (allCampaigns.length === 0) {
+    return (
+      <DashboardLayout title="Campaigns" userType={userType}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Campaigns</h2>
+              <p className="text-muted-foreground text-sm">Manage your marketing campaigns</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Upload className="h-3.5 w-3.5 mr-1.5" />
+                Upload
+              </Button>
+              <Button size="sm" onClick={() => navigate(`/${userType}/campaigns/new`)}>
+                <Plus className="h-4 w-4 mr-1.5" />
+                Launch New
+              </Button>
+            </div>
+          </div>
+          <Card className="p-12 text-center">
+            <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">No Campaign Data</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Upload your campaign data CSV from the main dashboard to view performance and get AI recommendations.
+            </p>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Campaigns" userType={userType}>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 md:mb-4">
-        <div>
-          <h2 className="text-base md:text-lg font-semibold">Campaigns by Development</h2>
-          <p className="text-xs text-muted-foreground">
-            {allCampaigns.length > 0 
-              ? `${developmentGroups.length} developments, ${filteredCampaigns.length} campaigns`
-              : 'Upload campaign data from the dashboard to view campaigns'}
-          </p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Campaigns</h2>
+            <p className="text-muted-foreground text-sm">
+              {needsAttention.length + performingWell.length} {roleConfig.assetLabelPlural.toLowerCase()}, {filteredCampaigns.length} campaigns
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={exportToCSV}>
+              <Download className="h-3.5 w-3.5 mr-1.5" />
+              Export
+            </Button>
+            <Button size="sm" onClick={() => navigate(`/${userType}/campaigns/new`)}>
+              <Plus className="h-4 w-4 mr-1.5" />
+              Launch New
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={exportToCSV} variant="outline" size="sm" className="gap-2" disabled={allCampaigns.length === 0}>
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
-          <Button onClick={() => navigate(`/${userType}/campaigns/new`)} size="sm" className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Campaign
-          </Button>
-        </div>
-      </div>
 
-      {allCampaigns.length > 0 ? (
-        <Card className="shadow-card">
-          <CardHeader className="p-4 pb-2">
-            {/* Filters */}
-            <div className="flex flex-wrap gap-2">
-              <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                <SelectTrigger className="w-32 text-xs h-8">
-                  <SelectValue placeholder="Rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Ratings</SelectItem>
-                  <SelectItem value="excellent">🟢 Excellent</SelectItem>
-                  <SelectItem value="good">🟢 Good</SelectItem>
-                  <SelectItem value="acceptable">🟡 Acceptable</SelectItem>
-                  <SelectItem value="poor">🔴 Poor</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                <SelectTrigger className="w-32 text-xs h-8">
-                  <SelectValue placeholder="Platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Platforms</SelectItem>
-                  {uniquePlatforms.map(platform => (
-                    <SelectItem key={platform} value={platform}>{platform}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-2 text-xs">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {dateRange.from ? (
-                      dateRange.to ? (
-                        <>
-                          {format(dateRange.from, "dd/MM/yy")} - {format(dateRange.to, "dd/MM/yy")}
-                        </>
-                      ) : (
-                        format(dateRange.from, "dd/MM/yy")
-                      )
-                    ) : (
-                      "Date Range"
+        {/* Overall Health */}
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">OVERALL HEALTH</span>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Stats row */}
+            <div className="flex flex-wrap items-center gap-6 text-sm">
+              <div>
+                <span className="text-muted-foreground">Total Spend:</span>
+                <span className="font-semibold ml-1">£{overallStats.totalSpend.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Leads:</span>
+                <span className="font-semibold ml-1">{overallStats.totalLeads.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">CPL:</span>
+                <span className={cn(
+                  "font-semibold ml-1",
+                  overallStats.avgCpl <= TARGET_CPL ? "text-green-500" : overallStats.avgCpl <= 50 ? "text-amber-500" : "text-red-500"
+                )}>
+                  £{overallStats.avgCpl.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Efficiency bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {overallStats.efficiency}% efficient (target: £{TARGET_CPL})
+                </span>
+              </div>
+              <Progress 
+                value={overallStats.efficiency} 
+                className={cn(
+                  "h-2",
+                  overallStats.efficiency >= 80 ? "[&>div]:bg-green-500" : 
+                  overallStats.efficiency >= 60 ? "[&>div]:bg-amber-500" : "[&>div]:bg-red-500"
+                )}
+              />
+            </div>
+
+            {/* Status summary */}
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                <span>{overallStats.onTrack} {roleConfig.assetLabelPlural.toLowerCase()} on track</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span>{overallStats.attention} need attention</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                <span>{overallStats.paused} poor performance</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* 🔴 NEEDS ATTENTION */}
+        {needsAttention.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <h3 className="font-semibold">NEEDS ATTENTION</h3>
+              <Badge variant="destructive" className="ml-1">{needsAttention.length}</Badge>
+            </div>
+            
+            <div className="space-y-3">
+              {needsAttention.map((group) => (
+                <Card key={group.name} className="border-l-4 border-l-red-500 overflow-hidden">
+                  <div className="p-4">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold">{group.name}</span>
+                        <Badge variant="outline" className={cn(
+                          "text-xs",
+                          group.rating === 'poor' ? "bg-red-500/10 text-red-500 border-red-500/30" : 
+                          "bg-amber-500/10 text-amber-500 border-amber-500/30"
+                        )}>
+                          {group.rating === 'poor' ? '🔴' : '🟡'} £{Math.round(group.avgCpl)} CPL
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>£{group.totalSpend.toLocaleString()} spent</span>
+                        <span>→</span>
+                        <span>{group.totalLeads} leads</span>
+                        <span className="text-red-500">
+                          {Math.round(((group.avgCpl - TARGET_CPL) / TARGET_CPL) * 100)}% over target
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* AI Recommendation */}
+                    {group.aiRecommendation && (
+                      <div className="bg-muted/50 rounded-lg p-3 mb-3">
+                        <div className="flex items-start gap-2">
+                          <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                          <div>
+                            <span className="text-xs font-medium text-amber-600">AI Recommendation:</span>
+                            <p className="text-sm mt-0.5">{group.aiRecommendation}</p>
+                          </div>
+                        </div>
+                      </div>
                     )}
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <CalendarComponent
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange.from}
-                    selected={{ from: dateRange.from, to: dateRange.to }}
-                    onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-                    numberOfMonths={2}
-                  />
-                  {(dateRange.from || dateRange.to) && (
-                    <div className="p-2 border-t">
-                      <Button variant="ghost" size="sm" onClick={clearDateRange} className="w-full text-xs">
-                        Clear dates
+
+                    {/* Actions */}
+                    <div className="flex gap-2 flex-wrap">
+                      <Button size="sm" className="gap-1.5 bg-green-600 hover:bg-green-700" onClick={() => handleApplyRecommendation(group)}>
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Apply Changes
+                      </Button>
+                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleViewDetails(group)}>
+                        <Eye className="h-3.5 w-3.5" />
+                        View Details
+                      </Button>
+                      <Button size="sm" variant="outline" className="gap-1.5 text-red-500 hover:text-red-600" onClick={() => handlePauseAll(group)}>
+                        <Pause className="h-3.5 w-3.5" />
+                        Pause All
                       </Button>
                     </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-28 text-xs h-8">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="live">Live</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="p-4 pt-2">
-            {developmentGroups.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No campaigns match the selected filters</p>
-              </div>
-            ) : (
-              <Accordion type="multiple" className="space-y-3">
-                {developmentGroups.map((group) => (
-                  <AccordionItem 
-                    key={group.name} 
-                    value={group.name}
-                    className="border rounded-lg px-4 bg-card"
-                  >
-                    <AccordionTrigger className="hover:no-underline py-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2 sm:gap-4 pr-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-sm md:text-base">{group.name}</span>
-                          <RatingBadge rating={group.rating} />
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
-                          <span>
-                            <span className="font-medium text-foreground">£{group.totalSpend.toLocaleString()}</span> spent
-                          </span>
-                          <span>
-                            <span className="font-medium text-foreground">{group.totalLeads.toLocaleString()}</span> leads
-                          </span>
-                          <span>
-                            CPL: <span className={cn("font-medium", getCplColorClass(group.avgCpl))}>
-                              £{group.avgCpl.toFixed(2)}
-                            </span>
-                          </span>
-                          <span className="text-muted-foreground/60">
-                            {group.campaigns.length} campaign{group.campaigns.length !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="overflow-x-auto -mx-4 px-4 pb-4">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="text-xs">Campaign Name</TableHead>
-                              <TableHead className="text-xs">Platform</TableHead>
-                              <TableHead className="text-xs text-right">Spend</TableHead>
-                              <TableHead className="text-xs text-center">Leads</TableHead>
-                              <TableHead className="text-xs text-right">CPL</TableHead>
+                  </div>
+
+                  {/* Campaign breakdown */}
+                  <div className="border-t bg-muted/20 px-4 py-2">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="text-xs h-8">Campaign</TableHead>
+                            <TableHead className="text-xs h-8">Platform</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Spend</TableHead>
+                            <TableHead className="text-xs h-8 text-center">Leads</TableHead>
+                            <TableHead className="text-xs h-8 text-right">CPL</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.campaigns.slice(0, 5).map((campaign) => (
+                            <TableRow key={campaign.id} className="hover:bg-muted/30">
+                              <TableCell className="text-xs py-2 max-w-[200px] truncate">{campaign.name}</TableCell>
+                              <TableCell className="text-xs py-2">{campaign.platform}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">£{campaign.spent.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-center">{campaign.leads}</TableCell>
+                              <TableCell className={cn(
+                                "text-xs py-2 text-right font-medium",
+                                campaign.cpl > 50 ? "text-red-500" : campaign.cpl > 35 ? "text-amber-500" : "text-green-500"
+                              )}>
+                                £{campaign.cpl.toFixed(0)}
+                              </TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {group.campaigns.map((campaign) => (
-                              <TableRow 
-                                key={campaign.id}
-                                className="cursor-pointer hover:bg-muted/50"
-                                onClick={() => navigate(`/${userType}/campaigns/${campaign.id}`)}
-                              >
-                                <TableCell className="text-xs md:text-sm">
-                                  <div>
-                                    <p className="font-medium truncate max-w-[200px] sm:max-w-none">{campaign.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {new Date(campaign.startDate).toLocaleDateString('en-GB')}
-                                    </p>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-xs md:text-sm">
-                                  <Badge variant="outline" className="text-xs">
-                                    {campaign.platform}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-xs md:text-sm text-right">
-                                  £{campaign.spent.toLocaleString()}
-                                </TableCell>
-                                <TableCell className="text-xs md:text-sm text-center">
-                                  {campaign.leads}
-                                </TableCell>
-                                <TableCell className={cn("text-xs md:text-sm text-right font-medium", getCplColorClass(campaign.cpl))}>
-                                  {campaign.cpl > 0 ? `£${campaign.cpl.toFixed(2)}` : '-'}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 🟢 PERFORMING WELL - Collapsible */}
+        {performingWell.length > 0 && (
+          <Collapsible open={performingExpanded} onOpenChange={setPerformingExpanded}>
+            <div className="space-y-3">
+              <CollapsibleTrigger asChild>
+                <div className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-2">
+                    {performingExpanded ? (
+                      <ChevronDown className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-green-500" />
+                    )}
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <h3 className="font-semibold">PERFORMING WELL</h3>
+                    <Badge variant="secondary" className="ml-1 bg-green-500/20 text-green-600">{performingWell.length}</Badge>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    {performingExpanded ? 'Collapse' : 'View all'}
+                  </Button>
+                </div>
+              </CollapsibleTrigger>
+
+              {!performingExpanded && (
+                <Card className="border-l-4 border-l-green-500">
+                  <div className="divide-y divide-border">
+                    {performingWell.map((group) => (
+                      <div key={group.name} className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{group.name}</span>
+                          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 text-xs">
+                            🟢 £{Math.round(group.avgCpl)} CPL
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>£{group.totalSpend.toLocaleString()}</span>
+                          <span>→</span>
+                          <span>{group.totalLeads} leads</span>
+                        </div>
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              <CollapsibleContent className="space-y-3">
+                {performingWell.map((group) => (
+                  <Card key={group.name} className="border-l-4 border-l-green-500">
+                    <div className="p-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold">{group.name}</span>
+                          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 text-xs">
+                            🟢 £{Math.round(group.avgCpl)} CPL
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>£{group.totalSpend.toLocaleString()} spent</span>
+                          <span>→</span>
+                          <span>{group.totalLeads} leads</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleViewDetails(group)}>
+                          <Eye className="h-3.5 w-3.5" />
+                          View Details
+                        </Button>
+                        <Button size="sm" variant="outline" className="gap-1.5">
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          Scale Up
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border-t bg-muted/20 px-4 py-2">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="text-xs h-8">Campaign</TableHead>
+                            <TableHead className="text-xs h-8">Platform</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Spend</TableHead>
+                            <TableHead className="text-xs h-8 text-center">Leads</TableHead>
+                            <TableHead className="text-xs h-8 text-right">CPL</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.campaigns.map((campaign) => (
+                            <TableRow key={campaign.id} className="hover:bg-muted/30">
+                              <TableCell className="text-xs py-2 max-w-[200px] truncate">{campaign.name}</TableCell>
+                              <TableCell className="text-xs py-2">{campaign.platform}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">£{campaign.spent.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-center">{campaign.leads}</TableCell>
+                              <TableCell className="text-xs py-2 text-right font-medium text-green-500">
+                                £{campaign.cpl.toFixed(0)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
                 ))}
-              </Accordion>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="p-8 md:p-12 text-center">
-          <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Campaign Data</h3>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Upload your campaign data CSV from the main dashboard to view and analyse your campaigns here.
-          </p>
-          <Button onClick={() => navigate(`/${userType}`)}>
-            Go to Dashboard
-          </Button>
-        </Card>
-      )}
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        )}
+      </div>
     </DashboardLayout>
   );
 };
