@@ -89,6 +89,21 @@ export function useMasterAgent() {
     );
   };
 
+  const getCampaignRecommendations = async (context?: MasterAgentContext) => {
+    return askAgent(
+      `Analyse these campaigns and for each development/group that is underperforming (CPL > £35), provide:
+1. A specific, actionable recommendation (max 2 sentences)
+2. The exact budget shift or action to take
+3. Expected savings or improvement
+
+Format your response as JSON array:
+[{"development": "name", "recommendation": "specific action", "savings": "£X", "priority": "high|medium"}]
+
+Focus only on campaigns that need attention. Be specific about which campaigns to pause and where to reallocate budget.`,
+      context
+    );
+  };
+
   return { 
     askAgent, 
     getDailyBriefing,
@@ -97,6 +112,7 @@ export function useMasterAgent() {
     getPipelineForecast,
     getMarketInsights,
     getBudgetRecommendations,
+    getCampaignRecommendations,
     isLoading, 
     error 
   };
