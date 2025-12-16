@@ -223,7 +223,7 @@ const AttributionInsightsWidget = ({
           </div>
         </div>
 
-        {/* Budget Shift Visualization */}
+        {/* Budget Shift Visualisation */}
         {currentInsight.budgetShiftSuggestion && (
           <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 mb-3">
             <p className="text-[10px] text-muted-foreground uppercase mb-2">Suggested Budget Shift</p>

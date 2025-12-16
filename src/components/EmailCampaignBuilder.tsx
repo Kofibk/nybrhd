@@ -246,7 +246,7 @@ const EmailCampaignBuilder = () => {
         </Card>
       )}
 
-      {/* Personalization Tokens */}
+      {/* Personalisation Tokens */}
       <Card className="p-6 bg-muted/30">
         <h3 className="font-semibold mb-3">Personalisation Tokens</h3>
         <p className="text-sm text-muted-foreground mb-4">

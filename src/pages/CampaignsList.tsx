@@ -191,7 +191,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     });
   }, [allCampaigns, statusFilter, dateRange]);
 
-  // Group and categorize campaigns
+  // Group and categorise campaigns
   const { needsAttention, performingWell, overallStats } = useMemo(() => {
     const groups: Record<string, Campaign[]> = {};
     
