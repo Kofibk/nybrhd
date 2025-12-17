@@ -171,7 +171,7 @@ const AnalyticsDashboard = ({ userType = 'admin' }: AnalyticsDashboardProps) => 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col min-h-0 space-y-6 overflow-auto">
       {/* Filters Bar */}
       <Card className="p-3 md:p-4 shadow-card">
         <div className="flex flex-col gap-3">

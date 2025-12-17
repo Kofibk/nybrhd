@@ -42,7 +42,7 @@ const Settings = ({ userType }: SettingsProps) => {
 
   return (
     <DashboardLayout title="Settings" userType={userType}>
-      <Tabs defaultValue="company" className="space-y-4 md:space-y-6">
+      <Tabs defaultValue="company" className="h-full flex flex-col min-h-0">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 md:max-w-3xl">
             <TabsTrigger value="company" className="text-xs md:text-sm whitespace-nowrap">Company Info</TabsTrigger>
@@ -53,8 +53,9 @@ const Settings = ({ userType }: SettingsProps) => {
           </TabsList>
         </div>
 
+        <div className="flex-1 min-h-0 overflow-auto mt-4 md:mt-6">
         {/* Company Info Tab */}
-        <TabsContent value="company">
+        <TabsContent value="company" className="mt-0">
           <Card className="p-4 md:p-6 shadow-card">
             <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
               <Building2 className="h-5 w-5 md:h-6 md:w-6 text-primary" />
@@ -240,6 +241,7 @@ const Settings = ({ userType }: SettingsProps) => {
             </Card>
           </div>
         </TabsContent>
+        </div>
       </Tabs>
     </DashboardLayout>
   );
