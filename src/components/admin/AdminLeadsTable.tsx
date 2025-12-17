@@ -792,7 +792,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
         <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
           <div className="overflow-auto h-full">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="w-12 pl-4">
                     <Checkbox
