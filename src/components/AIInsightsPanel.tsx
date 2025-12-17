@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
+import { Sparkles, RefreshCw, Loader2, ChevronRight, Lightbulb, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -18,21 +17,19 @@ interface AIInsightsPanelProps {
 
 interface Insight {
   type: 'action' | 'warning' | 'opportunity' | 'success';
-  title: string;
-  description: string;
+  text: string;
 }
 
 const contextPrompts: Record<string, string> = {
-  leads: 'Analyse the lead data and provide 3-4 actionable insights: identify hot leads to contact immediately, leads at risk of going cold, and any patterns in lead quality. Keep each insight to 1-2 sentences.',
-  campaigns: 'Analyse the campaign data and provide 3-4 actionable insights: identify underperforming campaigns to pause, budget reallocation opportunities, and which campaigns are performing well. Keep each insight to 1-2 sentences.',
-  analytics: 'Provide a strategic overview with 3-4 key insights: overall performance trends, areas needing attention, opportunities for improvement, and wins to celebrate. Keep each insight to 1-2 sentences.',
+  leads: 'Analyse the lead data and provide exactly 3 brief insights (max 15 words each): 1) Most urgent action needed, 2) A key pattern or risk, 3) Quick win opportunity.',
+  campaigns: 'Analyse the campaign data and provide exactly 3 brief insights (max 15 words each): 1) Biggest budget issue, 2) Best performing element, 3) Quick optimisation.',
+  analytics: 'Provide exactly 3 brief strategic insights (max 15 words each): 1) Key trend, 2) Area needing attention, 3) Top opportunity.',
 };
 
 export function AIInsightsPanel({ context, data, className }: AIInsightsPanelProps) {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const hasData = (data.campaigns?.length || 0) > 0 || (data.leads?.length || 0) > 0;
 
@@ -45,8 +42,8 @@ export function AIInsightsPanel({ context, data, className }: AIInsightsPanelPro
         body: {
           query: contextPrompts[context],
           context: {
-            leads: data.leads?.slice(0, 15),
-            campaigns: data.campaigns?.slice(0, 10),
+            leads: data.leads?.slice(0, 10),
+            campaigns: data.campaigns?.slice(0, 8),
           }
         }
       });
@@ -58,151 +55,88 @@ export function AIInsightsPanel({ context, data, className }: AIInsightsPanelPro
         return;
       }
 
-      // Parse the response into structured insights
       const parsedInsights = parseInsights(response?.response || '');
       setInsights(parsedInsights);
-      setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to fetch AI insights:', error);
-      toast.error('Failed to load AI insights');
     } finally {
       setIsLoading(false);
     }
   };
 
   const parseInsights = (text: string): Insight[] => {
-    // Split by common patterns (numbered lists, bullets, or double newlines)
-    const sections = text.split(/(?:\d+\.\s|\n-\s|\n\n)/).filter(s => s.trim());
+    const lines = text.split(/(?:\d+[\.\)]\s*|\n[-•]\s*|\n\n)/).filter(s => s.trim());
     
-    return sections.slice(0, 4).map(section => {
-      const lowerSection = section.toLowerCase();
+    return lines.slice(0, 3).map(line => {
+      const lower = line.toLowerCase();
       let type: Insight['type'] = 'opportunity';
       
-      if (lowerSection.includes('urgent') || lowerSection.includes('immediately') || lowerSection.includes('contact')) {
+      if (lower.includes('urgent') || lower.includes('contact') || lower.includes('call')) {
         type = 'action';
-      } else if (lowerSection.includes('warning') || lowerSection.includes('risk') || lowerSection.includes('underperform') || lowerSection.includes('pause')) {
+      } else if (lower.includes('risk') || lower.includes('pause') || lower.includes('underperform')) {
         type = 'warning';
-      } else if (lowerSection.includes('excellent') || lowerSection.includes('well') || lowerSection.includes('success') || lowerSection.includes('strong')) {
+      } else if (lower.includes('excellent') || lower.includes('strong') || lower.includes('performing well')) {
         type = 'success';
       }
 
-      // Extract title (first sentence) and description (rest)
-      const sentences = section.split(/(?<=[.!?])\s+/);
-      const title = sentences[0]?.trim() || section.substring(0, 50);
-      const description = sentences.slice(1).join(' ').trim() || '';
-
-      return { type, title, description };
+      return { type, text: line.trim().slice(0, 80) };
     });
   };
 
-  // Auto-fetch on mount if we have data
   useEffect(() => {
     if (hasData && insights.length === 0 && !isLoading) {
       fetchInsights();
     }
   }, [hasData]);
 
-  const getInsightIcon = (type: Insight['type']) => {
+  const getIcon = (type: Insight['type']) => {
+    const iconClass = "h-3 w-3";
     switch (type) {
-      case 'action': return <Lightbulb className="h-4 w-4 text-primary" />;
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-warning" />;
-      case 'opportunity': return <TrendingUp className="h-4 w-4 text-blue-500" />;
-      case 'success': return <CheckCircle className="h-4 w-4 text-success" />;
+      case 'action': return <Lightbulb className={cn(iconClass, "text-primary")} />;
+      case 'warning': return <AlertTriangle className={cn(iconClass, "text-amber-500")} />;
+      case 'opportunity': return <TrendingUp className={cn(iconClass, "text-blue-500")} />;
+      case 'success': return <CheckCircle className={cn(iconClass, "text-green-500")} />;
     }
   };
 
-  const getInsightBadge = (type: Insight['type']) => {
-    switch (type) {
-      case 'action': return <Badge variant="default" className="text-xs">Action</Badge>;
-      case 'warning': return <Badge variant="destructive" className="text-xs">Attention</Badge>;
-      case 'opportunity': return <Badge variant="secondary" className="text-xs">Opportunity</Badge>;
-      case 'success': return <Badge className="bg-success/10 text-success text-xs">Win</Badge>;
-    }
-  };
-
-  if (!hasData) {
-    return null;
-  }
+  if (!hasData) return null;
 
   return (
-    <Card className={cn("shadow-card", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-            <CardTitle className="text-sm font-semibold">AI Insights</CardTitle>
-            {lastUpdated && (
-              <span className="text-xs text-muted-foreground">
-                Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={fetchInsights}
-              disabled={isLoading}
-              className="h-8 w-8 p-0"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="h-8 w-8 p-0"
-            >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
+    <div className={cn("flex items-center gap-2 py-2 px-3 bg-muted/30 rounded-lg border border-border/50", className)}>
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Sparkles className="h-3.5 w-3.5 text-primary" />
+        <span>AI</span>
+      </div>
       
-      {isExpanded && (
-        <CardContent className="pt-2">
-          {isLoading && insights.length === 0 ? (
-            <div className="flex items-center justify-center py-6 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              <span className="text-sm">Analysing your data...</span>
+      <div className="h-4 w-px bg-border" />
+      
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>Analysing...</span>
+        </div>
+      ) : insights.length > 0 ? (
+        <div className="flex-1 flex items-center gap-3 overflow-x-auto">
+          {insights.map((insight, i) => (
+            <div key={i} className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+              {getIcon(insight.type)}
+              <span className="text-foreground/80">{insight.text}</span>
             </div>
-          ) : insights.length > 0 ? (
-            <div className="grid gap-3">
-              {insights.map((insight, index) => (
-                <div 
-                  key={index} 
-                  className="flex gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
-                >
-                  <div className="mt-0.5">{getInsightIcon(insight.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {getInsightBadge(insight.type)}
-                    </div>
-                    <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                    {insight.description && (
-                      <p className="text-xs text-muted-foreground mt-1">{insight.description}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground mb-3">Click refresh to generate AI insights</p>
-              <Button variant="outline" size="sm" onClick={fetchInsights}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate Insights
-              </Button>
-            </div>
-          )}
-        </CardContent>
+          ))}
+        </div>
+      ) : (
+        <span className="text-xs text-muted-foreground">Click refresh for insights</span>
       )}
-    </Card>
+      
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={fetchInsights}
+        disabled={isLoading}
+        className="h-6 w-6 p-0 ml-auto"
+      >
+        <RefreshCw className={cn("h-3 w-3", isLoading && "animate-spin")} />
+      </Button>
+    </div>
   );
 }
