@@ -6,8 +6,8 @@ const AdminLeadsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <section aria-label="Admin leads">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section aria-label="Admin leads" className="h-full flex flex-col min-h-0">
+      <div className="mb-4 flex items-center justify-between gap-3 flex-shrink-0">
         <div className="min-w-0">
           <h1 className="sr-only">Admin leads</h1>
         </div>
@@ -21,7 +21,9 @@ const AdminLeadsPage = () => {
         </div>
       </div>
 
-      <AdminLeadsTable searchQuery={searchQuery} />
+      <div className="flex-1 min-h-0">
+        <AdminLeadsTable searchQuery={searchQuery} />
+      </div>
     </section>
   );
 };

@@ -476,8 +476,8 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
 
   return (
     <>
-      <Card className="border-border/50">
-        <CardHeader className="px-4 py-4 sm:px-6">
+      <Card className="border-border/50 h-full flex flex-col">
+        <CardHeader className="px-4 py-4 sm:px-6 flex-shrink-0">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle className="text-lg font-semibold">
@@ -789,8 +789,8 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
+        <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
+          <div className="overflow-auto h-full">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">

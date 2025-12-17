@@ -131,17 +131,17 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   return (
     <>
       <ProductTour userType={userType} />
-      <div className="min-h-screen bg-background flex w-full">
+      <div className="h-screen bg-background flex w-full overflow-hidden">
         {/* Desktop Sidebar */}
         <aside 
-          className="hidden lg:flex flex-col w-64"
+          className="hidden lg:flex flex-col w-64 flex-shrink-0"
         >
           <SidebarContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          <header className="bg-card border-b border-border p-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <header className="bg-card border-b border-border p-4 flex items-center gap-4 flex-shrink-0 shadow-sm">
             {/* Mobile Menu */}
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild className="lg:hidden">
@@ -160,7 +160,7 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
             </div>
           </header>
           
-          <div className="p-4 md:p-6">
+          <div className="flex-1 overflow-auto p-4 md:p-6">
             {children}
           </div>
         </main>
