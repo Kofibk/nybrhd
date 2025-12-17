@@ -10,24 +10,27 @@ import {
   Loader2, 
   AlertCircle, 
   Flame,
-  Clock,
   PoundSterling,
   CheckCircle,
   Upload,
   TrendingUp,
+  TrendingDown,
   Users,
   MessageSquare,
   Phone,
   Calendar,
   MessageCircle,
   Eye,
-  X,
   ArrowUp,
+  ArrowDown,
   Target,
   Database,
   Lightbulb,
-  BarChart3,
-  Bot
+  Bot,
+  Zap,
+  Star,
+  ThermometerSun,
+  Snowflake
 } from 'lucide-react';
 import { useMasterAgent, MasterAgentContext } from '@/hooks/useMasterAgent';
 import { useUploadedData } from '@/contexts/DataContext';
@@ -44,6 +47,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  Legend
+} from 'recharts';
 
 interface Message {
   role: 'user' | 'agent';
@@ -62,6 +82,7 @@ interface ActionLead {
   email?: string;
   phone?: string;
   reason: string;
+  classification: string;
 }
 
 interface CampaignAlert {
@@ -79,64 +100,48 @@ interface AIAgentDashboardProps {
 }
 
 const getRoleConfig = (userType: string) => {
-  switch (userType) {
-    case 'developer':
-      return {
-        assetLabel: 'Development',
-        primaryAction: 'Book Viewing',
-        primaryActionIcon: Calendar,
-        leadsPath: '/developer/leads',
-        campaignsPath: '/developer/campaigns',
-        performanceMetrics: {
-          col1: { label: 'Buyers', icon: Users },
-          col2: { label: 'Viewings', icon: Calendar },
-          col3: { label: 'Reservations', icon: CheckCircle },
-          col4: { label: 'Pipeline', icon: PoundSterling },
-        }
-      };
-    case 'agent':
-      return {
-        assetLabel: 'Property',
-        primaryAction: 'Book Viewing',
-        primaryActionIcon: Calendar,
-        leadsPath: '/agent/leads',
-        campaignsPath: '/agent/campaigns',
-        performanceMetrics: {
-          col1: { label: 'Leads', icon: Users },
-          col2: { label: 'Viewings', icon: Calendar },
-          col3: { label: 'Offers', icon: Target },
-          col4: { label: 'Pipeline', icon: PoundSterling },
-        }
-      };
-    case 'broker':
-      return {
-        assetLabel: 'Product',
-        primaryAction: 'Book Consultation',
-        primaryActionIcon: Calendar,
-        leadsPath: '/broker/leads',
-        campaignsPath: '/broker/campaigns',
-        performanceMetrics: {
-          col1: { label: 'Clients', icon: Users },
-          col2: { label: 'Consultations', icon: Calendar },
-          col3: { label: 'Applications', icon: CheckCircle },
-          col4: { label: 'Loan Value', icon: PoundSterling },
-        }
-      };
-    default:
-      return {
-        assetLabel: 'Development',
-        primaryAction: 'Book Viewing',
-        primaryActionIcon: Calendar,
-        leadsPath: '/admin/leads',
-        campaignsPath: '/admin/campaigns',
-        performanceMetrics: {
-          col1: { label: 'Leads', icon: Users },
-          col2: { label: 'Viewings', icon: Calendar },
-          col3: { label: 'Offers', icon: Target },
-          col4: { label: 'Pipeline', icon: PoundSterling },
-        }
-      };
-  }
+  const configs: Record<string, any> = {
+    developer: {
+      primaryAction: 'Book Viewing',
+      primaryActionIcon: Calendar,
+      leadsPath: '/developer/leads',
+      campaignsPath: '/developer/campaigns',
+      metrics: { col1: 'Buyers', col2: 'Viewings', col3: 'Reservations', col4: 'Pipeline' }
+    },
+    agent: {
+      primaryAction: 'Book Viewing',
+      primaryActionIcon: Calendar,
+      leadsPath: '/agent/leads',
+      campaignsPath: '/agent/campaigns',
+      metrics: { col1: 'Leads', col2: 'Viewings', col3: 'Offers', col4: 'Pipeline' }
+    },
+    broker: {
+      primaryAction: 'Book Consultation',
+      primaryActionIcon: Calendar,
+      leadsPath: '/broker/leads',
+      campaignsPath: '/broker/campaigns',
+      metrics: { col1: 'Clients', col2: 'Consultations', col3: 'Applications', col4: 'Loan Value' }
+    },
+    admin: {
+      primaryAction: 'Book Viewing',
+      primaryActionIcon: Calendar,
+      leadsPath: '/admin/leads',
+      campaignsPath: '/admin/campaigns',
+      metrics: { col1: 'Leads', col2: 'Viewings', col3: 'Offers', col4: 'Pipeline' }
+    }
+  };
+  return configs[userType] || configs.admin;
+};
+
+const CHART_COLORS = ['hsl(var(--primary))', 'hsl(142, 76%, 36%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)', 'hsl(262, 83%, 58%)'];
+const CLASSIFICATION_COLORS = {
+  hot: '#ef4444',
+  star: '#eab308',
+  lightning: '#3b82f6',
+  valid: '#22c55e',
+  cold: '#94a3b8',
+  warning: '#f97316',
+  disqualified: '#6b7280'
 };
 
 export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) {
@@ -166,145 +171,181 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const greeting = currentDate.getHours() < 12 ? 'Good morning' : currentDate.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const dateString = currentDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
 
-  // Auto-scroll chat
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // Fetch AI recommendations when data changes
   useEffect(() => {
-    if (leadData.length > 0 || campaignData.length > 0) {
-      fetchRecommendations();
-    }
+    if (leadData.length > 0 || campaignData.length > 0) fetchRecommendations();
   }, [leadData.length, campaignData.length]);
 
   const fetchRecommendations = async () => {
     setLoadingRecommendations(true);
     try {
-      const response = await askAgent(
-        "Give me 3 brief, actionable recommendations based on the current data. Format as short bullet points.",
-        buildContext()
-      );
+      const response = await askAgent("Give me 3 brief, actionable recommendations. Format as short bullet points.", buildContext());
       if (response?.response) {
-        const recs = response.response
-          .split('\n')
-          .filter(line => line.trim().startsWith('-') || line.trim().startsWith('•') || line.trim().match(/^\d+\./))
+        const recs = response.response.split('\n')
+          .filter(line => line.trim().match(/^[-•\d.]/))
           .map(line => line.replace(/^[-•\d.]+\s*/, '').trim())
-          .filter(line => line.length > 0)
-          .slice(0, 3);
+          .filter(line => line.length > 0).slice(0, 3);
         setAiRecommendations(recs.length > 0 ? recs : [response.response.slice(0, 150)]);
       }
-    } catch (err) {
-      console.error('Failed to fetch recommendations:', err);
-    } finally {
-      setLoadingRecommendations(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoadingRecommendations(false); }
   };
 
-  const buildContext = (): MasterAgentContext => {
-    const context: MasterAgentContext = {};
-    if (leadData?.length > 0) context.leads = leadData;
-    if (campaignData?.length > 0) context.campaigns = campaignData;
-    return context;
-  };
+  const buildContext = (): MasterAgentContext => ({
+    ...(leadData?.length > 0 && { leads: leadData }),
+    ...(campaignData?.length > 0 && { campaigns: campaignData })
+  });
 
-  // Extract hot leads
-  const actionLeads: ActionLead[] = React.useMemo(() => {
-    if (leadData.length === 0) return [];
-    return leadData
-      .map((lead, idx) => {
-        const name = lead['Lead Name'] || lead.name || `Lead ${idx + 1}`;
-        const qualityScore = parseInt(lead.Score || lead.score || '50');
-        const intentText = (lead.Intent || lead.intent || '').toString().toLowerCase();
-        let intentScore = qualityScore;
-        if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(qualityScore, 80);
-        else if (intentText === 'warm') intentScore = Math.max(qualityScore, 60);
-        const classification = classifyLead(intentScore, qualityScore);
-        return {
-          id: lead['Lead ID'] || `lead_${idx}`,
-          name,
-          development: lead['Source Campaign'] || lead['Development'] || 'General Enquiry',
-          budget: lead['Budget Range'] || lead.budget || 'Not specified',
-          qualityScore,
-          intentScore,
-          timeline: lead['Timeline to Purchase'] || lead.timeline || 'Not specified',
-          email: lead.Email || lead.email || '',
-          phone: lead['Phone Number'] || lead.phone || '',
-          reason: classification === 'hot' ? 'Viewing ready' : 
-                  classification === 'star' ? 'High quality' :
-                  classification === 'lightning' ? 'High intent' : 'Needs attention',
-          classification
-        };
-      })
-      .filter(lead => ['hot', 'star', 'lightning'].includes((lead as any).classification))
-      .slice(0, 4);
+  // Process lead classifications
+  const leadClassifications = React.useMemo(() => {
+    const counts = { hot: 0, star: 0, lightning: 0, valid: 0, cold: 0, warning: 0, disqualified: 0 };
+    leadData.forEach(lead => {
+      const qualityScore = parseInt(lead.Score || lead.score || '50');
+      const intentText = (lead.Intent || lead.intent || '').toString().toLowerCase();
+      let intentScore = qualityScore;
+      if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(qualityScore, 80);
+      else if (intentText === 'warm') intentScore = Math.max(qualityScore, 60);
+      const classification = classifyLead(intentScore, qualityScore);
+      if (counts[classification as keyof typeof counts] !== undefined) {
+        counts[classification as keyof typeof counts]++;
+      }
+    });
+    return counts;
   }, [leadData]);
 
-  // Extract campaign alerts
-  const campaignAlerts: CampaignAlert[] = React.useMemo(() => {
-    if (campaignData.length === 0) return [];
-    return campaignData
-      .map((campaign, idx) => {
-        const spend = parseFloat(campaign['Amount spent (GBP)'] || campaign.spend || 0);
-        const results = parseFloat(campaign.Results || campaign.results || 1);
-        const cpl = spend / Math.max(results, 1);
-        const name = campaign['Campaign name'] || campaign.name || `Campaign ${idx + 1}`;
-        if (cpl > 50) {
-          return {
-            id: `alert_${idx}`,
-            name,
-            issue: 'CPL above target',
-            currentValue: `£${Math.round(cpl)}`,
-            targetValue: '£35',
-            recommendation: `Pause and reallocate budget`,
-            savings: `£${Math.round(spend * 0.3)}`
-          };
-        }
-        return null;
-      })
-      .filter(Boolean)
-      .slice(0, 2) as CampaignAlert[];
+  // Lead classification chart data
+  const classificationChartData = React.useMemo(() => [
+    { name: 'Hot', value: leadClassifications.hot, icon: Flame, color: CLASSIFICATION_COLORS.hot },
+    { name: 'Quality', value: leadClassifications.star, icon: Star, color: CLASSIFICATION_COLORS.star },
+    { name: 'High Intent', value: leadClassifications.lightning, icon: Zap, color: CLASSIFICATION_COLORS.lightning },
+    { name: 'Valid', value: leadClassifications.valid, icon: CheckCircle, color: CLASSIFICATION_COLORS.valid },
+    { name: 'Cold', value: leadClassifications.cold, icon: Snowflake, color: CLASSIFICATION_COLORS.cold },
+  ].filter(d => d.value > 0), [leadClassifications]);
+
+  // Lead score distribution
+  const scoreDistribution = React.useMemo(() => {
+    const ranges = [
+      { range: '0-20', min: 0, max: 20, count: 0 },
+      { range: '21-40', min: 21, max: 40, count: 0 },
+      { range: '41-60', min: 41, max: 60, count: 0 },
+      { range: '61-80', min: 61, max: 80, count: 0 },
+      { range: '81-100', min: 81, max: 100, count: 0 },
+    ];
+    leadData.forEach(lead => {
+      const score = parseInt(lead.Score || lead.score || '50');
+      const range = ranges.find(r => score >= r.min && score <= r.max);
+      if (range) range.count++;
+    });
+    return ranges;
+  }, [leadData]);
+
+  // Campaign performance data
+  const campaignPerformance = React.useMemo(() => {
+    return campaignData.slice(0, 8).map((c, i) => {
+      const spend = parseFloat(c['Amount spent (GBP)'] || c.spend || 0);
+      const results = parseFloat(c.Results || c.results || 0);
+      const cpl = results > 0 ? spend / results : 0;
+      return {
+        name: (c['Campaign name'] || c.name || `Campaign ${i + 1}`).slice(0, 15),
+        spend: Math.round(spend),
+        leads: results,
+        cpl: Math.round(cpl)
+      };
+    });
   }, [campaignData]);
 
-  // Weekly performance
-  const weeklyPerformance = React.useMemo(() => {
-    const totalLeads = leadData.length;
-    const hotLeads = leadData.filter(l => parseInt(l.Score || l.score || '0') >= 70).length;
-    const viewings = leadData.filter(l => (l.Status || l.status || '').toLowerCase().includes('viewing')).length;
-    const offers = leadData.filter(l => (l.Status || l.status || '').toLowerCase().includes('offer')).length;
-    const pipelineValue = leadData.reduce((acc, lead) => {
-      const budget = lead['Budget Range'] || lead.budget || '';
-      const match = budget.match(/[\d,]+/g);
-      if (match) {
-        const value = parseInt(match[0].replace(/,/g, ''));
-        return acc + (isNaN(value) ? 0 : value);
-      }
-      return acc;
-    }, 0);
-    return {
-      leads: { value: totalLeads, change: Math.floor(totalLeads * 0.25) },
-      viewings: { value: viewings, change: Math.floor(viewings * 0.4) },
-      offers: { value: offers, change: Math.floor(offers * 0.5) },
-      pipeline: { value: pipelineValue, change: Math.floor(pipelineValue * 0.15) }
-    };
+  // Lead source breakdown
+  const leadSources = React.useMemo(() => {
+    const sources: Record<string, number> = {};
+    leadData.forEach(lead => {
+      const source = lead['Source'] || lead['Source Campaign'] || lead.source || 'Direct';
+      const key = source.toLowerCase().includes('meta') ? 'Meta' :
+                  source.toLowerCase().includes('google') ? 'Google' :
+                  source.toLowerCase().includes('rightmove') ? 'Rightmove' :
+                  source.toLowerCase().includes('zoopla') ? 'Zoopla' : 'Other';
+      sources[key] = (sources[key] || 0) + 1;
+    });
+    return Object.entries(sources).map(([name, value]) => ({ name, value }));
   }, [leadData]);
 
+  // Timeline distribution
+  const timelineDistribution = React.useMemo(() => {
+    const timelines: Record<string, number> = {};
+    leadData.forEach(lead => {
+      const timeline = lead['Timeline to Purchase'] || lead.timeline || 'Unknown';
+      timelines[timeline] = (timelines[timeline] || 0) + 1;
+    });
+    return Object.entries(timelines).slice(0, 5).map(([name, value]) => ({ name: name.slice(0, 12), value }));
+  }, [leadData]);
+
+  // Action leads
+  const actionLeads: ActionLead[] = React.useMemo(() => {
+    if (leadData.length === 0) return [];
+    return leadData.map((lead, idx) => {
+      const name = lead['Lead Name'] || lead.name || `Lead ${idx + 1}`;
+      const qualityScore = parseInt(lead.Score || lead.score || '50');
+      const intentText = (lead.Intent || lead.intent || '').toString().toLowerCase();
+      let intentScore = qualityScore;
+      if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(qualityScore, 80);
+      else if (intentText === 'warm') intentScore = Math.max(qualityScore, 60);
+      const classification = classifyLead(intentScore, qualityScore);
+      return {
+        id: lead['Lead ID'] || `lead_${idx}`,
+        name,
+        development: lead['Source Campaign'] || lead['Development'] || 'General',
+        budget: lead['Budget Range'] || lead.budget || 'N/A',
+        qualityScore, intentScore,
+        timeline: lead['Timeline to Purchase'] || lead.timeline || 'N/A',
+        email: lead.Email || lead.email || '',
+        phone: lead['Phone Number'] || lead.phone || '',
+        reason: classification === 'hot' ? 'Viewing ready' : classification === 'star' ? 'High quality' : 'High intent',
+        classification
+      };
+    }).filter(l => ['hot', 'star', 'lightning'].includes(l.classification)).slice(0, 5);
+  }, [leadData]);
+
+  // Campaign alerts
+  const campaignAlerts: CampaignAlert[] = React.useMemo(() => {
+    if (campaignData.length === 0) return [];
+    return campaignData.map((c, idx) => {
+      const spend = parseFloat(c['Amount spent (GBP)'] || c.spend || 0);
+      const results = parseFloat(c.Results || c.results || 1);
+      const cpl = spend / Math.max(results, 1);
+      if (cpl > 50) {
+        return {
+          id: `alert_${idx}`,
+          name: c['Campaign name'] || c.name || `Campaign ${idx + 1}`,
+          issue: 'CPL above target',
+          currentValue: `£${Math.round(cpl)}`,
+          targetValue: '£35',
+          recommendation: 'Pause and reallocate budget',
+          savings: `£${Math.round(spend * 0.3)}`
+        };
+      }
+      return null;
+    }).filter(Boolean).slice(0, 3) as CampaignAlert[];
+  }, [campaignData]);
+
+  // KPIs
+  const kpis = React.useMemo(() => {
+    const totalLeads = leadData.length;
+    const hotLeads = leadClassifications.hot + leadClassifications.star + leadClassifications.lightning;
+    const avgScore = leadData.length > 0 ? Math.round(leadData.reduce((acc, l) => acc + parseInt(l.Score || l.score || '50'), 0) / leadData.length) : 0;
+    const totalSpend = campaignData.reduce((acc, c) => acc + parseFloat(c['Amount spent (GBP)'] || c.spend || 0), 0);
+    const totalResults = campaignData.reduce((acc, c) => acc + parseFloat(c.Results || c.results || 0), 0);
+    const avgCPL = totalResults > 0 ? totalSpend / totalResults : 0;
+    const qualifiedRate = totalLeads > 0 ? Math.round((hotLeads / totalLeads) * 100) : 0;
+    return { totalLeads, hotLeads, avgScore, totalSpend, avgCPL, qualifiedRate, totalResults };
+  }, [leadData, campaignData, leadClassifications]);
+
   const handleAction = (action: string, lead: ActionLead) => {
-    switch (action) {
-      case 'call':
-        if (lead.phone) window.open(`tel:${lead.phone}`, '_blank');
-        toast.success(`Calling ${lead.name}...`);
-        break;
-      case 'whatsapp':
-        if (lead.phone) window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank');
-        toast.success(`Opening WhatsApp for ${lead.name}`);
-        break;
-      case 'booking':
-        toast.success(`${roleConfig.primaryAction} for ${lead.name}`);
-        break;
-    }
+    if (action === 'call' && lead.phone) window.open(`tel:${lead.phone}`, '_blank');
+    else if (action === 'whatsapp' && lead.phone) window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank');
+    else if (action === 'booking') toast.success(`${roleConfig.primaryAction} for ${lead.name}`);
+    toast.success(`Action: ${action} for ${lead.name}`);
   };
 
   const handleCampaignAction = (action: string, alert: CampaignAlert) => {
@@ -315,77 +356,38 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim() || isLoading) return;
-    const userMessage: Message = { role: 'user', content: query, timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage]);
-    setQuery('');
-    const response = await askAgent(query, buildContext());
-    if (response) {
-      setMessages(prev => [...prev, { role: 'agent', content: response.response, timestamp: new Date() }]);
-    }
+    setMessages(prev => [...prev, { role: 'user', content: query, timestamp: new Date() }]);
+    const q = query; setQuery('');
+    const response = await askAgent(q, buildContext());
+    if (response) setMessages(prev => [...prev, { role: 'agent', content: response.response, timestamp: new Date() }]);
   };
 
-  const handleQuickQuestion = (question: string) => {
-    setQuery(question);
-  };
-
-  const handleUpload = (type: 'campaigns' | 'leads') => {
-    setUploadType(type);
-    setUploadDialogOpen(true);
-  };
-
-  const handleCampaignData = async (data: any[], fileName: string) => {
-    setCampaignData(data);
-    setCampaignFileName(fileName);
-    setUploadDialogOpen(false);
-    toast.success(`Loaded ${data.length} campaigns`);
-  };
-
-  const handleLeadData = async (data: any[], fileName: string) => {
-    setLeadData(data);
-    setLeadFileName(fileName);
-    setUploadDialogOpen(false);
-    toast.success(`Loaded ${data.length} leads`);
-  };
-
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `£${(value / 1000).toFixed(0)}K`;
-    return `£${value}`;
-  };
+  const handleUpload = (type: 'campaigns' | 'leads') => { setUploadType(type); setUploadDialogOpen(true); };
+  const handleCampaignData = (data: any[], fileName: string) => { setCampaignData(data); setCampaignFileName(fileName); setUploadDialogOpen(false); toast.success(`Loaded ${data.length} campaigns`); };
+  const handleLeadData = (data: any[], fileName: string) => { setLeadData(data); setLeadFileName(fileName); setUploadDialogOpen(false); toast.success(`Loaded ${data.length} leads`); };
+  const formatCurrency = (v: number) => v >= 1000000 ? `£${(v/1000000).toFixed(1)}M` : v >= 1000 ? `£${(v/1000).toFixed(0)}K` : `£${v}`;
 
   const [loadingDemo, setLoadingDemo] = useState(false);
-
   const loadDemoData = async () => {
     setLoadingDemo(true);
     try {
-      const campaignResponse = await fetch('/sample-data/sample-campaigns.csv');
-      const campaignText = await campaignResponse.text();
-      const campaignResult = Papa.parse(campaignText, { header: true, skipEmptyLines: true });
-      const leadsResponse = await fetch('/sample-data/sample-leads.csv');
-      const leadsText = await leadsResponse.text();
-      const leadsResult = Papa.parse(leadsText, { header: true, skipEmptyLines: true });
-      if (campaignResult.data.length > 0) {
-        setCampaignData(campaignResult.data);
-        setCampaignFileName('sample-campaigns.csv');
-      }
-      if (leadsResult.data.length > 0) {
-        setLeadData(leadsResult.data);
-        setLeadFileName('sample-leads.csv');
-      }
-      toast.success(`Loaded ${campaignResult.data.length} campaigns and ${leadsResult.data.length} leads`);
-    } catch (error) {
-      toast.error('Failed to load demo data');
-    } finally {
-      setLoadingDemo(false);
-    }
+      const [campRes, leadRes] = await Promise.all([fetch('/sample-data/sample-campaigns.csv'), fetch('/sample-data/sample-leads.csv')]);
+      const [campText, leadText] = await Promise.all([campRes.text(), leadRes.text()]);
+      const campResult = Papa.parse(campText, { header: true, skipEmptyLines: true });
+      const leadResult = Papa.parse(leadText, { header: true, skipEmptyLines: true });
+      if (campResult.data.length > 0) { setCampaignData(campResult.data); setCampaignFileName('sample-campaigns.csv'); }
+      if (leadResult.data.length > 0) { setLeadData(leadResult.data); setLeadFileName('sample-leads.csv'); }
+      toast.success(`Loaded ${campResult.data.length} campaigns and ${leadResult.data.length} leads`);
+    } catch { toast.error('Failed to load demo data'); }
+    finally { setLoadingDemo(false); }
   };
 
   const hasData = leadData.length > 0 || campaignData.length > 0;
 
   return (
     <div className="flex gap-6 h-full">
-      {/* Main Dashboard Content */}
-      <div className="flex-1 space-y-6 overflow-auto">
+      {/* Main Dashboard */}
+      <div className="flex-1 space-y-6 overflow-auto pb-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -393,183 +395,227 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             <p className="text-muted-foreground">{dateString}</p>
           </div>
           <div className="flex gap-2">
-            <Dialog open={uploadDialogOpen && uploadType === 'campaigns'} onOpenChange={(open) => { if (!open) setUploadDialogOpen(false); }}>
+            <Dialog open={uploadDialogOpen && uploadType === 'campaigns'} onOpenChange={(o) => !o && setUploadDialogOpen(false)}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" onClick={() => handleUpload('campaigns')}>
-                  <Upload className="h-3.5 w-3.5 mr-1.5" />
-                  Campaigns
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleUpload('campaigns')}><Upload className="h-3.5 w-3.5 mr-1.5" />Campaigns</Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Upload Campaign Data</DialogTitle></DialogHeader>
-                <UploadZone label="Campaign CSV" description="Upload your Meta Ads or campaign export CSV" onDataParsed={handleCampaignData} isUploaded={false} onClear={() => {}} />
+              <DialogContent><DialogHeader><DialogTitle>Upload Campaign Data</DialogTitle></DialogHeader>
+                <UploadZone label="Campaign CSV" description="Upload Meta Ads export CSV" onDataParsed={handleCampaignData} isUploaded={false} onClear={() => {}} />
               </DialogContent>
             </Dialog>
-            <Dialog open={uploadDialogOpen && uploadType === 'leads'} onOpenChange={(open) => { if (!open) setUploadDialogOpen(false); }}>
+            <Dialog open={uploadDialogOpen && uploadType === 'leads'} onOpenChange={(o) => !o && setUploadDialogOpen(false)}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" onClick={() => handleUpload('leads')}>
-                  <Upload className="h-3.5 w-3.5 mr-1.5" />
-                  Leads
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleUpload('leads')}><Upload className="h-3.5 w-3.5 mr-1.5" />Leads</Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Upload Lead Data</DialogTitle></DialogHeader>
-                <UploadZone label="Lead CSV" description="Upload your lead export CSV" onDataParsed={handleLeadData} isUploaded={false} onClear={() => {}} />
+              <DialogContent><DialogHeader><DialogTitle>Upload Lead Data</DialogTitle></DialogHeader>
+                <UploadZone label="Lead CSV" description="Upload lead export CSV" onDataParsed={handleLeadData} isUploaded={false} onClear={() => {}} />
               </DialogContent>
             </Dialog>
           </div>
         </div>
 
         {!hasData ? (
-          /* Empty State */
           <Card className="p-12 text-center border-dashed">
             <Brain className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
             <h3 className="text-xl font-semibold mb-2">Upload your data to get started</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Upload campaign and lead CSVs to see actionable insights and AI-powered recommendations.
-            </p>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">Upload campaign and lead CSVs to see actionable insights and analytics.</p>
             <div className="flex flex-col gap-4 items-center">
-              <div className="flex gap-3 justify-center">
-                <Button onClick={() => handleUpload('campaigns')}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Campaigns
-                </Button>
-                <Button variant="outline" onClick={() => handleUpload('leads')}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Leads
-                </Button>
+              <div className="flex gap-3">
+                <Button onClick={() => handleUpload('campaigns')}><Upload className="h-4 w-4 mr-2" />Upload Campaigns</Button>
+                <Button variant="outline" onClick={() => handleUpload('leads')}><Upload className="h-4 w-4 mr-2" />Upload Leads</Button>
               </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <div className="h-px w-12 bg-border" />
-                <span className="text-sm">or</span>
-                <div className="h-px w-12 bg-border" />
-              </div>
+              <div className="flex items-center gap-3 text-muted-foreground"><div className="h-px w-12 bg-border" /><span className="text-sm">or</span><div className="h-px w-12 bg-border" /></div>
               <Button variant="secondary" onClick={loadDemoData} disabled={loadingDemo}>
-                {loadingDemo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}
-                Load Demo Data
+                {loadingDemo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}Load Demo Data
               </Button>
             </div>
           </Card>
         ) : (
           <>
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               <Card className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col1.label}</span>
-                  <roleConfig.performanceMetrics.col1.icon className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Total Leads</span>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold">{weeklyPerformance.leads.value}</span>
-                  {weeklyPerformance.leads.change > 0 && (
-                    <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 text-xs">
-                      <ArrowUp className="h-3 w-3 mr-0.5" />+{weeklyPerformance.leads.change}
-                    </Badge>
-                  )}
-                </div>
+                <span className="text-2xl font-bold">{kpis.totalLeads}</span>
               </Card>
               <Card className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col2.label}</span>
-                  <roleConfig.performanceMetrics.col2.icon className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Hot Leads</span>
+                  <Flame className="h-4 w-4 text-orange-500" />
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold">{weeklyPerformance.viewings.value}</span>
-                  {weeklyPerformance.viewings.change > 0 && (
-                    <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 text-xs">
-                      <ArrowUp className="h-3 w-3 mr-0.5" />+{weeklyPerformance.viewings.change}
-                    </Badge>
-                  )}
-                </div>
+                <span className="text-2xl font-bold text-orange-500">{kpis.hotLeads}</span>
               </Card>
               <Card className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col3.label}</span>
-                  <roleConfig.performanceMetrics.col3.icon className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Avg Score</span>
+                  <Target className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold">{weeklyPerformance.offers.value}</span>
-                  {weeklyPerformance.offers.change > 0 && (
-                    <Badge variant="outline" className="text-green-500 border-green-500/30 bg-green-500/10 text-xs">
-                      <ArrowUp className="h-3 w-3 mr-0.5" />+{weeklyPerformance.offers.change}
-                    </Badge>
-                  )}
-                </div>
+                <span className="text-2xl font-bold">{kpis.avgScore}</span>
               </Card>
               <Card className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">{roleConfig.performanceMetrics.col4.label}</span>
-                  <roleConfig.performanceMetrics.col4.icon className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Total Spend</span>
+                  <PoundSterling className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold">{formatCurrency(weeklyPerformance.pipeline.value)}</span>
+                <span className="text-2xl font-bold">{formatCurrency(kpis.totalSpend)}</span>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Avg CPL</span>
+                  {kpis.avgCPL > 35 ? <TrendingUp className="h-4 w-4 text-destructive" /> : <TrendingDown className="h-4 w-4 text-green-500" />}
                 </div>
+                <span className={`text-2xl font-bold ${kpis.avgCPL > 35 ? 'text-destructive' : 'text-green-500'}`}>£{Math.round(kpis.avgCPL)}</span>
+              </Card>
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground">Qualified Rate</span>
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                </div>
+                <span className="text-2xl font-bold text-green-500">{kpis.qualifiedRate}%</span>
+              </Card>
+            </div>
+
+            {/* Charts Row 1 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Lead Classification */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Lead Classification</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <div className="w-32 h-32">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={classificationChartData} cx="50%" cy="50%" innerRadius={25} outerRadius={50} paddingAngle={2} dataKey="value">
+                            {classificationChartData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      {classificationChartData.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <span>{item.name}</span>
+                          </div>
+                          <span className="font-medium">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Score Distribution */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Lead Score Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={120}>
+                    <BarChart data={scoreDistribution}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="range" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts Row 2 */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Campaign Performance */}
+              <Card className="lg:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Campaign Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={campaignPerformance} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Bar dataKey="leads" name="Leads" fill="hsl(142, 76%, 36%)" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="cpl" name="CPL (£)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Lead Sources */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Lead Sources</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={leadSources} cx="50%" cy="50%" outerRadius={60} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {leadSources.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
               </Card>
             </div>
 
             {/* AI Recommendations */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-yellow-500" />
-                  AI Recommendations
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-yellow-500" />AI Recommendations
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loadingRecommendations ? (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Analysing your data...</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /><span className="text-sm">Analysing...</span></div>
                 ) : aiRecommendations.length > 0 ? (
                   <ul className="space-y-2">
                     {aiRecommendations.map((rec, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                        <span>{rec}</span>
-                      </li>
+                      <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" /><span>{rec}</span></li>
                     ))}
                   </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No recommendations yet. Upload more data for insights.</p>
-                )}
+                ) : <p className="text-sm text-muted-foreground">No recommendations yet.</p>}
               </CardContent>
             </Card>
 
-            {/* Action Required - Hot Leads */}
+            {/* Action Required */}
             {actionLeads.length > 0 && (
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                    Action Required
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-orange-500" />Action Required
                     <Badge variant="destructive" className="ml-1">{actionLeads.length}</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                   {actionLeads.map((lead) => (
                     <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{lead.name}</span>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm">{lead.name}</span>
                           <Badge variant="outline" className="text-xs">{lead.budget}</Badge>
                           <Badge className="bg-orange-500/20 text-orange-600 border-0 text-xs">{lead.reason}</Badge>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>Quality: {lead.qualityScore}</span>
-                          <span>Intent: {lead.intentScore}</span>
+                          <span>Q: {lead.qualityScore}</span><span>I: {lead.intentScore}</span><span>{lead.timeline}</span>
                         </div>
                       </div>
                       <div className="flex gap-1.5">
-                        <Button size="sm" variant="default" onClick={() => handleAction('call', lead)}>
-                          <Phone className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAction('whatsapp', lead)}>
-                          <MessageCircle className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAction('booking', lead)}>
-                          <Calendar className="h-3.5 w-3.5" />
-                        </Button>
+                        <Button size="sm" variant="default" onClick={() => handleAction('call', lead)}><Phone className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="outline" onClick={() => handleAction('whatsapp', lead)}><MessageCircle className="h-3.5 w-3.5" /></Button>
+                        <Button size="sm" variant="outline" onClick={() => handleAction('booking', lead)}><Calendar className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
                   ))}
@@ -580,33 +626,25 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             {/* Campaign Alerts */}
             {campaignAlerts.length > 0 && (
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    Campaign Alerts
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />Campaign Alerts
                     <Badge variant="secondary" className="ml-1 bg-amber-500/20 text-amber-600">{campaignAlerts.length}</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                   {campaignAlerts.map((alert) => (
                     <div key={alert.id} className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{alert.name}</span>
+                          <span className="font-medium text-sm">{alert.name}</span>
                           <span className="text-destructive font-medium text-sm">CPL: {alert.currentValue}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {alert.recommendation} {alert.savings && <span className="text-green-500">Save {alert.savings}</span>}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{alert.recommendation} {alert.savings && <span className="text-green-500">Save {alert.savings}</span>}</p>
                       </div>
                       <div className="flex gap-1.5">
-                        <Button size="sm" onClick={() => handleCampaignAction('apply', alert)} className="bg-green-600 hover:bg-green-700">
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                          Apply
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleCampaignAction('view', alert)}>
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
+                        <Button size="sm" onClick={() => handleCampaignAction('apply', alert)} className="bg-green-600 hover:bg-green-700"><CheckCircle className="h-3.5 w-3.5 mr-1" />Apply</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleCampaignAction('view', alert)}><Eye className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
                   ))}
@@ -621,95 +659,37 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
       <div className="w-80 shrink-0 hidden lg:block">
         <Card className="h-full flex flex-col sticky top-0">
           <CardHeader className="pb-3 border-b">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Bot className="h-4 w-4 text-primary" />
-              AI Assistant
-            </CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><Bot className="h-4 w-4 text-primary" />AI Assistant</CardTitle>
           </CardHeader>
-          
-          {/* Messages */}
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
             {messages.length === 0 ? (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground text-center mb-4">
-                  Ask me anything about your campaigns and leads
-                </p>
+                <p className="text-xs text-muted-foreground text-center mb-4">Ask me anything about your data</p>
                 <div className="space-y-2">
-                  {[
-                    "What's my best performing campaign?",
-                    "Show hot leads to contact",
-                    "How can I reduce CPL?",
-                    "Give me a daily summary"
-                  ].map((q, i) => (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs h-auto py-2 px-3 justify-start text-left"
-                      onClick={() => handleQuickQuestion(q)}
-                      disabled={!hasData}
-                    >
-                      {q}
-                    </Button>
+                  {["Best performing campaign?", "Show hot leads", "How to reduce CPL?", "Daily summary"].map((q, i) => (
+                    <Button key={i} variant="outline" size="sm" className="w-full text-xs h-auto py-2 justify-start" onClick={() => setQuery(q)} disabled={!hasData}>{q}</Button>
                   ))}
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                {messages.map((message, i) => (
-                  <div
-                    key={i}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
+                {messages.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                      <p className="whitespace-pre-wrap">{m.content}</p>
                     </div>
                   </div>
                 ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg px-3 py-2 flex items-center gap-2">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span className="text-sm">Thinking...</span>
-                    </div>
-                  </div>
-                )}
+                {isLoading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 flex items-center gap-2"><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="text-sm">Thinking...</span></div></div>}
               </div>
             )}
           </ScrollArea>
-
-          {/* Input */}
           <div className="p-4 border-t">
             <form onSubmit={handleSubmit} className="flex gap-2">
-              <Textarea
-                placeholder={hasData ? "Ask anything..." : "Upload data first..."}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="min-h-[40px] max-h-[80px] resize-none text-sm"
-                disabled={!hasData}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
-              />
-              <Button type="submit" size="icon" disabled={isLoading || !query.trim() || !hasData}>
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </Button>
+              <Textarea placeholder={hasData ? "Ask anything..." : "Upload data first..."} value={query} onChange={(e) => setQuery(e.target.value)} className="min-h-[40px] max-h-[80px] resize-none text-sm" disabled={!hasData} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }}} />
+              <Button type="submit" size="icon" disabled={isLoading || !query.trim() || !hasData}>{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button>
             </form>
-            {error && (
-              <p className="text-xs text-destructive mt-2 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                {error}
-              </p>
-            )}
+            {error && <p className="text-xs text-destructive mt-2 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{error}</p>}
           </div>
         </Card>
       </div>
