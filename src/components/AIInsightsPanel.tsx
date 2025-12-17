@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, RefreshCw, Loader2, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
+import { Sparkles, RefreshCw, Loader2, ChevronRight, Lightbulb, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface AIInsightsPanelProps {
   context: 'leads' | 'campaigns' | 'analytics';
@@ -31,7 +35,7 @@ const contextPrompts: Record<string, string> = {
 export function AIInsightsPanel({ context, data, className }: AIInsightsPanelProps) {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const hasData = (data.campaigns?.length || 0) > 0 || (data.leads?.length || 0) > 0;
@@ -58,10 +62,10 @@ export function AIInsightsPanel({ context, data, className }: AIInsightsPanelPro
         return;
       }
 
-      // Parse the response into structured insights
       const parsedInsights = parseInsights(response?.response || '');
       setInsights(parsedInsights);
       setLastUpdated(new Date());
+      setIsExpanded(true);
     } catch (error) {
       console.error('Failed to fetch AI insights:', error);
       toast.error('Failed to load AI insights');
@@ -71,7 +75,6 @@ export function AIInsightsPanel({ context, data, className }: AIInsightsPanelPro
   };
 
   const parseInsights = (text: string): Insight[] => {
-    // Split by common patterns (numbered lists, bullets, or double newlines)
     const sections = text.split(/(?:\d+\.\s|\n-\s|\n\n)/).filter(s => s.trim());
     
     return sections.slice(0, 4).map(section => {
@@ -86,7 +89,6 @@ export function AIInsightsPanel({ context, data, className }: AIInsightsPanelPro
         type = 'success';
       }
 
-      // Extract title (first sentence) and description (rest)
       const sentences = section.split(/(?<=[.!?])\s+/);
       const title = sentences[0]?.trim() || section.substring(0, 50);
       const description = sentences.slice(1).join(' ').trim() || '';
@@ -95,114 +97,107 @@ export function AIInsightsPanel({ context, data, className }: AIInsightsPanelPro
     });
   };
 
-  // Auto-fetch on mount if we have data
   useEffect(() => {
     if (hasData && insights.length === 0 && !isLoading) {
       fetchInsights();
     }
   }, [hasData]);
 
-  const getInsightIcon = (type: Insight['type']) => {
+  const getInsightStyles = (type: Insight['type']) => {
     switch (type) {
-      case 'action': return <Lightbulb className="h-4 w-4 text-primary" />;
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-warning" />;
-      case 'opportunity': return <TrendingUp className="h-4 w-4 text-blue-500" />;
-      case 'success': return <CheckCircle className="h-4 w-4 text-success" />;
+      case 'action': return { icon: Lightbulb, bg: 'bg-primary/5 border-primary/20', text: 'text-primary' };
+      case 'warning': return { icon: AlertTriangle, bg: 'bg-destructive/5 border-destructive/20', text: 'text-destructive' };
+      case 'opportunity': return { icon: TrendingUp, bg: 'bg-blue-500/5 border-blue-500/20', text: 'text-blue-600' };
+      case 'success': return { icon: CheckCircle, bg: 'bg-emerald-500/5 border-emerald-500/20', text: 'text-emerald-600' };
     }
   };
 
-  const getInsightBadge = (type: Insight['type']) => {
-    switch (type) {
-      case 'action': return <Badge variant="default" className="text-xs">Action</Badge>;
-      case 'warning': return <Badge variant="destructive" className="text-xs">Attention</Badge>;
-      case 'opportunity': return <Badge variant="secondary" className="text-xs">Opportunity</Badge>;
-      case 'success': return <Badge className="bg-success/10 text-success text-xs">Win</Badge>;
-    }
-  };
-
-  if (!hasData) {
-    return null;
-  }
+  if (!hasData) return null;
 
   return (
-    <Card className={cn("shadow-card", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-            <CardTitle className="text-sm font-semibold">AI Insights</CardTitle>
-            {lastUpdated && (
-              <span className="text-xs text-muted-foreground">
-                Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={fetchInsights}
-              disabled={isLoading}
-              className="h-8 w-8 p-0"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
+    <div className={cn("border-b border-border/50 bg-muted/30", className)}>
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <div className="flex items-center justify-between px-4 py-2">
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <ChevronRight className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-90")} />
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span>AI Insights</span>
+              {insights.length > 0 && !isExpanded && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {insights.length}
+                </Badge>
               )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="h-8 w-8 p-0"
-            >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </div>
+              {lastUpdated && (
+                <span className="text-xs text-muted-foreground/70 ml-2">
+                  {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </button>
+          </CollapsibleTrigger>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => { e.stopPropagation(); fetchInsights(); }}
+            disabled={isLoading}
+            className="h-7 px-2 text-xs"
+          >
+            {isLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                Refresh
+              </>
+            )}
+          </Button>
         </div>
-      </CardHeader>
-      
-      {isExpanded && (
-        <CardContent className="pt-2">
-          {isLoading && insights.length === 0 ? (
-            <div className="flex items-center justify-center py-6 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              <span className="text-sm">Analysing your data...</span>
-            </div>
-          ) : insights.length > 0 ? (
-            <div className="grid gap-3">
-              {insights.map((insight, index) => (
-                <div 
-                  key={index} 
-                  className="flex gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
-                >
-                  <div className="mt-0.5">{getInsightIcon(insight.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {getInsightBadge(insight.type)}
+        
+        <CollapsibleContent>
+          <div className="px-4 pb-3">
+            {isLoading && insights.length === 0 ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Analysing your data...</span>
+              </div>
+            ) : insights.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {insights.map((insight, index) => {
+                  const styles = getInsightStyles(insight.type);
+                  const Icon = styles.icon;
+                  return (
+                    <div 
+                      key={index} 
+                      className={cn(
+                        "group relative flex items-start gap-2 px-3 py-2 rounded-lg border text-sm max-w-sm",
+                        styles.bg
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4 mt-0.5 shrink-0", styles.text)} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground leading-tight line-clamp-2">
+                          {insight.title}
+                        </p>
+                        {insight.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                            {insight.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                    {insight.description && (
-                      <p className="text-xs text-muted-foreground mt-1">{insight.description}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground mb-3">Click refresh to generate AI insights</p>
-              <Button variant="outline" size="sm" onClick={fetchInsights}>
-                <Sparkles className="h-4 w-4 mr-2" />
+                  );
+                })}
+              </div>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={fetchInsights} className="h-8 text-xs">
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                 Generate Insights
               </Button>
-            </div>
-          )}
-        </CardContent>
-      )}
-    </Card>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 }
