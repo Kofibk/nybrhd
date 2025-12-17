@@ -28,18 +28,38 @@ import {
   MailOpen,
   Timer,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { Lead, LEAD_SOURCES } from "@/lib/types";
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
 import { classifyLead } from "@/lib/leadClassification";
 import { format } from "date-fns";
 import { formatBudget } from "@/lib/utils";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface LeadDetailDrawerProps {
   lead: Lead | null;
   open: boolean;
   onClose: () => void;
+}
+
+interface VerificationStatus {
+  mortgageAIP: boolean;
+  hasLawyer: boolean;
+  ukResident: boolean;
+  kycAmlCompleted: boolean;
+  proofOfFunds: boolean;
+}
+
+interface BehaviouralData {
+  brochureViews: number;
+  whatsappClicks: number;
+  emailOpens: number;
+  timeOnSite: number;
 }
 
 interface ScoreBreakdown {
@@ -49,7 +69,6 @@ interface ScoreBreakdown {
 }
 
 const ScoreBar = ({ label, score, max }: ScoreBreakdown) => {
-  const percentage = (score / max) * 100;
   const filledDots = Math.round((score / max) * 5);
   
   return (
@@ -68,7 +87,118 @@ const ScoreBar = ({ label, score, max }: ScoreBreakdown) => {
   );
 };
 
+// Storage keys for persisting data
+const getStorageKey = (leadId: string, type: string) => `lead_${leadId}_${type}`;
+
 export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps) => {
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
+    mortgageAIP: false,
+    hasLawyer: false,
+    ukResident: false,
+    kycAmlCompleted: false,
+    proofOfFunds: false,
+  });
+  const [behaviouralData, setBehaviouralData] = useState<BehaviouralData>({
+    brochureViews: 0,
+    whatsappClicks: 0,
+    emailOpens: 0,
+    timeOnSite: 0,
+  });
+
+  // Load persisted data when lead changes
+  useEffect(() => {
+    if (lead?.id) {
+      // Load verification status
+      const savedVerification = localStorage.getItem(getStorageKey(lead.id, 'verification'));
+      if (savedVerification) {
+        setVerificationStatus(JSON.parse(savedVerification));
+      } else {
+        // Set defaults based on lead data
+        setVerificationStatus({
+          mortgageAIP: lead.paymentMethod === "mortgage" ? Math.random() > 0.5 : false,
+          hasLawyer: Math.random() > 0.6,
+          ukResident: lead.country === "United Kingdom" || lead.countryCode === "GB",
+          kycAmlCompleted: Math.random() > 0.7,
+          proofOfFunds: lead.paymentMethod === "cash" ? Math.random() > 0.4 : false,
+        });
+      }
+
+      // Load behavioural data
+      const savedBehavioural = localStorage.getItem(getStorageKey(lead.id, 'behavioural'));
+      if (savedBehavioural) {
+        setBehaviouralData(JSON.parse(savedBehavioural));
+      } else {
+        // Set defaults with some randomization for demo
+        setBehaviouralData({
+          brochureViews: Math.floor(Math.random() * 12) + 1,
+          whatsappClicks: Math.floor(Math.random() * 6),
+          emailOpens: Math.floor(Math.random() * 10) + 1,
+          timeOnSite: Math.floor(Math.random() * 20) + 3,
+        });
+      }
+
+      // Load AI insights
+      const savedInsights = localStorage.getItem(getStorageKey(lead.id, 'insights'));
+      if (savedInsights) {
+        setAiInsights(savedInsights);
+      } else {
+        setAiInsights(null);
+      }
+    }
+  }, [lead?.id]);
+
+  // Save verification status when it changes
+  const updateVerification = useCallback((field: keyof VerificationStatus, value: boolean) => {
+    if (!lead?.id) return;
+    
+    const newStatus = { ...verificationStatus, [field]: value };
+    setVerificationStatus(newStatus);
+    localStorage.setItem(getStorageKey(lead.id, 'verification'), JSON.stringify(newStatus));
+    toast.success(`${field.replace(/([A-Z])/g, ' $1').trim()} updated`);
+  }, [lead?.id, verificationStatus]);
+
+  // Track behavioural event
+  const trackEvent = useCallback((eventType: keyof BehaviouralData) => {
+    if (!lead?.id) return;
+    
+    const newData = { ...behaviouralData, [eventType]: behaviouralData[eventType] + 1 };
+    setBehaviouralData(newData);
+    localStorage.setItem(getStorageKey(lead.id, 'behavioural'), JSON.stringify(newData));
+  }, [lead?.id, behaviouralData]);
+
+  // Fetch AI insights from Claude
+  const fetchAIInsights = useCallback(async () => {
+    if (!lead) return;
+    
+    setIsLoadingInsights(true);
+    try {
+      const leadData = {
+        ...lead,
+        ...verificationStatus,
+        ...behaviouralData,
+      };
+
+      const { data, error } = await supabase.functions.invoke('analyze-lead', {
+        body: { lead: leadData }
+      });
+
+      if (error) throw error;
+
+      if (data?.insights) {
+        setAiInsights(data.insights);
+        localStorage.setItem(getStorageKey(lead.id, 'insights'), data.insights);
+        toast.success('AI analysis generated');
+      }
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      toast.error('Failed to generate AI insights');
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  }, [lead, verificationStatus, behaviouralData]);
+
   if (!lead) return null;
 
   const classification = lead.classification || classifyLead(lead.intentScore, lead.qualityScore);
@@ -79,14 +209,6 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
   const qualityScore10 = (lead.qualityScore / 10).toFixed(1);
   const engagementScore = ((lead.intentScore * 0.6 + lead.qualityScore * 0.4) / 10).toFixed(1);
 
-  // Mock behavioural analytics (in production, these would come from the lead data)
-  const behaviouralData = {
-    brochureViews: Math.floor(Math.random() * 12) + 1,
-    whatsappClicks: Math.floor(Math.random() * 6),
-    emailOpens: Math.floor(Math.random() * 10) + 1,
-    timeOnSite: Math.floor(Math.random() * 20) + 3,
-  };
-
   // Mock engagement history
   const engagementHistory = [
     { action: "Interested in viewing schedule", timestamp: new Date().toISOString() },
@@ -95,16 +217,7 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
     { action: "Form submitted", timestamp: lead.createdAt || new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() },
   ];
 
-  // Mock verification status (in production, these would come from the lead data)
-  const verificationStatus = {
-    mortgageAIP: lead.paymentMethod === "mortgage" ? Math.random() > 0.5 : false,
-    hasLawyer: Math.random() > 0.6,
-    ukResident: lead.country === "United Kingdom" || lead.countryCode === "GB",
-    kycAmlCompleted: Math.random() > 0.7,
-    proofOfFunds: lead.paymentMethod === "cash" ? Math.random() > 0.4 : false,
-  };
-
-  // Mock score breakdowns
+  // Score breakdowns
   const qualityBreakdown: ScoreBreakdown[] = [
     { label: "Financial", score: Math.round(lead.qualityScore * 0.35), max: 35 },
     { label: "Property Match", score: Math.round(lead.qualityScore * 0.25 * 0.8), max: 25 },
@@ -180,33 +293,6 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
     if (percentage >= 80) return "text-green-500";
     if (percentage >= 60) return "text-amber-500";
     return "text-red-500";
-  };
-
-  // Generate AI insights based on lead data
-  const generateAIInsights = () => {
-    const insights: string[] = [];
-    
-    if (lead.paymentMethod === "cash") {
-      insights.push("Cash buyer with strong purchasing power.");
-    }
-    
-    if (lead.intentScore >= 70) {
-      insights.push(`Very interested in ${lead.bedrooms || "2"}-bed units.`);
-    }
-    
-    if (lead.country && lead.country !== "United Kingdom") {
-      insights.push(`International buyer from ${lead.country}.`);
-    }
-    
-    if (lead.purpose === "investment") {
-      insights.push("Looking for investment opportunity with rental yield potential.");
-    }
-    
-    if (insights.length === 0) {
-      return "Lead shows moderate interest. Recommend scheduling a consultation to understand requirements better.";
-    }
-    
-    return insights.join(" ");
   };
 
   return (
@@ -308,31 +394,51 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
 
             <Separator className="my-3" />
             
-            {/* Verification Checkboxes */}
+            {/* Editable Verification Checkboxes */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <Checkbox checked={verificationStatus.mortgageAIP} disabled />
-                <span className="text-muted-foreground">Mortgage AIP</span>
+                <Checkbox 
+                  id="mortgageAIP"
+                  checked={verificationStatus.mortgageAIP} 
+                  onCheckedChange={(checked) => updateVerification('mortgageAIP', checked as boolean)}
+                />
+                <label htmlFor="mortgageAIP" className="text-muted-foreground cursor-pointer">Mortgage AIP</label>
               </div>
               
               <div className="flex items-center gap-2">
-                <Checkbox checked={verificationStatus.hasLawyer} disabled />
-                <span className="text-muted-foreground">Lawyer</span>
+                <Checkbox 
+                  id="hasLawyer"
+                  checked={verificationStatus.hasLawyer} 
+                  onCheckedChange={(checked) => updateVerification('hasLawyer', checked as boolean)}
+                />
+                <label htmlFor="hasLawyer" className="text-muted-foreground cursor-pointer">Lawyer</label>
               </div>
               
               <div className="flex items-center gap-2">
-                <Checkbox checked={verificationStatus.ukResident} disabled />
-                <span className="text-muted-foreground">UK Resident</span>
+                <Checkbox 
+                  id="ukResident"
+                  checked={verificationStatus.ukResident} 
+                  onCheckedChange={(checked) => updateVerification('ukResident', checked as boolean)}
+                />
+                <label htmlFor="ukResident" className="text-muted-foreground cursor-pointer">UK Resident</label>
               </div>
               
               <div className="flex items-center gap-2">
-                <Checkbox checked={verificationStatus.kycAmlCompleted} disabled />
-                <span className="text-muted-foreground">KYC/AML Completed</span>
+                <Checkbox 
+                  id="kycAmlCompleted"
+                  checked={verificationStatus.kycAmlCompleted} 
+                  onCheckedChange={(checked) => updateVerification('kycAmlCompleted', checked as boolean)}
+                />
+                <label htmlFor="kycAmlCompleted" className="text-muted-foreground cursor-pointer">KYC/AML Completed</label>
               </div>
               
               <div className="flex items-center gap-2 col-span-2">
-                <Checkbox checked={verificationStatus.proofOfFunds} disabled />
-                <span className="text-muted-foreground">Proof of Funds</span>
+                <Checkbox 
+                  id="proofOfFunds"
+                  checked={verificationStatus.proofOfFunds} 
+                  onCheckedChange={(checked) => updateVerification('proofOfFunds', checked as boolean)}
+                />
+                <label htmlFor="proofOfFunds" className="text-muted-foreground cursor-pointer">Proof of Funds</label>
               </div>
             </div>
 
@@ -390,7 +496,11 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Behavioural Analytics</h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <div 
+                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => trackEvent('brochureViews')}
+                title="Click to track brochure view"
+              >
                 <BookOpen className="h-5 w-5 text-primary" />
                 <div>
                   <p className="text-xl font-bold">{behaviouralData.brochureViews}</p>
@@ -398,7 +508,11 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <div 
+                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => trackEvent('whatsappClicks')}
+                title="Click to track WhatsApp click"
+              >
                 <MessageCircle className="h-5 w-5 text-green-500" />
                 <div>
                   <p className="text-xl font-bold">{behaviouralData.whatsappClicks}</p>
@@ -406,7 +520,11 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <div 
+                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => trackEvent('emailOpens')}
+                title="Click to track email open"
+              >
                 <MailOpen className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="text-xl font-bold">{behaviouralData.emailOpens}</p>
@@ -414,7 +532,11 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <div 
+                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => trackEvent('timeOnSite')}
+                title="Click to add time on site"
+              >
                 <Timer className="h-5 w-5 text-amber-500" />
                 <div>
                   <p className="text-xl font-bold">{behaviouralData.timeOnSite}<span className="text-sm font-normal ml-1">mins</span></p>
@@ -422,16 +544,40 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 </div>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Click to manually track events</p>
           </Card>
 
           {/* AI Insights & Notes */}
           <Card className="p-4 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">AI Insights & Notes</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">AI Insights & Notes</h3>
+              </div>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-8 gap-1.5"
+                onClick={fetchAIInsights}
+                disabled={isLoadingInsights}
+              >
+                {isLoadingInsights ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                {isLoadingInsights ? 'Analysing...' : 'Analyse'}
+              </Button>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {lead.notes || generateAIInsights()}
+              {isLoadingInsights ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating AI analysis with Claude...
+                </span>
+              ) : (
+                aiInsights || lead.notes || "Click 'Analyse' to generate AI insights based on this lead's profile and behaviour."
+              )}
             </p>
           </Card>
 
