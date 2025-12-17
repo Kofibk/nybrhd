@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useUploadedData } from "@/contexts/DataContext";
+import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 
 interface AnalyticsDashboardProps {
   userType?: 'developer' | 'agent' | 'broker' | 'admin';
@@ -236,6 +237,12 @@ const AnalyticsDashboard = ({ userType = 'admin' }: AnalyticsDashboardProps) => 
           </Button>
         </div>
       </Card>
+
+      {/* AI Insights Panel */}
+      <AIInsightsPanel 
+        context="analytics" 
+        data={{ campaigns: campaignData, leads: leadData }}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
