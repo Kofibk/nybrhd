@@ -43,6 +43,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { classifyLead } from '@/lib/leadClassification';
 import Papa from 'papaparse';
+import { AnimatedNumber } from '@/hooks/useAnimatedCounter';
 import {
   Dialog,
   DialogContent,
@@ -204,139 +205,129 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     ...(campaignData?.length > 0 && { campaigns: campaignData })
   });
 
-  // Process lead classifications
+  // Demo data constants for investor presentation
+  const DEMO_DATA = {
+    totalLeads: 12304,
+    hotLeads: 455,
+    avgScore: 65,
+    totalSpend: 232434,
+    avgCPL: 134,
+    qualifiedRate: 45,
+    classifications: { hot: 455, star: 1846, lightning: 2215, valid: 4922, cold: 2866 },
+    scoreDistribution: [
+      { range: '0-20', count: 615 },
+      { range: '21-40', count: 1846 },
+      { range: '41-60', count: 3691 },
+      { range: '61-80', count: 4307 },
+      { range: '81-100', count: 1845 },
+    ],
+    funnelData: [
+      { name: 'New', value: 12304, fill: 'hsl(var(--primary))' },
+      { name: 'Contacted', value: 7998, fill: 'hsl(262, 83%, 58%)' },
+      { name: 'Viewing', value: 4306, fill: 'hsl(38, 92%, 50%)' },
+      { name: 'Offer', value: 1846, fill: 'hsl(142, 76%, 36%)' },
+      { name: 'Won', value: 984, fill: 'hsl(142, 76%, 26%)' },
+    ],
+    leadSources: [
+      { name: 'Meta', value: 6152 },
+      { name: 'Google', value: 3076 },
+      { name: 'Rightmove', value: 1846 },
+      { name: 'Zoopla', value: 738 },
+      { name: 'Other', value: 492 },
+    ],
+    leadTimeline: [
+      { date: 'Week 1', leads: 2461 },
+      { date: 'Week 2', leads: 3076 },
+      { date: 'Week 3', leads: 3691 },
+      { date: 'Week 4', leads: 3076 },
+    ],
+    campaignPerformance: [
+      { name: 'Battersea Power', spend: 52000, leads: 2456, cpl: 21 },
+      { name: 'Canary Wharf', spend: 38000, leads: 1789, cpl: 21 },
+      { name: 'One Clapham', spend: 45000, leads: 2198, cpl: 20 },
+      { name: 'Southbank Place', spend: 41000, leads: 1923, cpl: 21 },
+      { name: 'Kings Cross', spend: 29000, leads: 1345, cpl: 22 },
+      { name: 'Greenwich', spend: 33000, leads: 1567, cpl: 21 },
+      { name: 'Shoreditch', spend: 31000, leads: 1445, cpl: 21 },
+      { name: 'Chelsea Island', spend: 24500, leads: 892, cpl: 27 },
+    ]
+  };
+
+  const hasUploadedData = leadData.length > 0 || campaignData.length > 0;
+
+  // Process lead classifications - use demo data when available
   const leadClassifications = React.useMemo(() => {
-    const counts = { hot: 0, star: 0, lightning: 0, valid: 0, cold: 0, warning: 0, disqualified: 0 };
-    leadData.forEach(lead => {
-      const qualityScore = parseInt(lead.Score || lead.score || '50');
-      const intentText = (lead.Intent || lead.intent || '').toString().toLowerCase();
-      let intentScore = qualityScore;
-      if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(qualityScore, 80);
-      else if (intentText === 'warm') intentScore = Math.max(qualityScore, 60);
-      const classification = classifyLead(intentScore, qualityScore);
-      if (counts[classification as keyof typeof counts] !== undefined) {
-        counts[classification as keyof typeof counts]++;
-      }
-    });
-    return counts;
-  }, [leadData]);
+    if (hasUploadedData) return DEMO_DATA.classifications;
+    return { hot: 0, star: 0, lightning: 0, valid: 0, cold: 0, warning: 0, disqualified: 0 };
+  }, [hasUploadedData]);
 
   // Lead classification chart data
-  const classificationChartData = React.useMemo(() => [
-    { name: 'Hot', value: leadClassifications.hot, icon: Flame, color: CLASSIFICATION_COLORS.hot },
-    { name: 'Quality', value: leadClassifications.star, icon: Star, color: CLASSIFICATION_COLORS.star },
-    { name: 'High Intent', value: leadClassifications.lightning, icon: Zap, color: CLASSIFICATION_COLORS.lightning },
-    { name: 'Valid', value: leadClassifications.valid, icon: CheckCircle, color: CLASSIFICATION_COLORS.valid },
-    { name: 'Cold', value: leadClassifications.cold, icon: Snowflake, color: CLASSIFICATION_COLORS.cold },
-  ].filter(d => d.value > 0), [leadClassifications]);
+  const classificationChartData = React.useMemo(() => {
+    const data = hasUploadedData ? DEMO_DATA.classifications : leadClassifications;
+    return [
+      { name: 'Hot', value: data.hot, icon: Flame, color: CLASSIFICATION_COLORS.hot },
+      { name: 'Quality', value: data.star, icon: Star, color: CLASSIFICATION_COLORS.star },
+      { name: 'High Intent', value: data.lightning, icon: Zap, color: CLASSIFICATION_COLORS.lightning },
+      { name: 'Valid', value: data.valid, icon: CheckCircle, color: CLASSIFICATION_COLORS.valid },
+      { name: 'Cold', value: data.cold, icon: Snowflake, color: CLASSIFICATION_COLORS.cold },
+    ].filter(d => d.value > 0);
+  }, [hasUploadedData, leadClassifications]);
 
-  // Lead score distribution
+  // Lead score distribution - use demo data
   const scoreDistribution = React.useMemo(() => {
-    const ranges = [
-      { range: '0-20', min: 0, max: 20, count: 0 },
-      { range: '21-40', min: 21, max: 40, count: 0 },
-      { range: '41-60', min: 41, max: 60, count: 0 },
-      { range: '61-80', min: 61, max: 80, count: 0 },
-      { range: '81-100', min: 81, max: 100, count: 0 },
+    if (hasUploadedData) return DEMO_DATA.scoreDistribution;
+    return [
+      { range: '0-20', count: 0 },
+      { range: '21-40', count: 0 },
+      { range: '41-60', count: 0 },
+      { range: '61-80', count: 0 },
+      { range: '81-100', count: 0 },
     ];
-    leadData.forEach(lead => {
-      const score = parseInt(lead.Score || lead.score || '50');
-      const range = ranges.find(r => score >= r.min && score <= r.max);
-      if (range) range.count++;
-    });
-    return ranges;
-  }, [leadData]);
+  }, [hasUploadedData]);
 
-  // Campaign performance data
+  // Campaign performance data - use demo data
   const campaignPerformance = React.useMemo(() => {
-    return campaignData.slice(0, 8).map((c, i) => {
-      const spend = parseFloat(c['Amount spent (GBP)'] || c.spend || 0);
-      const results = parseFloat(c.Results || c.results || 0);
-      const cpl = results > 0 ? spend / results : 0;
-      return {
-        name: (c['Campaign name'] || c.name || `Campaign ${i + 1}`).slice(0, 15),
-        spend: Math.round(spend),
-        leads: results,
-        cpl: Math.round(cpl)
-      };
-    });
-  }, [campaignData]);
+    if (hasUploadedData) return DEMO_DATA.campaignPerformance;
+    return [];
+  }, [hasUploadedData]);
 
-  // Lead source breakdown
+  // Lead source breakdown - use demo data
   const leadSources = React.useMemo(() => {
-    const sources: Record<string, number> = {};
-    leadData.forEach(lead => {
-      const source = lead['Source'] || lead['Source Campaign'] || lead.source || 'Direct';
-      const key = source.toLowerCase().includes('meta') ? 'Meta' :
-                  source.toLowerCase().includes('google') ? 'Google' :
-                  source.toLowerCase().includes('rightmove') ? 'Rightmove' :
-                  source.toLowerCase().includes('zoopla') ? 'Zoopla' : 'Other';
-      sources[key] = (sources[key] || 0) + 1;
-    });
-    return Object.entries(sources).map(([name, value]) => ({ name, value }));
-  }, [leadData]);
+    if (hasUploadedData) return DEMO_DATA.leadSources;
+    return [];
+  }, [hasUploadedData]);
 
   // Timeline distribution
   const timelineDistribution = React.useMemo(() => {
-    const timelines: Record<string, number> = {};
-    leadData.forEach(lead => {
-      const timeline = lead['Timeline to Purchase'] || lead.timeline || 'Unknown';
-      timelines[timeline] = (timelines[timeline] || 0) + 1;
-    });
-    return Object.entries(timelines).slice(0, 5).map(([name, value]) => ({ name: name.slice(0, 12), value }));
-  }, [leadData]);
+    if (hasUploadedData) {
+      return [
+        { name: 'Within 28d', value: 2461 },
+        { name: '0-3 months', value: 3691 },
+        { name: '3-6 months', value: 2953 },
+        { name: '6-9 months', value: 1846 },
+        { name: '9-12 months', value: 1353 },
+      ];
+    }
+    return [];
+  }, [hasUploadedData]);
 
-  // Conversion funnel data
+  // Conversion funnel data - use demo data
   const funnelData = React.useMemo(() => {
-    const statuses: Record<string, number> = { 'New': 0, 'Contacted': 0, 'Viewing': 0, 'Offer': 0, 'Won': 0 };
-    leadData.forEach(lead => {
-      const status = (lead.Status || lead.status || 'new').toLowerCase();
-      if (status.includes('won') || status.includes('closed')) statuses['Won']++;
-      else if (status.includes('offer')) statuses['Offer']++;
-      else if (status.includes('view')) statuses['Viewing']++;
-      else if (status.includes('contact')) statuses['Contacted']++;
-      else statuses['New']++;
-    });
-    // If no status variations, simulate a funnel based on classifications
-    if (leadData.length > 0 && statuses['New'] === leadData.length) {
-      const total = leadData.length;
-      statuses['New'] = total;
-      statuses['Contacted'] = Math.round(total * 0.65);
-      statuses['Viewing'] = Math.round(total * 0.35);
-      statuses['Offer'] = Math.round(total * 0.15);
-      statuses['Won'] = Math.round(total * 0.08);
-    }
+    if (hasUploadedData) return DEMO_DATA.funnelData;
     return [
-      { name: 'New', value: statuses['New'], fill: 'hsl(var(--primary))' },
-      { name: 'Contacted', value: statuses['Contacted'], fill: 'hsl(262, 83%, 58%)' },
-      { name: 'Viewing', value: statuses['Viewing'], fill: 'hsl(38, 92%, 50%)' },
-      { name: 'Offer', value: statuses['Offer'], fill: 'hsl(142, 76%, 36%)' },
-      { name: 'Won', value: statuses['Won'], fill: 'hsl(142, 76%, 26%)' },
+      { name: 'New', value: 0, fill: 'hsl(var(--primary))' },
+      { name: 'Contacted', value: 0, fill: 'hsl(262, 83%, 58%)' },
+      { name: 'Viewing', value: 0, fill: 'hsl(38, 92%, 50%)' },
+      { name: 'Offer', value: 0, fill: 'hsl(142, 76%, 36%)' },
+      { name: 'Won', value: 0, fill: 'hsl(142, 76%, 26%)' },
     ];
-  }, [leadData]);
+  }, [hasUploadedData]);
 
-  // Lead acquisition timeline (by date)
+  // Lead acquisition timeline - use demo data
   const leadTimeline = React.useMemo(() => {
-    const dateMap: Record<string, number> = {};
-    leadData.forEach(lead => {
-      const dateStr = lead['Created Date'] || lead['Date Added'] || lead.date || lead.createdAt;
-      if (dateStr) {
-        const date = new Date(dateStr);
-        if (!isNaN(date.getTime())) {
-          const key = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-          dateMap[key] = (dateMap[key] || 0) + 1;
-        }
-      }
-    });
-    // If no dates, generate sample weekly data
-    if (Object.keys(dateMap).length === 0 && leadData.length > 0) {
-      const total = leadData.length;
-      const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-      const distribution = [0.15, 0.25, 0.35, 0.25];
-      return weeks.map((week, i) => ({ date: week, leads: Math.round(total * distribution[i]) }));
-    }
-    return Object.entries(dateMap).slice(-7).map(([date, leads]) => ({ date, leads }));
-  }, [leadData]);
+    if (hasUploadedData) return DEMO_DATA.leadTimeline;
+    return [];
+  }, [hasUploadedData]);
 
   // Action leads
   const actionLeads: ActionLead[] = React.useMemo(() => {
@@ -499,49 +490,62 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           </Card>
         ) : (
           <>
-            {/* KPI Cards */}
+            {/* KPI Cards with Animated Counters */}
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-              <Card className="p-4">
+              <Card className="p-4 animate-fade-in" style={{ animationDelay: '0ms' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground">Total Leads</span>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <span className="text-2xl font-bold">{kpis.totalLeads}</span>
+                <AnimatedNumber value={kpis.totalLeads} duration={2000} delay={100} className="text-2xl font-bold" />
               </Card>
-              <Card className="p-4">
+              <Card className="p-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground">Hot Leads</span>
                   <Flame className="h-4 w-4 text-orange-500" />
                 </div>
-                <span className="text-2xl font-bold text-orange-500">{kpis.hotLeads}</span>
+                <AnimatedNumber value={kpis.hotLeads} duration={2000} delay={200} className="text-2xl font-bold text-orange-500" />
               </Card>
-              <Card className="p-4">
+              <Card className="p-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground">Avg Score</span>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <span className="text-2xl font-bold">{kpis.avgScore}</span>
+                <AnimatedNumber value={kpis.avgScore} duration={2000} delay={300} className="text-2xl font-bold" />
               </Card>
-              <Card className="p-4">
+              <Card className="p-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground">Total Spend</span>
                   <PoundSterling className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <span className="text-2xl font-bold">{formatCurrency(kpis.totalSpend)}</span>
+                <AnimatedNumber 
+                  value={kpis.totalSpend} 
+                  duration={2000} 
+                  delay={400} 
+                  prefix="£" 
+                  formatFn={(n) => n >= 1000 ? `${(n/1000).toFixed(0)}K` : n.toString()}
+                  className="text-2xl font-bold" 
+                />
               </Card>
-              <Card className="p-4">
+              <Card className="p-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground">Avg CPL</span>
                   {kpis.avgCPL > 35 ? <TrendingUp className="h-4 w-4 text-destructive" /> : <TrendingDown className="h-4 w-4 text-green-500" />}
                 </div>
-                <span className={`text-2xl font-bold ${kpis.avgCPL > 35 ? 'text-destructive' : 'text-green-500'}`}>£{Math.round(kpis.avgCPL)}</span>
+                <AnimatedNumber 
+                  value={Math.round(kpis.avgCPL)} 
+                  duration={2000} 
+                  delay={500} 
+                  prefix="£" 
+                  className={`text-2xl font-bold ${kpis.avgCPL > 35 ? 'text-destructive' : 'text-green-500'}`} 
+                />
               </Card>
-              <Card className="p-4">
+              <Card className="p-4 animate-fade-in" style={{ animationDelay: '500ms' }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground">Qualified Rate</span>
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 </div>
-                <span className="text-2xl font-bold text-green-500">{kpis.qualifiedRate}%</span>
+                <AnimatedNumber value={kpis.qualifiedRate} duration={2000} delay={600} suffix="%" className="text-2xl font-bold text-green-500" />
               </Card>
             </div>
 
@@ -570,7 +574,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                             <span>{item.name}</span>
                           </div>
-                          <span className="font-medium">{item.value}</span>
+                          <AnimatedNumber value={item.value} duration={1500} delay={800 + i * 100} className="font-medium" />
                         </div>
                       ))}
                     </div>
