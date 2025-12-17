@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useMasterAgent } from "@/hooks/useMasterAgent";
+import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import { 
   Plus, Upload, Download, Calendar, ChevronDown, ChevronRight,
   TrendingUp, AlertCircle, CheckCircle, Pause, Play, Eye,
@@ -129,7 +130,7 @@ const getRoleConfig = (userType: string) => {
 
 const CampaignsList = ({ userType }: CampaignsListProps) => {
   const navigate = useNavigate();
-  const { campaignData } = useUploadedData(userType);
+  const { campaignData, leadData } = useUploadedData(userType);
   const { getCampaignRecommendations, isLoading: aiLoading } = useMasterAgent();
   
   const [performingExpanded, setPerformingExpanded] = useState(false);
@@ -398,6 +399,12 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
             </Button>
           </div>
         </div>
+
+        {/* AI Insights Panel */}
+        <AIInsightsPanel 
+          context="campaigns" 
+          data={{ campaigns: campaignData, leads: leadData }}
+        />
 
         {/* Overall Health */}
         <Card className="p-4">
