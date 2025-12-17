@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,6 +99,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   const [addLeadOpen, setAddLeadOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   
   // Local leads state (demoLeads + imported leads)
   const [localLeads, setLocalLeads] = useState<Lead[]>(demoLeads);
@@ -233,6 +235,14 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
       }
       return columnSort.direction === "asc" ? comparison : -comparison;
     });
+
+  // Virtual scrolling setup
+  const rowVirtualizer = useVirtualizer({
+    count: filteredLeads.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 52, // Estimated row height in pixels
+    overscan: 10, // Number of items to render outside visible area
+  });
 
   const exportToCSV = (leads: Lead[]) => {
     const headers = ["Name", "Email", "Phone", "Country", "Campaign", "Intent Score", "Quality Score", "Combined Score", "Status", "Budget", "Bedrooms", "Date", "Notes"];
@@ -790,7 +800,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
         </CardHeader>
 
         <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
-          <div className="overflow-auto h-full">
+          <div ref={tableContainerRef} className="overflow-auto h-full">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -811,68 +821,78 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map((lead) => (
-                  <TableRow 
-                    key={lead.id} 
-                    className="cursor-pointer transition-colors hover:bg-muted/40"
-                  >
-                    <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedLeads.has(lead.id)}
-                        onCheckedChange={() => toggleSelectLead(lead.id)}
-                      />
-                    </TableCell>
-                    <TableCell 
-                      className="font-medium text-sm" 
-                      onClick={() => setSelectedLead(lead)}
+                {/* Virtual scrolling spacer */}
+                <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0]?.start ?? 0}px` }} />
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const lead = filteredLeads[virtualRow.index];
+                  if (!lead) return null;
+                  return (
+                    <TableRow 
+                      key={lead.id}
+                      data-index={virtualRow.index}
+                      className="cursor-pointer transition-colors hover:bg-muted/40"
+                      style={{ height: `${virtualRow.size}px` }}
                     >
-                      {lead.name}
-                    </TableCell>
-                    <TableCell 
-                      className="text-sm text-muted-foreground hidden md:table-cell" 
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      {lead.email}
-                    </TableCell>
-                    <TableCell 
-                      className="text-sm hidden lg:table-cell" 
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      {lead.country}
-                    </TableCell>
-                    <TableCell 
-                      className="text-sm hidden sm:table-cell" 
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      {formatBudget(lead.budget)}
-                    </TableCell>
-                    <TableCell 
-                      className="text-sm hidden lg:table-cell max-w-[150px] truncate" 
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      {lead.campaignName}
-                    </TableCell>
-                    <TableCell onClick={() => setSelectedLead(lead)}>
-                      <span className={`font-semibold text-sm ${getScoreColor(totalScore(lead))}`}>
-                        {totalScore(lead)}
-                      </span>
-                    </TableCell>
-                    <TableCell onClick={() => setSelectedLead(lead)}>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs whitespace-nowrap ${getStatusColor(getLeadStatus(lead))}`}
+                      <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedLeads.has(lead.id)}
+                          onCheckedChange={() => toggleSelectLead(lead.id)}
+                        />
+                      </TableCell>
+                      <TableCell 
+                        className="font-medium text-sm" 
+                        onClick={() => setSelectedLead(lead)}
                       >
-                        {getStatusLabel(getLeadStatus(lead))}
-                      </Badge>
-                    </TableCell>
-                    <TableCell 
-                      className="text-sm text-muted-foreground hidden md:table-cell" 
-                      onClick={() => setSelectedLead(lead)}
-                    >
-                      {formatDate(lead.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {lead.name}
+                      </TableCell>
+                      <TableCell 
+                        className="text-sm text-muted-foreground hidden md:table-cell" 
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        {lead.email}
+                      </TableCell>
+                      <TableCell 
+                        className="text-sm hidden lg:table-cell" 
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        {lead.country}
+                      </TableCell>
+                      <TableCell 
+                        className="text-sm hidden sm:table-cell" 
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        {formatBudget(lead.budget)}
+                      </TableCell>
+                      <TableCell 
+                        className="text-sm hidden lg:table-cell max-w-[150px] truncate" 
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        {lead.campaignName}
+                      </TableCell>
+                      <TableCell onClick={() => setSelectedLead(lead)}>
+                        <span className={`font-semibold text-sm ${getScoreColor(totalScore(lead))}`}>
+                          {totalScore(lead)}
+                        </span>
+                      </TableCell>
+                      <TableCell onClick={() => setSelectedLead(lead)}>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs whitespace-nowrap ${getStatusColor(getLeadStatus(lead))}`}
+                        >
+                          {getStatusLabel(getLeadStatus(lead))}
+                        </Badge>
+                      </TableCell>
+                      <TableCell 
+                        className="text-sm text-muted-foreground hidden md:table-cell" 
+                        onClick={() => setSelectedLead(lead)}
+                      >
+                        {formatDate(lead.createdAt)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {/* Virtual scrolling end spacer */}
+                <tr style={{ height: `${rowVirtualizer.getTotalSize() - (rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]?.end ?? 0)}px` }} />
               </TableBody>
             </Table>
           </div>
