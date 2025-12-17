@@ -28,7 +28,7 @@ const AdminLeadsPage = () => {
       <AIInsightsPanel 
         context="leads" 
         data={{ leads: leadData, campaigns: campaignData }}
-        className="mb-4 flex-shrink-0"
+        className="flex-shrink-0 -mx-4 sm:-mx-6"
       />
 
       <div className="flex-1 min-h-0">
