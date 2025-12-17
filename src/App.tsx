@@ -33,6 +33,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ClientDetail from "./pages/admin/ClientDetail";
+import AdminLeadsPage from "./pages/admin/AdminLeadsPage";
 import AdminRoute from "./components/admin/AdminRoute";
 import AirtableTest from "./pages/AirtableTest";
 import AITestPage from "./pages/AITestPage";
@@ -133,7 +134,7 @@ const AppRoutes = () => {
       <Route path="/admin/leads" element={
         <AdminRoute>
           <DashboardLayout title="Leads" userType="admin">
-            <LeadsManagement userType="admin" />
+            <AdminLeadsPage />
           </DashboardLayout>
         </AdminRoute>
       } />
