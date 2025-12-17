@@ -30,7 +30,9 @@ import {
   Sparkles,
   TrendingUp,
   RefreshCw,
-  Loader2
+  Loader2,
+  Zap,
+  Activity
 } from "lucide-react";
 import { Lead, LEAD_SOURCES } from "@/lib/types";
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
@@ -40,6 +42,7 @@ import { formatBudget } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAutoLeadAnalysis } from "@/hooks/useAutoLeadAnalysis";
 
 interface LeadDetailDrawerProps {
   lead: Lead | null;
@@ -93,6 +96,8 @@ const getStorageKey = (leadId: string, type: string) => `lead_${leadId}_${type}`
 export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps) => {
   const [aiInsights, setAiInsights] = useState<string | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [autoAnalysisTriggered, setAutoAnalysisTriggered] = useState(false);
+  const [thresholdsMet, setThresholdsMet] = useState<string[]>([]);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
     mortgageAIP: false,
     hasLawyer: false,
@@ -106,6 +111,16 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
     emailOpens: 0,
     timeOnSite: 0,
   });
+
+  const { 
+    checkThresholds, 
+    checkAndTriggerAnalysis, 
+    loadExistingAnalysis,
+    calculateEngagementScore,
+    DEFAULT_THRESHOLDS,
+    isAnalysing: isAutoAnalysing,
+    lastAnalysis,
+  } = useAutoLeadAnalysis();
 
   // Load persisted data when lead changes
   useEffect(() => {
@@ -146,8 +161,30 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
       } else {
         setAiInsights(null);
       }
+
+      // Load existing auto-analysis
+      loadExistingAnalysis(lead.id);
     }
-  }, [lead?.id]);
+  }, [lead?.id, loadExistingAnalysis]);
+
+  // Check thresholds when behavioural data changes
+  useEffect(() => {
+    if (lead && behaviouralData) {
+      const { shouldTrigger, thresholdsMet: met } = checkThresholds(behaviouralData);
+      setThresholdsMet(met);
+      setAutoAnalysisTriggered(shouldTrigger);
+    }
+  }, [lead, behaviouralData, checkThresholds]);
+
+  // Update AI insights when auto-analysis completes
+  useEffect(() => {
+    if (lastAnalysis?.insights) {
+      setAiInsights(lastAnalysis.insights);
+      if (lead?.id) {
+        localStorage.setItem(getStorageKey(lead.id, 'insights'), lastAnalysis.insights);
+      }
+    }
+  }, [lastAnalysis, lead?.id]);
 
   // Save verification status when it changes
   const updateVerification = useCallback((field: keyof VerificationStatus, value: boolean) => {
@@ -159,14 +196,22 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
     toast.success(`${field.replace(/([A-Z])/g, ' $1').trim()} updated`);
   }, [lead?.id, verificationStatus]);
 
-  // Track behavioural event
-  const trackEvent = useCallback((eventType: keyof BehaviouralData) => {
+  // Track behavioural event and check for auto-analysis trigger
+  const trackEvent = useCallback(async (eventType: keyof BehaviouralData) => {
     if (!lead?.id) return;
     
     const newData = { ...behaviouralData, [eventType]: behaviouralData[eventType] + 1 };
     setBehaviouralData(newData);
     localStorage.setItem(getStorageKey(lead.id, 'behavioural'), JSON.stringify(newData));
-  }, [lead?.id, behaviouralData]);
+
+    // Check if this event triggers auto-analysis
+    const result = await checkAndTriggerAnalysis(lead, newData, eventType);
+    if (result) {
+      toast.success('Auto-analysis triggered by engagement threshold!', {
+        description: `Thresholds met: ${result.thresholdsMet.join(', ')}`,
+      });
+    }
+  }, [lead, behaviouralData, checkAndTriggerAnalysis]);
 
   // Fetch AI insights from Claude
   const fetchAIInsights = useCallback(async () => {
@@ -491,15 +536,55 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
 
           {/* Behavioural Analytics */}
           <Card className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Behavioural Analytics</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Behavioural Analytics</h3>
+              </div>
+              {autoAnalysisTriggered && (
+                <Badge variant="default" className="bg-green-500/10 text-green-500 border-green-500/20 gap-1">
+                  <Zap className="h-3 w-3" />
+                  Auto-analysis enabled
+                </Badge>
+              )}
             </div>
+
+            {/* Engagement Score Bar */}
+            <div className="mb-4 p-3 bg-muted/20 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Engagement Score</span>
+                <span className="font-bold text-primary">{calculateEngagementScore(behaviouralData)}</span>
+              </div>
+              <Progress 
+                value={(calculateEngagementScore(behaviouralData) / DEFAULT_THRESHOLDS.totalEngagementScore) * 100} 
+                className="h-2"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Auto-analysis triggers at {DEFAULT_THRESHOLDS.totalEngagementScore} points
+              </p>
+            </div>
+
+            {/* Thresholds Met */}
+            {thresholdsMet.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-1">
+                {thresholdsMet.map((threshold, i) => (
+                  <Badge key={i} variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                    <Check className="h-3 w-3 mr-1" />
+                    {threshold}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div 
-                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                  behaviouralData.brochureViews >= DEFAULT_THRESHOLDS.brochureViews 
+                    ? 'bg-green-500/10 border border-green-500/30' 
+                    : 'bg-muted/30'
+                }`}
                 onClick={() => trackEvent('brochureViews')}
-                title="Click to track brochure view"
+                title={`Click to track brochure view (threshold: ${DEFAULT_THRESHOLDS.brochureViews})`}
               >
                 <BookOpen className="h-5 w-5 text-primary" />
                 <div>
@@ -509,9 +594,13 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
               </div>
               
               <div 
-                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                  behaviouralData.whatsappClicks >= DEFAULT_THRESHOLDS.whatsappClicks 
+                    ? 'bg-green-500/10 border border-green-500/30' 
+                    : 'bg-muted/30'
+                }`}
                 onClick={() => trackEvent('whatsappClicks')}
-                title="Click to track WhatsApp click"
+                title={`Click to track WhatsApp click (threshold: ${DEFAULT_THRESHOLDS.whatsappClicks})`}
               >
                 <MessageCircle className="h-5 w-5 text-green-500" />
                 <div>
@@ -521,9 +610,13 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
               </div>
               
               <div 
-                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                  behaviouralData.emailOpens >= DEFAULT_THRESHOLDS.emailOpens 
+                    ? 'bg-green-500/10 border border-green-500/30' 
+                    : 'bg-muted/30'
+                }`}
                 onClick={() => trackEvent('emailOpens')}
-                title="Click to track email open"
+                title={`Click to track email open (threshold: ${DEFAULT_THRESHOLDS.emailOpens})`}
               >
                 <MailOpen className="h-5 w-5 text-blue-500" />
                 <div>
@@ -533,9 +626,13 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
               </div>
               
               <div 
-                className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
+                  behaviouralData.timeOnSite >= DEFAULT_THRESHOLDS.timeOnSite 
+                    ? 'bg-green-500/10 border border-green-500/30' 
+                    : 'bg-muted/30'
+                }`}
                 onClick={() => trackEvent('timeOnSite')}
-                title="Click to add time on site"
+                title={`Click to add time on site (threshold: ${DEFAULT_THRESHOLDS.timeOnSite} mins)`}
               >
                 <Timer className="h-5 w-5 text-amber-500" />
                 <div>
@@ -544,7 +641,7 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Click to manually track events</p>
+            <p className="text-xs text-muted-foreground mt-2 text-center">Click to manually track events • Green = threshold met</p>
           </Card>
 
           {/* AI Insights & Notes */}
@@ -554,29 +651,42 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
                 <Sparkles className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">AI Insights & Notes</h3>
               </div>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="h-8 gap-1.5"
-                onClick={fetchAIInsights}
-                disabled={isLoadingInsights}
-              >
-                {isLoadingInsights ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-2">
+                {lastAnalysis?.triggeredBy && (
+                  <Badge variant="outline" className="text-xs bg-primary/10">
+                    <Activity className="h-3 w-3 mr-1" />
+                    Auto: {lastAnalysis.triggeredBy}
+                  </Badge>
                 )}
-                {isLoadingInsights ? 'Analysing...' : 'Analyse'}
-              </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 gap-1.5"
+                  onClick={fetchAIInsights}
+                  disabled={isLoadingInsights || isAutoAnalysing}
+                >
+                  {isLoadingInsights || isAutoAnalysing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                  {isLoadingInsights || isAutoAnalysing ? 'Analysing...' : 'Analyse'}
+                </Button>
+              </div>
             </div>
+            {lastAnalysis?.analyzedAt && (
+              <p className="text-xs text-muted-foreground mb-2">
+                Last analysed: {format(new Date(lastAnalysis.analyzedAt), "MMM d, yyyy 'at' h:mm a")}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {isLoadingInsights ? (
+              {isLoadingInsights || isAutoAnalysing ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Generating AI analysis with Claude...
                 </span>
               ) : (
-                aiInsights || lead.notes || "Click 'Analyse' to generate AI insights based on this lead's profile and behaviour."
+                aiInsights || lead.notes || "Click 'Analyse' to generate AI insights, or interact with the lead to trigger auto-analysis."
               )}
             </p>
           </Card>
