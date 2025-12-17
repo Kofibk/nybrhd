@@ -22,12 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -79,6 +73,7 @@ import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
 import { formatBudget } from "@/lib/utils";
+import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 
 interface AdminLeadsTableProps {
   searchQuery: string;
@@ -889,199 +884,12 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
         </CardContent>
       </Card>
 
-      {/* Lead Profile Drawer */}
-      <Sheet open={!!selectedLead} onOpenChange={() => setSelectedLead(null)}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-          {selectedLead && (
-            <>
-              <SheetHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <SheetTitle className="text-xl">{selectedLead.name}</SheetTitle>
-                    <Badge variant="outline" className={`mt-2 ${getStatusColor(getLeadStatus(selectedLead))}`}>
-                      {getStatusLabel(getLeadStatus(selectedLead))}
-                    </Badge>
-                  </div>
-                </div>
-              </SheetHeader>
-
-              <div className="space-y-6">
-                {/* Status Update Actions */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Update Status
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant={getLeadStatus(selectedLead) === "contacted" ? "default" : "outline"} 
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => updateLeadStatus(selectedLead.id, "contacted")}
-                      >
-                        <Phone className="h-3 w-3 mr-1" />
-                        Contacted
-                      </Button>
-                      <Button 
-                        variant={getLeadStatus(selectedLead) === "booked_viewing" ? "default" : "outline"} 
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => updateLeadStatus(selectedLead.id, "booked_viewing")}
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        Book Viewing
-                      </Button>
-                      <Button 
-                        variant={getLeadStatus(selectedLead) === "offer" ? "default" : "outline"} 
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => updateLeadStatus(selectedLead.id, "offer")}
-                      >
-                        <Clock className="h-3 w-3 mr-1" />
-                        Offer Made
-                      </Button>
-                      <Button 
-                        variant={getLeadStatus(selectedLead) === "won" ? "default" : "outline"} 
-                        size="sm"
-                        className="text-xs gap-1"
-                        onClick={() => updateLeadStatus(selectedLead.id, "won")}
-                      >
-                        <CheckCircle className="h-3 w-3" />
-                        Won
-                      </Button>
-                      <Button 
-                        variant={getLeadStatus(selectedLead) === "lost" ? "destructive" : "outline"} 
-                        size="sm"
-                        className="text-xs gap-1 col-span-2"
-                        onClick={() => updateLeadStatus(selectedLead.id, "lost")}
-                      >
-                        <XCircle className="h-3 w-3" />
-                        Mark as Lost
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Lead Scores */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Lead Scores
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-center mb-4">
-                      <span className={`text-4xl font-bold ${getScoreColor(totalScore(selectedLead))}`}>
-                        {totalScore(selectedLead)}
-                      </span>
-                      <p className="text-xs text-muted-foreground">Combined Score</p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Intent Score</span>
-                        <span className="font-medium">{selectedLead.intentScore}</span>
-                      </div>
-                      <Progress value={selectedLead.intentScore} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Quality Score</span>
-                        <span className="font-medium">{selectedLead.qualityScore}</span>
-                      </div>
-                      <Progress value={selectedLead.qualityScore} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Contact Information */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Contact Information
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedLead.email}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedLead.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedLead.country}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{formatDate(selectedLead.createdAt)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Preferences */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Building className="h-4 w-4" />
-                      Preferences
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Budget</p>
-                        <p className="font-medium">{formatBudget(selectedLead.budget)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Bedrooms</p>
-                        <p className="font-medium">{selectedLead.bedrooms}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-muted-foreground">Campaign Source</p>
-                        <p className="font-medium">{selectedLead.campaignName}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Notes */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Notes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedLead.notes || "No notes available for this lead."}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Actions */}
-                <div className="flex gap-2">
-                  <Button className="flex-1 gap-2" variant="outline">
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </Button>
-                  <Button className="flex-1 gap-2" variant="outline">
-                    <Phone className="h-4 w-4" />
-                    Call
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      {/* Lead Profile Drawer - Comprehensive View */}
+      <LeadDetailDrawer 
+        lead={selectedLead} 
+        open={!!selectedLead} 
+        onClose={() => setSelectedLead(null)} 
+      />
     </>
   );
 };
