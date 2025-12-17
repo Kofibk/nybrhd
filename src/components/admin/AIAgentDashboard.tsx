@@ -28,7 +28,8 @@ import {
   ArrowUp,
   ArrowDown,
   Target,
-  Home
+  Home,
+  Database
 } from 'lucide-react';
 import { useMasterAgent, MasterAgentContext } from '@/hooks/useMasterAgent';
 import { useUploadedData } from '@/contexts/DataContext';
@@ -37,6 +38,7 @@ import { UploadZone } from '@/components/UploadZone';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { classifyLead, getClassificationConfig } from '@/lib/leadClassification';
+import Papa from 'papaparse';
 import {
   Dialog,
   DialogContent,
@@ -388,6 +390,40 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     return `£${value}`;
   };
 
+  const [loadingDemo, setLoadingDemo] = useState(false);
+
+  const loadDemoData = async () => {
+    setLoadingDemo(true);
+    try {
+      // Fetch and parse campaign CSV
+      const campaignResponse = await fetch('/sample-data/sample-campaigns.csv');
+      const campaignText = await campaignResponse.text();
+      const campaignResult = Papa.parse(campaignText, { header: true, skipEmptyLines: true });
+      
+      // Fetch and parse leads CSV
+      const leadsResponse = await fetch('/sample-data/sample-leads.csv');
+      const leadsText = await leadsResponse.text();
+      const leadsResult = Papa.parse(leadsText, { header: true, skipEmptyLines: true });
+      
+      if (campaignResult.data.length > 0) {
+        setCampaignData(campaignResult.data);
+        setCampaignFileName('sample-campaigns.csv');
+      }
+      
+      if (leadsResult.data.length > 0) {
+        setLeadData(leadsResult.data);
+        setLeadFileName('sample-leads.csv');
+      }
+      
+      toast.success(`Loaded ${campaignResult.data.length} campaigns and ${leadsResult.data.length} leads`);
+    } catch (error) {
+      console.error('Failed to load demo data:', error);
+      toast.error('Failed to load demo data');
+    } finally {
+      setLoadingDemo(false);
+    }
+  };
+
   // Empty state when no data
   if (leadData.length === 0 && campaignData.length === 0) {
     return (
@@ -449,14 +485,29 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Upload campaign and lead CSVs to see actionable insights, hot leads, and AI-powered recommendations.
           </p>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={() => handleUpload('campaigns')}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Campaigns
-            </Button>
-            <Button variant="outline" onClick={() => handleUpload('leads')}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Leads
+          <div className="flex flex-col gap-4 items-center">
+            <div className="flex gap-3 justify-center">
+              <Button onClick={() => handleUpload('campaigns')}>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Campaigns
+              </Button>
+              <Button variant="outline" onClick={() => handleUpload('leads')}>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Leads
+              </Button>
+            </div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="h-px w-12 bg-border" />
+              <span className="text-sm">or</span>
+              <div className="h-px w-12 bg-border" />
+            </div>
+            <Button variant="secondary" onClick={loadDemoData} disabled={loadingDemo}>
+              {loadingDemo ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Database className="h-4 w-4 mr-2" />
+              )}
+              Load Demo Data
             </Button>
           </div>
         </Card>
