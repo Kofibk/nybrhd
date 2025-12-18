@@ -159,11 +159,11 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="bg-card border-b border-border p-4 flex items-center gap-4 flex-shrink-0 shadow-sm">
+          <header className="bg-card border-b border-border px-3 py-3 md:p-4 flex items-center gap-3 md:gap-4 flex-shrink-0 shadow-sm">
             {/* Mobile Menu */}
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -173,12 +173,12 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
               </SheetContent>
             </Sheet>
             
-            <div className="flex-1" data-tour="ai-insights">
-              <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+            <div className="flex-1 min-w-0" data-tour="ai-insights">
+              <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">{title}</h1>
             </div>
           </header>
           
-          <div className="flex-1 overflow-auto p-4 md:p-6">
+          <div className="flex-1 overflow-auto p-3 md:p-6">
             {children}
           </div>
         </main>
