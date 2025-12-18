@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import AdminUsersTable from "@/components/admin/AdminUsersTable";
+import ClientOnboardingWizard from "@/components/admin/ClientOnboardingWizard";
 
 const AdminUsersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -8,8 +9,8 @@ const AdminUsersPage = () => {
   return (
     <section aria-label="Admin users" className="h-full flex flex-col min-h-0">
       <div className="mb-4 flex items-center justify-between gap-3 flex-shrink-0">
-        <div className="min-w-0">
-          <h1 className="sr-only">Users</h1>
+        <div className="flex items-center gap-3">
+          <ClientOnboardingWizard />
         </div>
         <div className="w-full max-w-sm">
           <Input
