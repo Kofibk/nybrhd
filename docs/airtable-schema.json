@@ -1,19 +1,23 @@
 {
   "name": "Naybourhood.ai Platform",
-  "description": "Complete backend schema for property lead generation platform",
-  "version": "1.0.0",
+  "description": "Complete backend schema for property lead generation platform with admin client management",
+  "version": "2.0.0",
   "tables": [
     {
       "name": "Users",
-      "description": "Platform users (developers, agents, brokers)",
+      "description": "Platform users (developers, agents, brokers, admins)",
       "fields": [
         { "name": "email", "type": "email", "required": true, "unique": true },
         { "name": "full_name", "type": "singleLineText", "required": true },
         { "name": "phone", "type": "phoneNumber" },
         { "name": "avatar_url", "type": "url" },
-        { "name": "user_type", "type": "singleSelect", "options": ["developer", "agent", "broker"] },
-        { "name": "status", "type": "singleSelect", "options": ["active", "inactive", "pending"] },
+        { "name": "user_type", "type": "singleSelect", "options": ["developer", "agent", "broker", "admin"] },
+        { "name": "status", "type": "singleSelect", "options": ["active", "inactive", "pending", "suspended"] },
         { "name": "company", "type": "link", "linkedTable": "Companies" },
+        { "name": "onboarded_by", "type": "link", "linkedTable": "Users", "description": "Admin who onboarded this user" },
+        { "name": "onboarded_at", "type": "dateTime" },
+        { "name": "last_login", "type": "dateTime" },
+        { "name": "login_count", "type": "number", "precision": 0 },
         { "name": "created_at", "type": "createdTime" }
       ]
     },
@@ -23,10 +27,20 @@
       "fields": [
         { "name": "name", "type": "singleLineText", "required": true },
         { "name": "website", "type": "url" },
-        { "name": "industry", "type": "singleSelect", "options": ["developer", "agency", "brokerage"] },
+        { "name": "industry", "type": "singleSelect", "options": ["residential", "commercial", "mixed", "lettings", "financial"] },
+        { "name": "address", "type": "multilineText" },
         { "name": "logo_url", "type": "url" },
+        { "name": "primary_contact", "type": "link", "linkedTable": "Users" },
         { "name": "users", "type": "link", "linkedTable": "Users", "multiple": true },
         { "name": "campaigns", "type": "link", "linkedTable": "Campaigns", "multiple": true },
+        { "name": "subscription", "type": "link", "linkedTable": "Subscriptions" },
+        { "name": "monthly_budget", "type": "currency", "symbol": "£" },
+        { "name": "total_spend", "type": "rollup", "linkedTable": "Invoices", "field": "amount", "aggregation": "sum" },
+        { "name": "total_leads", "type": "rollup", "linkedTable": "Leads", "aggregation": "count" },
+        { "name": "status", "type": "singleSelect", "options": ["active", "inactive", "trial", "churned"] },
+        { "name": "onboarded_by", "type": "link", "linkedTable": "Users", "description": "Admin who onboarded this company" },
+        { "name": "onboarded_at", "type": "dateTime" },
+        { "name": "notes", "type": "multilineText" },
         { "name": "created_at", "type": "createdTime" }
       ]
     },
@@ -35,7 +49,45 @@
       "description": "Role-based access control",
       "fields": [
         { "name": "user", "type": "link", "linkedTable": "Users", "required": true },
-        { "name": "role", "type": "singleSelect", "options": ["admin", "manager", "member"], "required": true }
+        { "name": "role", "type": "singleSelect", "options": ["super_admin", "admin", "manager", "member", "viewer"], "required": true },
+        { "name": "granted_by", "type": "link", "linkedTable": "Users" },
+        { "name": "granted_at", "type": "dateTime" }
+      ]
+    },
+    {
+      "name": "Client_Invitations",
+      "description": "Pending client onboarding invitations",
+      "fields": [
+        { "name": "email", "type": "email", "required": true },
+        { "name": "name", "type": "singleLineText", "required": true },
+        { "name": "phone", "type": "phoneNumber" },
+        { "name": "company_name", "type": "singleLineText", "required": true },
+        { "name": "client_type", "type": "singleSelect", "options": ["developer", "agent", "broker"], "required": true },
+        { "name": "status", "type": "singleSelect", "options": ["pending", "sent", "opened", "accepted", "expired", "cancelled"], "required": true },
+        { "name": "invitation_token", "type": "singleLineText", "description": "Unique token for invitation link" },
+        { "name": "assigned_campaigns", "type": "link", "linkedTable": "Campaigns", "multiple": true },
+        { "name": "monthly_budget", "type": "currency", "symbol": "£" },
+        { "name": "notes", "type": "multilineText" },
+        { "name": "invited_by", "type": "link", "linkedTable": "Users", "required": true },
+        { "name": "sent_at", "type": "dateTime" },
+        { "name": "opened_at", "type": "dateTime" },
+        { "name": "accepted_at", "type": "dateTime" },
+        { "name": "expires_at", "type": "dateTime" },
+        { "name": "created_company", "type": "link", "linkedTable": "Companies", "description": "Company created upon acceptance" },
+        { "name": "created_user", "type": "link", "linkedTable": "Users", "description": "User created upon acceptance" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Onboarding_Steps",
+      "description": "Track client onboarding progress",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "user", "type": "link", "linkedTable": "Users", "required": true },
+        { "name": "step", "type": "singleSelect", "options": ["invitation_sent", "account_created", "profile_completed", "integrations_connected", "first_campaign_created", "first_lead_received"], "required": true },
+        { "name": "completed", "type": "checkbox" },
+        { "name": "completed_at", "type": "dateTime" },
+        { "name": "notes", "type": "singleLineText" }
       ]
     },
     {
@@ -70,6 +122,7 @@
         { "name": "user_type", "type": "singleSelect", "options": ["developer", "agent", "broker"] },
         { "name": "objective", "type": "singleSelect", "options": ["leads", "awareness"] },
         { "name": "status", "type": "singleSelect", "options": ["draft", "pending", "active", "paused", "completed"] },
+        { "name": "managed_by", "type": "singleSelect", "options": ["client", "naybourhood"], "description": "Who manages this campaign" },
         { "name": "audience_maturity", "type": "singleSelect", "options": ["cold-start", "warm-data", "verified-lookalikes"] },
         { "name": "audience_clusters", "type": "multipleSelects", "options": ["Young Professionals", "HNWI", "First-Time Buyers", "Investors", "Downsizers", "Families", "Expats", "Holiday Home Seekers"] },
         { "name": "anti_tire_kicker_enabled", "type": "checkbox" },
@@ -97,6 +150,7 @@
         { "name": "creative_assets", "type": "link", "linkedTable": "Creative_Assets", "multiple": true },
         { "name": "ad_copies", "type": "link", "linkedTable": "Ad_Copies", "multiple": true },
         { "name": "leads", "type": "link", "linkedTable": "Leads", "multiple": true },
+        { "name": "created_by", "type": "link", "linkedTable": "Users" },
         { "name": "created_at", "type": "createdTime" }
       ]
     },
@@ -105,7 +159,7 @@
       "description": "Campaign creative files",
       "fields": [
         { "name": "campaign", "type": "link", "linkedTable": "Campaigns", "required": true },
-        { "name": "type", "type": "singleSelect", "options": ["static", "carousel", "video"] },
+        { "name": "type", "type": "singleSelect", "options": ["static", "carousel", "video", "ugc"] },
         { "name": "file", "type": "attachment" },
         { "name": "thumbnail_url", "type": "url" },
         { "name": "file_size_bytes", "type": "number" },
@@ -134,6 +188,7 @@
       "fields": [
         { "name": "campaign", "type": "link", "linkedTable": "Campaigns", "required": true },
         { "name": "date", "type": "date", "required": true },
+        { "name": "platform", "type": "singleSelect", "options": ["facebook", "instagram", "messenger", "audience_network"] },
         { "name": "impressions", "type": "number", "precision": 0 },
         { "name": "clicks", "type": "number", "precision": 0 },
         { "name": "spend", "type": "currency", "symbol": "£" },
@@ -174,7 +229,9 @@
         { "name": "quality_score", "type": "number", "precision": 0, "description": "0-100" },
         { "name": "intent_score", "type": "number", "precision": 0, "description": "0-100" },
         { "name": "classification", "type": "singleSelect", "options": ["hot", "quality", "intent", "valid", "cold", "at-risk", "disqualified"] },
-        { "name": "lead_source", "type": "singleSelect", "options": ["meta", "portal", "website", "email", "introducer", "crm", "csv"] },
+        { "name": "sla_deadline", "type": "dateTime", "description": "When this lead must be contacted by" },
+        { "name": "sla_status", "type": "singleSelect", "options": ["on-track", "due-soon", "overdue"] },
+        { "name": "lead_source", "type": "singleSelect", "options": ["meta", "google", "rightmove", "zoopla", "onthemarket", "website", "email", "introducer", "crm", "csv"] },
         { "name": "source_detail", "type": "singleLineText" },
         { "name": "utm_campaign", "type": "singleLineText" },
         { "name": "utm_content", "type": "singleLineText" },
@@ -183,7 +240,13 @@
         { "name": "status", "type": "singleSelect", "options": ["new", "contacted", "qualified", "viewing-booked", "offer-made", "won", "lost"] },
         { "name": "assigned_agent", "type": "link", "linkedTable": "Users" },
         { "name": "notes", "type": "multilineText" },
+        { "name": "verification_mortgage_aip", "type": "checkbox" },
+        { "name": "verification_lawyer", "type": "checkbox" },
+        { "name": "verification_uk_resident", "type": "checkbox" },
+        { "name": "verification_kyc_aml", "type": "checkbox" },
+        { "name": "verification_proof_of_funds", "type": "checkbox" },
         { "name": "interactions", "type": "link", "linkedTable": "Lead_Interactions", "multiple": true },
+        { "name": "behavioral_analytics", "type": "link", "linkedTable": "Lead_Behavioral_Analytics" },
         { "name": "created_at", "type": "createdTime" }
       ]
     },
@@ -192,10 +255,27 @@
       "description": "Lead engagement timeline",
       "fields": [
         { "name": "lead", "type": "link", "linkedTable": "Leads", "required": true },
-        { "name": "type", "type": "singleSelect", "options": ["form-submit", "email-open", "email-click", "whatsapp-reply", "call", "viewing", "brochure-download", "offer-submitted"] },
+        { "name": "type", "type": "singleSelect", "options": ["form-submit", "email-open", "email-click", "whatsapp-reply", "call", "viewing", "brochure-download", "offer-submitted", "note-added"] },
         { "name": "description", "type": "singleLineText" },
+        { "name": "performed_by", "type": "link", "linkedTable": "Users" },
         { "name": "metadata", "type": "multilineText", "description": "JSON data" },
         { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Lead_Behavioral_Analytics",
+      "description": "Tracked behavioral data for leads",
+      "fields": [
+        { "name": "lead", "type": "link", "linkedTable": "Leads", "required": true },
+        { "name": "brochure_views", "type": "number", "precision": 0 },
+        { "name": "whatsapp_clicks", "type": "number", "precision": 0 },
+        { "name": "email_opens", "type": "number", "precision": 0 },
+        { "name": "time_on_site_seconds", "type": "number", "precision": 0 },
+        { "name": "page_views", "type": "number", "precision": 0 },
+        { "name": "last_activity", "type": "dateTime" },
+        { "name": "engagement_score", "type": "number", "precision": 0, "description": "Calculated total engagement" },
+        { "name": "auto_analysis_triggered", "type": "checkbox" },
+        { "name": "auto_analysis_at", "type": "dateTime" }
       ]
     },
     {
@@ -206,6 +286,7 @@
         { "name": "source_type", "type": "singleSelect", "options": ["portal", "website", "email", "introducer", "crm"] },
         { "name": "name", "type": "singleLineText" },
         { "name": "config", "type": "multilineText", "description": "JSON config" },
+        { "name": "webhook_url", "type": "url" },
         { "name": "is_active", "type": "checkbox" },
         { "name": "leads_count", "type": "rollup", "linkedTable": "Leads", "aggregation": "count" },
         { "name": "created_at", "type": "createdTime" }
@@ -218,7 +299,7 @@
         { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
         { "name": "name", "type": "singleLineText", "required": true },
         { "name": "channel", "type": "singleSelect", "options": ["whatsapp", "email", "sms"] },
-        { "name": "trigger", "type": "singleSelect", "options": ["new-lead", "viewing-booked", "offer-made", "manual"] },
+        { "name": "trigger", "type": "singleSelect", "options": ["new-lead", "viewing-booked", "offer-made", "manual", "classification-change"] },
         { "name": "target_classifications", "type": "multipleSelects", "options": ["hot", "quality", "intent", "valid", "cold"] },
         { "name": "is_active", "type": "checkbox" },
         { "name": "messages", "type": "link", "linkedTable": "Automation_Messages", "multiple": true },
@@ -245,14 +326,20 @@
       "description": "Client billing and plans",
       "fields": [
         { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
-        { "name": "plan", "type": "singleSelect", "options": ["starter", "growth", "enterprise"] },
-        { "name": "status", "type": "singleSelect", "options": ["active", "past-due", "cancelled", "trial"] },
+        { "name": "plan", "type": "singleSelect", "options": ["starter", "growth", "enterprise", "custom"] },
+        { "name": "status", "type": "singleSelect", "options": ["active", "past-due", "cancelled", "trial", "paused"] },
         { "name": "monthly_fee", "type": "currency", "symbol": "£" },
+        { "name": "setup_fee", "type": "currency", "symbol": "£" },
         { "name": "leads_included", "type": "number", "precision": 0 },
         { "name": "leads_used", "type": "number", "precision": 0 },
+        { "name": "overage_rate", "type": "currency", "symbol": "£", "description": "Per lead over included" },
+        { "name": "billing_cycle", "type": "singleSelect", "options": ["monthly", "quarterly", "annual"] },
         { "name": "billing_cycle_start", "type": "date" },
         { "name": "billing_cycle_end", "type": "date" },
+        { "name": "trial_ends_at", "type": "date" },
         { "name": "stripe_subscription_id", "type": "singleLineText" },
+        { "name": "stripe_customer_id", "type": "singleLineText" },
+        { "name": "auto_renew", "type": "checkbox" },
         { "name": "created_at", "type": "createdTime" }
       ]
     },
@@ -262,13 +349,46 @@
       "fields": [
         { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
         { "name": "subscription", "type": "link", "linkedTable": "Subscriptions" },
+        { "name": "invoice_number", "type": "singleLineText", "required": true },
         { "name": "amount", "type": "currency", "symbol": "£" },
-        { "name": "status", "type": "singleSelect", "options": ["pending", "paid", "failed", "refunded"] },
+        { "name": "tax_amount", "type": "currency", "symbol": "£" },
+        { "name": "total_amount", "type": "currency", "symbol": "£" },
+        { "name": "status", "type": "singleSelect", "options": ["draft", "pending", "paid", "failed", "refunded", "cancelled"] },
         { "name": "invoice_date", "type": "date" },
         { "name": "due_date", "type": "date" },
         { "name": "paid_at", "type": "date" },
+        { "name": "payment_method", "type": "singleSelect", "options": ["card", "bank_transfer", "direct_debit"] },
         { "name": "stripe_invoice_id", "type": "singleLineText" },
-        { "name": "pdf_url", "type": "url" }
+        { "name": "stripe_payment_intent_id", "type": "singleLineText" },
+        { "name": "pdf_url", "type": "url" },
+        { "name": "line_items", "type": "link", "linkedTable": "Invoice_Line_Items", "multiple": true }
+      ]
+    },
+    {
+      "name": "Invoice_Line_Items",
+      "description": "Individual items on invoices",
+      "fields": [
+        { "name": "invoice", "type": "link", "linkedTable": "Invoices", "required": true },
+        { "name": "description", "type": "singleLineText", "required": true },
+        { "name": "quantity", "type": "number", "precision": 0 },
+        { "name": "unit_price", "type": "currency", "symbol": "£" },
+        { "name": "total", "type": "currency", "symbol": "£" },
+        { "name": "type", "type": "singleSelect", "options": ["subscription", "setup", "overage", "ad_spend", "service", "discount"] }
+      ]
+    },
+    {
+      "name": "Payment_Methods",
+      "description": "Stored payment methods for companies",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies", "required": true },
+        { "name": "type", "type": "singleSelect", "options": ["card", "bank_account", "direct_debit"] },
+        { "name": "last_four", "type": "singleLineText" },
+        { "name": "brand", "type": "singleSelect", "options": ["visa", "mastercard", "amex"] },
+        { "name": "expiry_month", "type": "number", "precision": 0 },
+        { "name": "expiry_year", "type": "number", "precision": 0 },
+        { "name": "is_default", "type": "checkbox" },
+        { "name": "stripe_payment_method_id", "type": "singleLineText" },
+        { "name": "created_at", "type": "createdTime" }
       ]
     },
     {
@@ -283,10 +403,17 @@
         { "name": "whatsapp_phone_id", "type": "singleLineText" },
         { "name": "whatsapp_access_token", "type": "singleLineText" },
         { "name": "whatsapp_business_id", "type": "singleLineText" },
+        { "name": "whatsapp_webhook_verify_token", "type": "singleLineText" },
+        { "name": "n8n_webhook_url", "type": "url" },
+        { "name": "n8n_api_key", "type": "singleLineText" },
         { "name": "timezone", "type": "singleSelect", "options": ["Europe/London", "Asia/Dubai", "Africa/Lagos", "Africa/Cairo"] },
         { "name": "date_format", "type": "singleSelect", "options": ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"] },
         { "name": "email_notifications", "type": "checkbox" },
-        { "name": "weekly_report", "type": "checkbox" }
+        { "name": "push_notifications", "type": "checkbox" },
+        { "name": "weekly_report", "type": "checkbox" },
+        { "name": "sla_hot_lead_hours", "type": "number", "precision": 0, "description": "Default: 1" },
+        { "name": "sla_quality_lead_hours", "type": "number", "precision": 0, "description": "Default: 4" },
+        { "name": "sla_warm_lead_hours", "type": "number", "precision": 0, "description": "Default: 24" }
       ]
     },
     {
@@ -295,37 +422,105 @@
       "fields": [
         { "name": "user", "type": "link", "linkedTable": "Users" },
         { "name": "company", "type": "link", "linkedTable": "Companies" },
-        { "name": "action", "type": "singleSelect", "options": ["create", "update", "delete", "login", "logout", "export", "import"] },
+        { "name": "action", "type": "singleSelect", "options": ["create", "update", "delete", "login", "logout", "export", "import", "invite_sent", "invite_accepted", "status_change", "payment"] },
         { "name": "entity_type", "type": "singleLineText" },
         { "name": "entity_id", "type": "singleLineText" },
-        { "name": "changes", "type": "multilineText", "description": "JSON diff" },
+        { "name": "old_value", "type": "multilineText", "description": "JSON" },
+        { "name": "new_value", "type": "multilineText", "description": "JSON" },
         { "name": "ip_address", "type": "singleLineText" },
+        { "name": "user_agent", "type": "singleLineText" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "AI_Analysis_Results",
+      "description": "Stored AI analysis for leads and campaigns",
+      "fields": [
+        { "name": "lead", "type": "link", "linkedTable": "Leads" },
+        { "name": "campaign", "type": "link", "linkedTable": "Campaigns" },
+        { "name": "company", "type": "link", "linkedTable": "Companies" },
+        { "name": "analysis_type", "type": "singleSelect", "options": ["lead_scoring", "campaign_optimization", "budget_recommendation", "creative_suggestion"] },
+        { "name": "model_used", "type": "singleLineText" },
+        { "name": "input_data", "type": "multilineText", "description": "JSON" },
+        { "name": "result", "type": "multilineText", "description": "JSON" },
+        { "name": "recommendations", "type": "multilineText" },
+        { "name": "applied", "type": "checkbox" },
+        { "name": "applied_at", "type": "dateTime" },
+        { "name": "applied_by", "type": "link", "linkedTable": "Users" },
+        { "name": "created_at", "type": "createdTime" }
+      ]
+    },
+    {
+      "name": "Webhook_Events",
+      "description": "Incoming webhook events log",
+      "fields": [
+        { "name": "company", "type": "link", "linkedTable": "Companies" },
+        { "name": "source", "type": "singleSelect", "options": ["meta", "stripe", "whatsapp", "pixel", "email", "crm"] },
+        { "name": "event_type", "type": "singleLineText" },
+        { "name": "payload", "type": "multilineText", "description": "JSON" },
+        { "name": "status", "type": "singleSelect", "options": ["received", "processed", "failed", "ignored"] },
+        { "name": "error_message", "type": "singleLineText" },
+        { "name": "processed_at", "type": "dateTime" },
         { "name": "created_at", "type": "createdTime" }
       ]
     }
   ],
-  "relationships": [
-    { "from": "Users.company", "to": "Companies" },
-    { "from": "User_Roles.user", "to": "Users" },
-    { "from": "Developments.company", "to": "Companies" },
-    { "from": "Campaigns.company", "to": "Companies" },
-    { "from": "Campaigns.development", "to": "Developments" },
-    { "from": "Creative_Assets.campaign", "to": "Campaigns" },
-    { "from": "Ad_Copies.campaign", "to": "Campaigns" },
-    { "from": "Campaign_Metrics.campaign", "to": "Campaigns" },
-    { "from": "Leads.campaign", "to": "Campaigns" },
-    { "from": "Leads.company", "to": "Companies" },
-    { "from": "Leads.development", "to": "Developments" },
-    { "from": "Leads.assigned_agent", "to": "Users" },
-    { "from": "Lead_Interactions.lead", "to": "Leads" },
-    { "from": "Lead_Sources.company", "to": "Companies" },
-    { "from": "Automation_Sequences.company", "to": "Companies" },
-    { "from": "Automation_Messages.sequence", "to": "Automation_Sequences" },
-    { "from": "Subscriptions.company", "to": "Companies" },
-    { "from": "Invoices.company", "to": "Companies" },
-    { "from": "Invoices.subscription", "to": "Subscriptions" },
-    { "from": "Settings.company", "to": "Companies" },
-    { "from": "Audit_Logs.user", "to": "Users" },
-    { "from": "Audit_Logs.company", "to": "Companies" }
+  "relationships": {
+    "Users → Companies": "Many-to-One (via company field)",
+    "Companies → Users": "One-to-Many (via users field)",
+    "Client_Invitations → Users": "Many-to-One (invited_by, created_user)",
+    "Client_Invitations → Companies": "Many-to-One (created_company)",
+    "Client_Invitations → Campaigns": "Many-to-Many (assigned_campaigns)",
+    "Onboarding_Steps → Companies": "Many-to-One",
+    "Onboarding_Steps → Users": "Many-to-One",
+    "Campaigns → Companies": "Many-to-One",
+    "Campaigns → Developments": "Many-to-One",
+    "Leads → Campaigns": "Many-to-One",
+    "Leads → Companies": "Many-to-One",
+    "Subscriptions → Companies": "One-to-One",
+    "Invoices → Companies": "Many-to-One",
+    "Invoices → Subscriptions": "Many-to-One",
+    "Invoice_Line_Items → Invoices": "Many-to-One",
+    "Payment_Methods → Companies": "Many-to-One",
+    "AI_Analysis_Results → Leads/Campaigns": "Many-to-One"
+  },
+  "indexes": [
+    "Users.email (unique)",
+    "Companies.name",
+    "Client_Invitations.email",
+    "Client_Invitations.invitation_token (unique)",
+    "Leads.email",
+    "Leads.classification",
+    "Leads.sla_status",
+    "Campaigns.status",
+    "Invoices.invoice_number (unique)",
+    "Invoices.status"
+  ],
+  "automations": [
+    {
+      "name": "Set SLA deadline on lead creation",
+      "trigger": "Lead created",
+      "action": "Calculate sla_deadline based on classification"
+    },
+    {
+      "name": "Update SLA status",
+      "trigger": "Every 15 minutes",
+      "action": "Check leads approaching/past deadline, update sla_status"
+    },
+    {
+      "name": "Process invitation acceptance",
+      "trigger": "Client_Invitation.status changed to 'accepted'",
+      "action": "Create Company and User records, link to invitation"
+    },
+    {
+      "name": "Send weekly reports",
+      "trigger": "Every Monday 9am",
+      "action": "Generate and email weekly performance reports to companies with weekly_report enabled"
+    },
+    {
+      "name": "Invoice reminder",
+      "trigger": "3 days before due_date",
+      "action": "Send payment reminder email"
+    }
   ]
 }
