@@ -518,30 +518,30 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   return (
     <div className="h-full">
       {/* Main Dashboard */}
-      <div className="space-y-6 overflow-auto pb-6">
+      <div className="space-y-4 md:space-y-6 overflow-auto pb-6 px-1">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">{greeting}, {userName}</h1>
-            <p className="text-muted-foreground">{dateString}</p>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold">{greeting}, {userName}</h1>
+            <p className="text-sm text-muted-foreground">{dateString}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Campaigns: {campaignData.length}{campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}
             </p>
           </div>
           <div className="flex gap-2">
             <Dialog open={uploadDialogOpen && uploadType === 'campaigns'} onOpenChange={(o) => !o && setUploadDialogOpen(false)}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" onClick={() => handleUpload('campaigns')}><Upload className="h-3.5 w-3.5 mr-1.5" />Campaigns</Button>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => handleUpload('campaigns')}><Upload className="h-3.5 w-3.5 mr-1.5" /><span className="hidden xs:inline">Campaigns</span><span className="xs:hidden">Camp.</span></Button>
               </DialogTrigger>
-              <DialogContent><DialogHeader><DialogTitle>Upload Campaign Data</DialogTitle></DialogHeader>
+              <DialogContent className="max-w-[90vw] sm:max-w-lg"><DialogHeader><DialogTitle>Upload Campaign Data</DialogTitle></DialogHeader>
                 <UploadZone label="Campaign CSV" description="Upload Meta Ads export CSV" onDataParsed={handleCampaignData} isUploaded={false} onClear={() => {}} />
               </DialogContent>
             </Dialog>
             <Dialog open={uploadDialogOpen && uploadType === 'leads'} onOpenChange={(o) => !o && setUploadDialogOpen(false)}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" onClick={() => handleUpload('leads')}><Upload className="h-3.5 w-3.5 mr-1.5" />Leads</Button>
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => handleUpload('leads')}><Upload className="h-3.5 w-3.5 mr-1.5" />Leads</Button>
               </DialogTrigger>
-              <DialogContent><DialogHeader><DialogTitle>Upload Lead Data</DialogTitle></DialogHeader>
+              <DialogContent className="max-w-[90vw] sm:max-w-lg"><DialogHeader><DialogTitle>Upload Lead Data</DialogTitle></DialogHeader>
                 <UploadZone label="Lead CSV" description="Upload lead export CSV" onDataParsed={handleLeadData} isUploaded={false} onClear={() => {}} />
               </DialogContent>
             </Dialog>
@@ -549,17 +549,17 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         </div>
 
         {!hasData ? (
-          <Card className="p-12 text-center border-dashed">
-            <Brain className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-xl font-semibold mb-2">Upload your data to get started</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">Upload campaign and lead CSVs to see actionable insights and analytics.</p>
-            <div className="flex flex-col gap-4 items-center">
-              <div className="flex gap-3">
-                <Button onClick={() => handleUpload('campaigns')}><Upload className="h-4 w-4 mr-2" />Upload Campaigns</Button>
-                <Button variant="outline" onClick={() => handleUpload('leads')}><Upload className="h-4 w-4 mr-2" />Upload Leads</Button>
+          <Card className="p-6 md:p-12 text-center border-dashed">
+            <Brain className="h-12 w-12 md:h-16 md:w-16 mx-auto text-muted-foreground mb-3 md:mb-4 opacity-50" />
+            <h3 className="text-lg md:text-xl font-semibold mb-2">Upload your data to get started</h3>
+            <p className="text-sm text-muted-foreground mb-4 md:mb-6 max-w-md mx-auto">Upload campaign and lead CSVs to see actionable insights and analytics.</p>
+            <div className="flex flex-col gap-3 md:gap-4 items-center">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                <Button onClick={() => handleUpload('campaigns')} className="w-full sm:w-auto"><Upload className="h-4 w-4 mr-2" />Upload Campaigns</Button>
+                <Button variant="outline" onClick={() => handleUpload('leads')} className="w-full sm:w-auto"><Upload className="h-4 w-4 mr-2" />Upload Leads</Button>
               </div>
               <div className="flex items-center gap-3 text-muted-foreground"><div className="h-px w-12 bg-border" /><span className="text-sm">or</span><div className="h-px w-12 bg-border" /></div>
-              <Button variant="secondary" onClick={loadDemoData} disabled={loadingDemo}>
+              <Button variant="secondary" onClick={loadDemoData} disabled={loadingDemo} className="w-full sm:w-auto">
                 {loadingDemo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Database className="h-4 w-4 mr-2" />}Load Demo Data
               </Button>
             </div>
@@ -567,32 +567,32 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
         ) : (
           <>
             {/* KPI Cards with Animated Counters */}
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-              <Card className="p-4 animate-fade-in" style={{ animationDelay: '0ms' }}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
+              <Card className="p-3 md:p-4 animate-fade-in" style={{ animationDelay: '0ms' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Total Leads</span>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-[10px] md:text-xs text-muted-foreground">Total Leads</span>
+                  <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </div>
-                <AnimatedNumber value={kpis.totalLeads} duration={2000} delay={100} className="text-2xl font-bold" />
+                <AnimatedNumber value={kpis.totalLeads} duration={2000} delay={100} className="text-xl md:text-2xl font-bold" />
               </Card>
-              <Card className="p-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <Card className="p-3 md:p-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Hot Leads</span>
-                  <Flame className="h-4 w-4 text-orange-500" />
+                  <span className="text-[10px] md:text-xs text-muted-foreground">Hot Leads</span>
+                  <Flame className="h-3.5 w-3.5 md:h-4 md:w-4 text-orange-500" />
                 </div>
-                <AnimatedNumber value={kpis.hotLeads} duration={2000} delay={200} className="text-2xl font-bold text-orange-500" />
+                <AnimatedNumber value={kpis.hotLeads} duration={2000} delay={200} className="text-xl md:text-2xl font-bold text-orange-500" />
               </Card>
-              <Card className="p-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
+              <Card className="p-3 md:p-4 animate-fade-in" style={{ animationDelay: '200ms' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Avg Score</span>
-                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-[10px] md:text-xs text-muted-foreground">Avg Score</span>
+                  <Target className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </div>
-                <AnimatedNumber value={kpis.avgScore} duration={2000} delay={300} className="text-2xl font-bold" />
+                <AnimatedNumber value={kpis.avgScore} duration={2000} delay={300} className="text-xl md:text-2xl font-bold" />
               </Card>
-              <Card className="p-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
+              <Card className="p-3 md:p-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Total Spend</span>
-                  <PoundSterling className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-[10px] md:text-xs text-muted-foreground">Total Spend</span>
+                  <PoundSterling className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
                 </div>
                 <AnimatedNumber 
                   value={kpis.totalSpend} 
@@ -600,57 +600,57 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
                   delay={400} 
                   prefix="£" 
                   formatFn={(n) => n >= 1000 ? `${(n/1000).toFixed(0)}K` : n.toString()}
-                  className="text-2xl font-bold" 
+                  className="text-xl md:text-2xl font-bold" 
                 />
               </Card>
-              <Card className="p-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
+              <Card className="p-3 md:p-4 animate-fade-in" style={{ animationDelay: '400ms' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Avg CPL</span>
-                  {kpis.avgCPL > 35 ? <TrendingUp className="h-4 w-4 text-destructive" /> : <TrendingDown className="h-4 w-4 text-green-500" />}
+                  <span className="text-[10px] md:text-xs text-muted-foreground">Avg CPL</span>
+                  {kpis.avgCPL > 35 ? <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 text-destructive" /> : <TrendingDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" />}
                 </div>
                 <AnimatedNumber 
                   value={Math.round(kpis.avgCPL)} 
                   duration={2000} 
                   delay={500} 
                   prefix="£" 
-                  className={`text-2xl font-bold ${kpis.avgCPL > 35 ? 'text-destructive' : 'text-green-500'}`} 
+                  className={`text-xl md:text-2xl font-bold ${kpis.avgCPL > 35 ? 'text-destructive' : 'text-green-500'}`} 
                 />
               </Card>
-              <Card className="p-4 animate-fade-in" style={{ animationDelay: '500ms' }}>
+              <Card className="p-3 md:p-4 animate-fade-in" style={{ animationDelay: '500ms' }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground">Qualified Rate</span>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-[10px] md:text-xs text-muted-foreground">Qualified Rate</span>
+                  <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" />
                 </div>
-                <AnimatedNumber value={kpis.qualifiedRate} duration={2000} delay={600} suffix="%" className="text-2xl font-bold text-green-500" />
+                <AnimatedNumber value={kpis.qualifiedRate} duration={2000} delay={600} suffix="%" className="text-xl md:text-2xl font-bold text-green-500" />
               </Card>
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {/* Lead Classification */}
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Lead Classification</CardTitle>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium">Lead Classification</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4">
-                    <div className="w-32 h-32">
+                <CardContent className="px-3 md:px-6">
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-24 h-24 md:w-32 md:h-32 shrink-0">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={classificationChartData} cx="50%" cy="50%" innerRadius={25} outerRadius={50} paddingAngle={2} dataKey="value">
+                          <Pie data={classificationChartData} cx="50%" cy="50%" innerRadius={20} outerRadius={40} paddingAngle={2} dataKey="value">
                             {classificationChartData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                           </Pie>
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-1.5 md:space-y-2 min-w-0">
                       {classificationChartData.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                            <span>{item.name}</span>
+                        <div key={i} className="flex items-center justify-between text-xs md:text-sm">
+                          <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+                            <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                            <span className="truncate">{item.name}</span>
                           </div>
-                          <AnimatedNumber value={item.value} duration={1500} delay={800 + i * 100} className="font-medium" />
+                          <AnimatedNumber value={item.value} duration={1500} delay={800 + i * 100} className="font-medium shrink-0 ml-2" />
                         </div>
                       ))}
                     </div>
@@ -660,16 +660,16 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
 
               {/* Score Distribution */}
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Lead Score Distribution</CardTitle>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium">Lead Score Distribution</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={120}>
+                <CardContent className="px-3 md:px-6">
+                  <ResponsiveContainer width="100%" height={100}>
                     <BarChart data={scoreDistribution}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="range" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                      <XAxis dataKey="range" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" width={25} />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11 }} />
                       <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -678,20 +678,20 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
               {/* Campaign Performance */}
               <Card className="lg:col-span-2">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Campaign Performance</CardTitle>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium">Campaign Performance</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={180}>
+                <CardContent className="px-3 md:px-6">
+                  <ResponsiveContainer width="100%" height={150}>
                     <BarChart data={campaignPerformance} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <XAxis type="number" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={70} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11 }} />
+                      <Legend wrapperStyle={{ fontSize: 10 }} />
                       <Bar dataKey="leads" name="Leads" fill="hsl(142, 76%, 36%)" radius={[0, 4, 4, 0]} />
                       <Bar dataKey="cpl" name="CPL (£)" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                     </BarChart>
@@ -701,16 +701,16 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
 
               {/* Lead Sources */}
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Lead Sources</CardTitle>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium">Lead Sources</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={180}>
+                <CardContent className="px-3 md:px-6">
+                  <ResponsiveContainer width="100%" height={150}>
                     <PieChart>
-                      <Pie data={leadSources} cx="50%" cy="50%" outerRadius={60} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                      <Pie data={leadSources} cx="50%" cy="50%" outerRadius={50} dataKey="value" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                         {leadSources.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                       </Pie>
-                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -718,14 +718,14 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             </div>
 
             {/* Charts Row 3 - Funnel & Timeline */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {/* Conversion Funnel */}
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Conversion Funnel</CardTitle>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium">Conversion Funnel</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="px-3 md:px-6">
+                  <div className="space-y-2 md:space-y-3">
                     {funnelData.map((stage, i) => {
                       const maxValue = funnelData[0]?.value || 1;
                       const widthPercent = Math.max((stage.value / maxValue) * 100, 15);
@@ -733,18 +733,18 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
                         ? Math.round((stage.value / funnelData[i - 1].value) * 100) 
                         : 100;
                       return (
-                        <div key={stage.name} className="flex items-center gap-3">
-                          <span className="text-xs w-16 text-muted-foreground">{stage.name}</span>
+                        <div key={stage.name} className="flex items-center gap-2 md:gap-3">
+                          <span className="text-[10px] md:text-xs w-12 md:w-16 text-muted-foreground">{stage.name}</span>
                           <div className="flex-1 relative">
                             <div 
-                              className="h-8 rounded flex items-center justify-end pr-3 transition-all"
+                              className="h-6 md:h-8 rounded flex items-center justify-end pr-2 md:pr-3 transition-all"
                               style={{ width: `${widthPercent}%`, backgroundColor: stage.fill }}
                             >
-                              <span className="text-xs font-medium text-white">{stage.value}</span>
+                              <span className="text-[10px] md:text-xs font-medium text-white">{stage.value}</span>
                             </div>
                           </div>
                           {i > 0 && (
-                            <span className={`text-xs w-12 text-right ${conversionRate >= 50 ? 'text-green-500' : conversionRate >= 30 ? 'text-amber-500' : 'text-destructive'}`}>
+                            <span className={`text-[10px] md:text-xs w-10 md:w-12 text-right ${conversionRate >= 50 ? 'text-green-500' : conversionRate >= 30 ? 'text-amber-500' : 'text-destructive'}`}>
                               {conversionRate}%
                             </span>
                           )}
@@ -757,16 +757,16 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
 
               {/* Lead Acquisition Timeline */}
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Lead Acquisition Over Time</CardTitle>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium">Lead Acquisition Over Time</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={160}>
+                <CardContent className="px-3 md:px-6">
+                  <ResponsiveContainer width="100%" height={130}>
                     <AreaChart data={leadTimeline}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                      <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }} />
+                      <XAxis dataKey="date" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
+                      <YAxis tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" width={25} />
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11 }} />
                       <Area type="monotone" dataKey="leads" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.2)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -776,50 +776,50 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
 
             {/* AI Recommendations */}
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-yellow-500" />AI Recommendations
+              <CardHeader className="pb-2 px-3 md:px-6">
+                <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                  <Lightbulb className="h-3.5 w-3.5 md:h-4 md:w-4 text-yellow-500" />AI Recommendations
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 md:px-6">
                 {loadingRecommendations ? (
-                  <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /><span className="text-sm">Analysing...</span></div>
+                  <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="text-xs md:text-sm">Analysing...</span></div>
                 ) : aiRecommendations.length > 0 ? (
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5 md:space-y-2">
                     {aiRecommendations.map((rec, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" /><span>{rec}</span></li>
+                      <li key={i} className="flex items-start gap-2 text-xs md:text-sm"><CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500 mt-0.5 shrink-0" /><span>{rec}</span></li>
                     ))}
                   </ul>
-                ) : <p className="text-sm text-muted-foreground">No recommendations yet.</p>}
+                ) : <p className="text-xs md:text-sm text-muted-foreground">No recommendations yet.</p>}
               </CardContent>
             </Card>
 
             {/* Action Required */}
             {actionLeads.length > 0 && (
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-orange-500" />Action Required
-                    <Badge variant="destructive" className="ml-1">{actionLeads.length}</Badge>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                    <Flame className="h-3.5 w-3.5 md:h-4 md:w-4 text-orange-500" />Action Required
+                    <Badge variant="destructive" className="ml-1 text-[10px] md:text-xs">{actionLeads.length}</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-2 px-3 md:px-6">
                   {actionLeads.map((lead) => (
-                    <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm">{lead.name}</span>
-                          <Badge variant="outline" className="text-xs">{lead.budget}</Badge>
-                          <Badge className="bg-orange-500/20 text-orange-600 border-0 text-xs">{lead.reason}</Badge>
+                    <div key={lead.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 md:p-3 rounded-lg bg-orange-500/5 border border-orange-500/20">
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                          <span className="font-medium text-xs md:text-sm truncate">{lead.name}</span>
+                          <Badge variant="outline" className="text-[10px] md:text-xs shrink-0">{lead.budget}</Badge>
+                          <Badge className="bg-orange-500/20 text-orange-600 border-0 text-[10px] md:text-xs shrink-0">{lead.reason}</Badge>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>Q: {lead.qualityScore}</span><span>I: {lead.intentScore}</span><span>{lead.timeline}</span>
+                        <div className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs text-muted-foreground">
+                          <span>Q: {lead.qualityScore}</span><span>I: {lead.intentScore}</span><span className="truncate">{lead.timeline}</span>
                         </div>
                       </div>
-                      <div className="flex gap-1.5">
-                        <Button size="sm" variant="default" onClick={() => handleAction('call', lead)}><Phone className="h-3.5 w-3.5" /></Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAction('whatsapp', lead)}><MessageCircle className="h-3.5 w-3.5" /></Button>
-                        <Button size="sm" variant="outline" onClick={() => handleAction('booking', lead)}><Calendar className="h-3.5 w-3.5" /></Button>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button size="sm" variant="default" onClick={() => handleAction('call', lead)} className="h-7 w-7 md:h-8 md:w-8 p-0"><Phone className="h-3 w-3 md:h-3.5 md:w-3.5" /></Button>
+                        <Button size="sm" variant="outline" onClick={() => handleAction('whatsapp', lead)} className="h-7 w-7 md:h-8 md:w-8 p-0"><MessageCircle className="h-3 w-3 md:h-3.5 md:w-3.5" /></Button>
+                        <Button size="sm" variant="outline" onClick={() => handleAction('booking', lead)} className="h-7 w-7 md:h-8 md:w-8 p-0"><Calendar className="h-3 w-3 md:h-3.5 md:w-3.5" /></Button>
                       </div>
                     </div>
                   ))}
@@ -830,25 +830,25 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             {/* Campaign Alerts */}
             {campaignAlerts.length > 0 && (
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />Campaign Alerts
-                    <Badge variant="secondary" className="ml-1 bg-amber-500/20 text-amber-600">{campaignAlerts.length}</Badge>
+                <CardHeader className="pb-2 px-3 md:px-6">
+                  <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+                    <AlertCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-500" />Campaign Alerts
+                    <Badge variant="secondary" className="ml-1 bg-amber-500/20 text-amber-600 text-[10px] md:text-xs">{campaignAlerts.length}</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-2 px-3 md:px-6">
                   {campaignAlerts.map((alert) => (
-                    <div key={alert.id} className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{alert.name}</span>
-                          <span className="text-destructive font-medium text-sm">CPL: {alert.currentValue}</span>
+                    <div key={alert.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 md:p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-xs md:text-sm truncate">{alert.name}</span>
+                          <span className="text-destructive font-medium text-xs md:text-sm shrink-0">CPL: {alert.currentValue}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground">{alert.recommendation} {alert.savings && <span className="text-green-500">Save {alert.savings}</span>}</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">{alert.recommendation} {alert.savings && <span className="text-green-500">Save {alert.savings}</span>}</p>
                       </div>
-                      <div className="flex gap-1.5">
-                        <Button size="sm" onClick={() => handleCampaignAction('apply', alert)} className="bg-green-600 hover:bg-green-700"><CheckCircle className="h-3.5 w-3.5 mr-1" />Apply</Button>
-                        <Button size="sm" variant="outline" onClick={() => handleCampaignAction('view', alert)}><Eye className="h-3.5 w-3.5" /></Button>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button size="sm" onClick={() => handleCampaignAction('apply', alert)} className="bg-green-600 hover:bg-green-700 h-7 md:h-8 text-xs"><CheckCircle className="h-3 w-3 md:h-3.5 md:w-3.5 mr-1" />Apply</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleCampaignAction('view', alert)} className="h-7 w-7 md:h-8 md:w-8 p-0"><Eye className="h-3 w-3 md:h-3.5 md:w-3.5" /></Button>
                       </div>
                     </div>
                   ))}
@@ -863,57 +863,57 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
       {!chatOpen ? (
         <Button 
           onClick={() => setChatOpen(true)} 
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+          className="fixed bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg z-50"
           size="icon"
         >
-          <Bot className="h-6 w-6" />
+          <Bot className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
       ) : (
-        <Card className={`fixed bottom-6 right-6 z-50 shadow-2xl transition-all ${chatMinimized ? 'w-72 h-14' : 'w-96 h-[500px]'}`}>
-          <CardHeader className="pb-2 border-b flex flex-row items-center justify-between py-3 px-4">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Bot className="h-4 w-4 text-primary" />AI Assistant
+        <Card className={`fixed z-50 shadow-2xl transition-all ${chatMinimized ? 'bottom-4 right-4 md:bottom-6 md:right-6 w-64 md:w-72 h-12 md:h-14' : 'bottom-0 right-0 md:bottom-6 md:right-6 w-full md:w-96 h-[85vh] md:h-[500px] md:rounded-lg rounded-t-lg'}`}>
+          <CardHeader className="pb-2 border-b flex flex-row items-center justify-between py-2.5 md:py-3 px-3 md:px-4">
+            <CardTitle className="text-xs md:text-sm font-medium flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />AI Assistant
             </CardTitle>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setChatMinimized(!chatMinimized)}>
-                {chatMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              <Button variant="ghost" size="icon" className="h-6 w-6 md:h-7 md:w-7" onClick={() => setChatMinimized(!chatMinimized)}>
+                {chatMinimized ? <Maximize2 className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <Minimize2 className="h-3.5 w-3.5 md:h-4 md:w-4" />}
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setChatOpen(false)}>
-                <X className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-6 w-6 md:h-7 md:w-7" onClick={() => setChatOpen(false)}>
+                <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
               </Button>
             </div>
           </CardHeader>
           {!chatMinimized && (
             <>
-              <ScrollArea className="flex-1 p-4 h-[360px]" ref={scrollRef}>
+              <ScrollArea className="flex-1 p-3 md:p-4 h-[calc(85vh-120px)] md:h-[360px]" ref={scrollRef}>
                 {messages.length === 0 ? (
                   <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground text-center mb-4">Ask me anything about your data</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground text-center mb-3 md:mb-4">Ask me anything about your data</p>
                     <div className="space-y-2">
                       {["Best performing campaign?", "Show hot leads", "How to reduce CPL?", "Daily summary"].map((q, i) => (
-                        <Button key={i} variant="outline" size="sm" className="w-full text-xs h-auto py-2 justify-start" onClick={() => setQuery(q)} disabled={!hasData}>{q}</Button>
+                        <Button key={i} variant="outline" size="sm" className="w-full text-[10px] md:text-xs h-auto py-2 justify-start" onClick={() => setQuery(q)} disabled={!hasData}>{q}</Button>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 md:space-y-3">
                     {messages.map((m, i) => (
                       <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                        <div className={`max-w-[85%] rounded-lg px-2.5 md:px-3 py-1.5 md:py-2 text-xs md:text-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                           <p className="whitespace-pre-wrap">{m.content}</p>
                         </div>
                       </div>
                     ))}
-                    {isLoading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-3 py-2 flex items-center gap-2"><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="text-sm">Thinking...</span></div></div>}
+                    {isLoading && <div className="flex justify-start"><div className="bg-muted rounded-lg px-2.5 md:px-3 py-1.5 md:py-2 flex items-center gap-2"><Loader2 className="h-3 w-3 md:h-3.5 md:w-3.5 animate-spin" /><span className="text-xs md:text-sm">Thinking...</span></div></div>}
                   </div>
                 )}
               </ScrollArea>
-              <div className="p-3 border-t">
+              <div className="p-2.5 md:p-3 border-t">
                 <form onSubmit={handleSubmit} className="flex gap-2">
-                  <Textarea placeholder={hasData ? "Ask anything..." : "Upload data first..."} value={query} onChange={(e) => setQuery(e.target.value)} className="min-h-[40px] max-h-[60px] resize-none text-sm" disabled={!hasData} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }}} />
-                  <Button type="submit" size="icon" disabled={isLoading || !query.trim() || !hasData}>{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button>
+                  <Textarea placeholder={hasData ? "Ask anything..." : "Upload data first..."} value={query} onChange={(e) => setQuery(e.target.value)} className="min-h-[36px] md:min-h-[40px] max-h-[50px] md:max-h-[60px] resize-none text-xs md:text-sm" disabled={!hasData} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }}} />
+                  <Button type="submit" size="icon" disabled={isLoading || !query.trim() || !hasData} className="h-9 w-9 md:h-10 md:w-10">{isLoading ? <Loader2 className="h-3.5 w-3.5 md:h-4 md:w-4 animate-spin" /> : <Send className="h-3.5 w-3.5 md:h-4 md:w-4" />}</Button>
                 </form>
-                {error && <p className="text-xs text-destructive mt-2 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{error}</p>}
+                {error && <p className="text-[10px] md:text-xs text-destructive mt-2 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{error}</p>}
               </div>
             </>
           )}
