@@ -19,7 +19,10 @@ import {
   BarChart3, 
   Settings, 
   LogOut, 
-  Menu 
+  Menu,
+  Building2,
+  CreditCard,
+  UserCog
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -40,13 +43,28 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   const navigate = useNavigate();
   
   const basePath = `/${userType}`;
-  const navigation = [
+  
+  // Base navigation items for all user types
+  const baseNavigation = [
     { name: "Dashboard", icon: LayoutDashboard, href: basePath, tourId: "dashboard" },
     { name: "Campaigns", icon: Megaphone, href: `${basePath}/campaigns`, tourId: "campaigns" },
     { name: "Leads", icon: Users, href: `${basePath}/leads`, tourId: "leads" },
+  ];
+  
+  // Admin-specific navigation items
+  const adminNavigation = userType === 'admin' ? [
+    { name: "Companies", icon: Building2, href: `${basePath}/companies`, tourId: "companies" },
+    { name: "Users", icon: UserCog, href: `${basePath}/users`, tourId: "users" },
+    { name: "Billing", icon: CreditCard, href: `${basePath}/billing`, tourId: "billing" },
+  ] : [];
+  
+  // Common navigation items for all user types
+  const commonNavigation = [
     { name: "Analytics", icon: BarChart3, href: `${basePath}/analytics`, tourId: "analytics" },
     { name: "Settings", icon: Settings, href: `${basePath}/settings`, tourId: "settings" },
   ];
+  
+  const navigation = [...baseNavigation, ...adminNavigation, ...commonNavigation];
 
   const isActive = (href: string) => location.pathname === href;
 

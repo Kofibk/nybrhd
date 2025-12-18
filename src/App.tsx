@@ -34,6 +34,9 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ClientDetail from "./pages/admin/ClientDetail";
 import AdminLeadsPage from "./pages/admin/AdminLeadsPage";
+import AdminCompaniesPage from "./pages/admin/AdminCompaniesPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminBillingPage from "./pages/admin/AdminBillingPage";
 import AdminRoute from "./components/admin/AdminRoute";
 import AirtableTest from "./pages/AirtableTest";
 import AITestPage from "./pages/AITestPage";
@@ -135,6 +138,27 @@ const AppRoutes = () => {
         <AdminRoute>
           <DashboardLayout title="Leads" userType="admin">
             <AdminLeadsPage />
+          </DashboardLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/companies" element={
+        <AdminRoute>
+          <DashboardLayout title="Companies" userType="admin">
+            <AdminCompaniesPage />
+          </DashboardLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/users" element={
+        <AdminRoute>
+          <DashboardLayout title="Users" userType="admin">
+            <AdminUsersPage />
+          </DashboardLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/billing" element={
+        <AdminRoute>
+          <DashboardLayout title="Billing" userType="admin">
+            <AdminBillingPage />
           </DashboardLayout>
         </AdminRoute>
       } />
