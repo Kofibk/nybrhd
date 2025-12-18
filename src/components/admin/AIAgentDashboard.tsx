@@ -205,65 +205,69 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     ...(campaignData?.length > 0 && { campaigns: campaignData })
   });
 
-  // Demo data constants for investor presentation
-  const DEMO_DATA = {
-    totalLeads: 12304,
-    hotLeads: 455,
-    avgScore: 65,
-    totalSpend: 232434,
-    avgCPL: 134,
-    qualifiedRate: 45,
-    classifications: { hot: 455, star: 1846, lightning: 2215, valid: 4922, cold: 2866 },
-    scoreDistribution: [
-      { range: '0-20', count: 615 },
-      { range: '21-40', count: 1846 },
-      { range: '41-60', count: 3691 },
-      { range: '61-80', count: 4307 },
-      { range: '81-100', count: 1845 },
-    ],
-    funnelData: [
-      { name: 'New', value: 12304, fill: 'hsl(var(--primary))' },
-      { name: 'Contacted', value: 7998, fill: 'hsl(262, 83%, 58%)' },
-      { name: 'Viewing', value: 4306, fill: 'hsl(38, 92%, 50%)' },
-      { name: 'Offer', value: 1846, fill: 'hsl(142, 76%, 36%)' },
-      { name: 'Won', value: 984, fill: 'hsl(142, 76%, 26%)' },
-    ],
-    leadSources: [
-      { name: 'Meta', value: 6152 },
-      { name: 'Google', value: 3076 },
-      { name: 'Rightmove', value: 1846 },
-      { name: 'Zoopla', value: 738 },
-      { name: 'Other', value: 492 },
-    ],
-    leadTimeline: [
-      { date: 'Week 1', leads: 2461 },
-      { date: 'Week 2', leads: 3076 },
-      { date: 'Week 3', leads: 3691 },
-      { date: 'Week 4', leads: 3076 },
-    ],
-    campaignPerformance: [
-      { name: 'Battersea Power', spend: 52000, leads: 2456, cpl: 21 },
-      { name: 'Canary Wharf', spend: 38000, leads: 1789, cpl: 21 },
-      { name: 'One Clapham', spend: 45000, leads: 2198, cpl: 20 },
-      { name: 'Southbank Place', spend: 41000, leads: 1923, cpl: 21 },
-      { name: 'Kings Cross', spend: 29000, leads: 1345, cpl: 22 },
-      { name: 'Greenwich', spend: 33000, leads: 1567, cpl: 21 },
-      { name: 'Shoreditch', spend: 31000, leads: 1445, cpl: 21 },
-      { name: 'Chelsea Island', spend: 24500, leads: 892, cpl: 27 },
-    ]
-  };
-
   const hasUploadedData = leadData.length > 0 || campaignData.length > 0;
 
-  // Process lead classifications - use demo data when available
+  // Calculate real metrics from uploaded data
+  const calculatedMetrics = React.useMemo(() => {
+    const totalLeads = leadData.length;
+    
+    // Calculate campaign metrics
+    let totalSpend = 0;
+    let totalResults = 0;
+    campaignData.forEach(c => {
+      const spend = parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spend || 0);
+      const results = parseFloat(c.Results || c.results || 0);
+      totalSpend += spend;
+      totalResults += results;
+    });
+    const avgCPL = totalResults > 0 ? Math.round(totalSpend / totalResults) : 0;
+
+    // Classify leads
+    const classifications = { hot: 0, star: 0, lightning: 0, valid: 0, cold: 0, warning: 0, disqualified: 0 };
+    leadData.forEach(lead => {
+      const status = (lead.Status || lead.status || '').toLowerCase();
+      const timeline = (lead.Timeline || lead['Timeline to Purchase'] || '').toLowerCase();
+      
+      // Hot: Viewing booked or Offer made with short timeline
+      if (status.includes('offer') || (status.includes('viewing') && timeline.includes('28'))) {
+        classifications.hot++;
+      } else if (status.includes('viewing')) {
+        classifications.star++;
+      } else if (timeline.includes('28') || timeline.includes('0-3')) {
+        classifications.lightning++;
+      } else if (status.includes('engaged') || status.includes('new')) {
+        classifications.valid++;
+      } else if (status.includes('cold')) {
+        classifications.cold++;
+      } else {
+        classifications.valid++;
+      }
+    });
+
+    const hotLeads = classifications.hot + classifications.star;
+    const qualifiedRate = totalLeads > 0 ? Math.round(((classifications.hot + classifications.star + classifications.lightning) / totalLeads) * 100) : 0;
+    const avgScore = totalLeads > 0 ? Math.round((classifications.hot * 90 + classifications.star * 75 + classifications.lightning * 65 + classifications.valid * 50 + classifications.cold * 25) / totalLeads) : 0;
+
+    return {
+      totalLeads,
+      hotLeads,
+      avgScore,
+      totalSpend,
+      avgCPL,
+      qualifiedRate,
+      totalResults,
+      classifications
+    };
+  }, [leadData, campaignData]);
+
+  // Process lead classifications
   const leadClassifications = React.useMemo(() => {
-    if (hasUploadedData) return DEMO_DATA.classifications;
-    return { hot: 0, star: 0, lightning: 0, valid: 0, cold: 0, warning: 0, disqualified: 0 };
-  }, [hasUploadedData]);
+    return calculatedMetrics.classifications;
+  }, [calculatedMetrics]);
 
   // Lead classification chart data
   const classificationChartData = React.useMemo(() => {
-    const data = hasUploadedData ? DEMO_DATA.classifications : leadClassifications;
+    const data = calculatedMetrics.classifications;
     return [
       { name: 'Hot', value: data.hot, icon: Flame, color: CLASSIFICATION_COLORS.hot },
       { name: 'Quality', value: data.star, icon: Star, color: CLASSIFICATION_COLORS.star },
@@ -271,84 +275,159 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
       { name: 'Valid', value: data.valid, icon: CheckCircle, color: CLASSIFICATION_COLORS.valid },
       { name: 'Cold', value: data.cold, icon: Snowflake, color: CLASSIFICATION_COLORS.cold },
     ].filter(d => d.value > 0);
-  }, [hasUploadedData, leadClassifications]);
+  }, [calculatedMetrics]);
 
-  // Lead score distribution - use demo data
+  // Lead score distribution - calculate from actual lead data
   const scoreDistribution = React.useMemo(() => {
-    if (hasUploadedData) return DEMO_DATA.scoreDistribution;
-    return [
+    if (!hasUploadedData) return [
       { range: '0-20', count: 0 },
       { range: '21-40', count: 0 },
       { range: '41-60', count: 0 },
       { range: '61-80', count: 0 },
       { range: '81-100', count: 0 },
     ];
-  }, [hasUploadedData]);
-
-  // Campaign performance data - use demo data
-  const campaignPerformance = React.useMemo(() => {
-    if (hasUploadedData) return DEMO_DATA.campaignPerformance;
-    return [];
-  }, [hasUploadedData]);
-
-  // Lead source breakdown - use demo data
-  const leadSources = React.useMemo(() => {
-    if (hasUploadedData) return DEMO_DATA.leadSources;
-    return [];
-  }, [hasUploadedData]);
-
-  // Timeline distribution
-  const timelineDistribution = React.useMemo(() => {
-    if (hasUploadedData) {
-      return [
-        { name: 'Within 28d', value: 2461 },
-        { name: '0-3 months', value: 3691 },
-        { name: '3-6 months', value: 2953 },
-        { name: '6-9 months', value: 1846 },
-        { name: '9-12 months', value: 1353 },
-      ];
-    }
-    return [];
-  }, [hasUploadedData]);
-
-  // Conversion funnel data - use demo data
-  const funnelData = React.useMemo(() => {
-    if (hasUploadedData) return DEMO_DATA.funnelData;
+    const { classifications } = calculatedMetrics;
+    // Distribute based on classifications
     return [
+      { range: '0-20', count: classifications.cold },
+      { range: '21-40', count: Math.round(classifications.valid * 0.4) },
+      { range: '41-60', count: Math.round(classifications.valid * 0.6) + classifications.lightning },
+      { range: '61-80', count: classifications.star },
+      { range: '81-100', count: classifications.hot },
+    ];
+  }, [hasUploadedData, calculatedMetrics]);
+
+  // Campaign performance data - from actual campaign data
+  const campaignPerformance = React.useMemo(() => {
+    if (campaignData.length === 0) return [];
+    // Group by development and aggregate
+    const grouped: Record<string, { spend: number; leads: number }> = {};
+    campaignData.forEach(c => {
+      const name = (c['Campaign Name'] || c['Campaign name'] || c.name || '').split(' ')[0];
+      if (!grouped[name]) grouped[name] = { spend: 0, leads: 0 };
+      grouped[name].spend += parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spend || 0);
+      grouped[name].leads += parseFloat(c.Results || c.results || 0);
+    });
+    return Object.entries(grouped)
+      .map(([name, data]) => ({
+        name: name.slice(0, 15),
+        spend: Math.round(data.spend),
+        leads: Math.round(data.leads),
+        cpl: data.leads > 0 ? Math.round(data.spend / data.leads) : 0
+      }))
+      .sort((a, b) => b.spend - a.spend)
+      .slice(0, 8);
+  }, [campaignData]);
+
+  // Lead source breakdown - from actual lead data
+  const leadSources = React.useMemo(() => {
+    if (leadData.length === 0) return [];
+    const sources: Record<string, number> = {};
+    leadData.forEach(lead => {
+      const source = lead['Source Platform'] || lead.source || 'Direct';
+      sources[source] = (sources[source] || 0) + 1;
+    });
+    return Object.entries(sources)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [leadData]);
+
+  // Timeline distribution - from actual lead data
+  const timelineDistribution = React.useMemo(() => {
+    if (leadData.length === 0) return [];
+    const timelines: Record<string, number> = {
+      'Within 28d': 0,
+      '0-3 months': 0,
+      '3-6 months': 0,
+      '6-9 months': 0,
+      '9-12 months': 0,
+    };
+    leadData.forEach(lead => {
+      const timeline = (lead.Timeline || lead['Timeline to Purchase'] || '').toLowerCase();
+      if (timeline.includes('28')) timelines['Within 28d']++;
+      else if (timeline.includes('0-3')) timelines['0-3 months']++;
+      else if (timeline.includes('3-6')) timelines['3-6 months']++;
+      else if (timeline.includes('6-9')) timelines['6-9 months']++;
+      else if (timeline.includes('9-12')) timelines['9-12 months']++;
+      else timelines['0-3 months']++;
+    });
+    return Object.entries(timelines).map(([name, value]) => ({ name, value }));
+  }, [leadData]);
+
+  // Conversion funnel data - from actual lead statuses
+  const funnelData = React.useMemo(() => {
+    if (leadData.length === 0) return [
       { name: 'New', value: 0, fill: 'hsl(var(--primary))' },
       { name: 'Contacted', value: 0, fill: 'hsl(262, 83%, 58%)' },
       { name: 'Viewing', value: 0, fill: 'hsl(38, 92%, 50%)' },
       { name: 'Offer', value: 0, fill: 'hsl(142, 76%, 36%)' },
       { name: 'Won', value: 0, fill: 'hsl(142, 76%, 26%)' },
     ];
-  }, [hasUploadedData]);
+    const statuses = { New: 0, Engaged: 0, Viewing: 0, Offer: 0, Won: 0 };
+    leadData.forEach(lead => {
+      const status = (lead.Status || lead.status || 'New').toLowerCase();
+      if (status.includes('new')) statuses.New++;
+      else if (status.includes('engaged')) statuses.Engaged++;
+      else if (status.includes('viewing')) statuses.Viewing++;
+      else if (status.includes('offer')) statuses.Offer++;
+      else if (status.includes('won') || status.includes('closed')) statuses.Won++;
+      else statuses.New++;
+    });
+    return [
+      { name: 'New', value: statuses.New, fill: 'hsl(var(--primary))' },
+      { name: 'Engaged', value: statuses.Engaged, fill: 'hsl(262, 83%, 58%)' },
+      { name: 'Viewing', value: statuses.Viewing, fill: 'hsl(38, 92%, 50%)' },
+      { name: 'Offer', value: statuses.Offer, fill: 'hsl(142, 76%, 36%)' },
+      { name: 'Won', value: statuses.Won, fill: 'hsl(142, 76%, 26%)' },
+    ];
+  }, [leadData]);
 
-  // Lead acquisition timeline - use demo data
+  // Lead acquisition timeline - from actual lead dates
   const leadTimeline = React.useMemo(() => {
-    if (hasUploadedData) return DEMO_DATA.leadTimeline;
-    return [];
-  }, [hasUploadedData]);
+    if (leadData.length === 0) return [];
+    const weeks: Record<string, number> = {};
+    leadData.forEach(lead => {
+      const dateStr = lead['Created Date'] || lead.date || '';
+      if (dateStr) {
+        const date = new Date(dateStr);
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        const weekKey = weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        weeks[weekKey] = (weeks[weekKey] || 0) + 1;
+      }
+    });
+    return Object.entries(weeks)
+      .map(([date, leads]) => ({ date, leads }))
+      .slice(-4);
+  }, [leadData]);
 
   // Action leads
   const actionLeads: ActionLead[] = React.useMemo(() => {
     if (leadData.length === 0) return [];
     return leadData.map((lead, idx) => {
-      const name = lead['Lead Name'] || lead.name || `Lead ${idx + 1}`;
-      const qualityScore = parseInt(lead.Score || lead.score || '50');
-      const intentText = (lead.Intent || lead.intent || '').toString().toLowerCase();
-      let intentScore = qualityScore;
-      if (intentText === 'high' || intentText === 'hot') intentScore = Math.max(qualityScore, 80);
-      else if (intentText === 'warm') intentScore = Math.max(qualityScore, 60);
+      const name = lead.Name || lead['Lead Name'] || lead.name || `Lead ${idx + 1}`;
+      const status = (lead.Status || lead.status || '').toLowerCase();
+      const timeline = (lead.Timeline || lead['Timeline to Purchase'] || '').toLowerCase();
+      let qualityScore = 50;
+      let intentScore = 50;
+      
+      if (status.includes('offer')) { qualityScore = 90; intentScore = 95; }
+      else if (status.includes('viewing')) { qualityScore = 75; intentScore = 80; }
+      else if (status.includes('engaged')) { qualityScore = 60; intentScore = 65; }
+      
+      if (timeline.includes('28')) intentScore = Math.max(intentScore, 85);
+      else if (timeline.includes('0-3')) intentScore = Math.max(intentScore, 70);
+
       const classification = classifyLead(intentScore, qualityScore);
       return {
         id: lead['Lead ID'] || `lead_${idx}`,
         name,
-        development: lead['Source Campaign'] || lead['Development'] || 'General',
-        budget: lead['Budget Range'] || lead.budget || 'N/A',
+        development: lead.Campaign || lead['Source Campaign'] || lead['Development'] || 'General',
+        budget: lead.Budget || lead['Budget Range'] || 'N/A',
         qualityScore, intentScore,
-        timeline: lead['Timeline to Purchase'] || lead.timeline || 'N/A',
+        timeline: lead.Timeline || lead['Timeline to Purchase'] || 'N/A',
         email: lead.Email || lead.email || '',
-        phone: lead['Phone Number'] || lead.phone || '',
+        phone: lead.Phone || lead['Phone Number'] || '',
         reason: classification === 'hot' ? 'Viewing ready' : classification === 'star' ? 'High quality' : 'High intent',
         classification
       };
@@ -359,13 +438,13 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const campaignAlerts: CampaignAlert[] = React.useMemo(() => {
     if (campaignData.length === 0) return [];
     return campaignData.map((c, idx) => {
-      const spend = parseFloat(c['Amount spent (GBP)'] || c.spend || 0);
+      const spend = parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spend || 0);
       const results = parseFloat(c.Results || c.results || 1);
       const cpl = spend / Math.max(results, 1);
       if (cpl > 50) {
         return {
           id: `alert_${idx}`,
-          name: c['Campaign name'] || c.name || `Campaign ${idx + 1}`,
+          name: c['Campaign Name'] || c['Campaign name'] || c.name || `Campaign ${idx + 1}`,
           issue: 'CPL above target',
           currentValue: `£${Math.round(cpl)}`,
           targetValue: '£35',
@@ -377,27 +456,10 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     }).filter(Boolean).slice(0, 3) as CampaignAlert[];
   }, [campaignData]);
 
-  // KPIs - Demo values for investor presentation
+  // KPIs - Use calculated metrics from real data
   const kpis = React.useMemo(() => {
-    // Use demo values when data is loaded to show impressive portfolio metrics
-    const hasUploadedData = leadData.length > 0 || campaignData.length > 0;
-    
-    if (hasUploadedData) {
-      // Scale up to represent large developer client portfolio
-      return {
-        totalLeads: 12304,
-        hotLeads: 455,
-        avgScore: 65,
-        totalSpend: 232434,
-        avgCPL: 134,
-        qualifiedRate: 45,
-        totalResults: Math.round(232434 / 134)
-      };
-    }
-    
-    // No data loaded - show zeros
-    return { totalLeads: 0, hotLeads: 0, avgScore: 0, totalSpend: 0, avgCPL: 0, qualifiedRate: 0, totalResults: 0 };
-  }, [leadData, campaignData]);
+    return calculatedMetrics;
+  }, [calculatedMetrics]);
 
   const handleAction = (action: string, lead: ActionLead) => {
     if (action === 'call' && lead.phone) window.open(`tel:${lead.phone}`, '_blank');
