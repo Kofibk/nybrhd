@@ -164,7 +164,7 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "startDate", direction: "desc" });
   
   // Get uploaded campaign data from context
-  const { campaignData } = useUploadedData();
+  const { campaignData, setCampaignData, setCampaignFileName } = useUploadedData('admin');
   
   // Local campaigns state (mockCampaigns + imported campaigns)
   const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>(mockCampaigns);
@@ -174,16 +174,17 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
     if (campaignData && campaignData.length > 0) {
       const mappedCampaigns: Campaign[] = campaignData.map((c, index) => ({
         id: `uploaded-${index}`,
-        name: c['Campaign name'] || c.name || 'Unknown Campaign',
+        name: c['Campaign Name'] || c['Campaign name'] || c.name || 'Unknown Campaign',
         client: c.client || 'Uploaded',
         clientType: c.clientType || 'developer',
-        status: c['Campaign delivery'] === 'archived' ? 'paused' : 
+        status: c.Status === 'Active' ? 'live' : 
+                c['Campaign delivery'] === 'archived' ? 'paused' : 
                 c['Campaign delivery'] === 'inactive' ? 'paused' : 'live',
-        budget: parseFloat(c['Amount spent (GBP)'] || c.budget || '0') * 1.5 || 1000,
-        spent: parseFloat(c['Amount spent (GBP)'] || c.spent || '0'),
+        budget: parseFloat(c.Spend || c['Amount spent (GBP)'] || c.budget || '0') * 1.5 || 1000,
+        spent: parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spent || '0'),
         leads: parseInt(c.Results || c.leads || '0', 10),
-        cpl: parseFloat(c['Amount spent (GBP)'] || '0') / Math.max(parseInt(c.Results || '1', 10), 1),
-        startDate: c['Reporting starts'] || c.startDate || new Date().toISOString().split('T')[0],
+        cpl: parseFloat(c.CPL || c.Spend || c['Amount spent (GBP)'] || '0') / Math.max(parseInt(c.Results || '1', 10), 1),
+        startDate: c['Start Date'] || c['Reporting starts'] || c.startDate || new Date().toISOString().split('T')[0],
       }));
       
       // Combine mock + uploaded, removing duplicates by name
@@ -195,9 +196,21 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
     }
   }, [campaignData]);
 
-  // Handle importing campaigns from file upload
+  // Handle importing campaigns from file upload - also save to DataContext
   const handleCampaignsImport = (importedCampaigns: Campaign[]) => {
     setLocalCampaigns(prev => [...importedCampaigns, ...prev]);
+    // Convert to raw format and save to DataContext for dashboard
+    const rawData = importedCampaigns.map(c => ({
+      'Campaign Name': c.name,
+      'Platform': 'Facebook',
+      'Spend': c.spent,
+      'Results': c.leads,
+      'CPL': c.cpl,
+      'Status': c.status === 'live' ? 'Active' : 'Paused',
+      'Start Date': c.startDate,
+    }));
+    setCampaignData(rawData);
+    setCampaignFileName('imported-campaigns.csv');
   };
 
   const uniqueClients = [...new Set(localCampaigns.map((c) => c.client))];

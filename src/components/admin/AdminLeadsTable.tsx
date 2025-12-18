@@ -75,6 +75,7 @@ import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
 import { formatBudget } from "@/lib/utils";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
+import { useUploadedData } from "@/contexts/DataContext";
 
 interface AdminLeadsTableProps {
   searchQuery: string;
@@ -101,6 +102,9 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   
+  // Get DataContext for syncing with dashboard
+  const { setLeadData, setLeadFileName } = useUploadedData('admin');
+  
   // Local leads state (demoLeads + imported leads)
   const [localLeads, setLocalLeads] = useState<Lead[]>(demoLeads);
   
@@ -116,9 +120,25 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
     campaignName: "",
   });
 
-  // Handle importing leads from file upload
+  // Handle importing leads from file upload - also save to DataContext
   const handleLeadsImport = (importedLeads: Lead[]) => {
     setLocalLeads(prev => [...importedLeads, ...prev]);
+    // Convert to raw format and save to DataContext for dashboard
+    const rawData = importedLeads.map(lead => ({
+      'Name': lead.name,
+      'Email': lead.email,
+      'Phone': lead.phone,
+      'Country': lead.country,
+      'Budget': lead.budget,
+      'Bedrooms': lead.bedrooms,
+      'Timeline': lead.purchaseTimeline || '0-3 months',
+      'Status': lead.status,
+      'Source Platform': lead.source || 'Facebook',
+      'Campaign': lead.campaignName,
+      'Created Date': lead.createdAt,
+    }));
+    setLeadData(rawData);
+    setLeadFileName('imported-leads.csv');
   };
 
   // Get unique clients/campaigns for filter
