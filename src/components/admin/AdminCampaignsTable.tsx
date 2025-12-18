@@ -361,6 +361,20 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
             type="campaigns" 
             onUploadComplete={(data) => {
               console.log("Campaign report processed:", data);
+              const campaigns = (data?.campaigns || []) as Campaign[];
+              if (campaigns.length > 0) {
+                const rawData = campaigns.map((c) => ({
+                  'Campaign Name': c.name,
+                  'Platform': 'Facebook',
+                  'Spend': c.spent,
+                  'Results': c.leads,
+                  'CPL': c.cpl,
+                  'Status': c.status === 'live' ? 'Active' : 'Paused',
+                  'Start Date': c.startDate,
+                }));
+                setCampaignData(rawData);
+                setCampaignFileName('uploaded-campaign-report');
+              }
             }}
             onCampaignsImport={handleCampaignsImport}
           />
