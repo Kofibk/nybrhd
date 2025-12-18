@@ -39,6 +39,9 @@ interface ReportUploadDialogProps {
 
 type UploadStatus = "idle" | "uploading" | "processing" | "preview" | "importing" | "complete" | "error";
 
+const MAX_RETRIES = 3;
+const INITIAL_DELAY = 1000; // 1 second
+
 const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaignsImport }: ReportUploadDialogProps) => {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<UploadStatus>("idle");
@@ -47,6 +50,8 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
   const [processingResult, setProcessingResult] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryingIn, setRetryingIn] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const acceptedTypes = ".csv,.xlsx,.xls,.pdf";
@@ -58,6 +63,8 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
     return <FileSpreadsheet className="h-5 w-5 text-green-500" />;
   };
 
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -66,6 +73,8 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
       setErrorMessage("");
       setProcessingResult(null);
       setSelectedItems(new Set());
+      setRetryCount(0);
+      setRetryingIn(null);
     }
   };
 
@@ -80,6 +89,8 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
         setErrorMessage("");
         setProcessingResult(null);
         setSelectedItems(new Set());
+        setRetryCount(0);
+        setRetryingIn(null);
       } else {
         toast({
           title: "Invalid file type",
@@ -90,11 +101,13 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
     }
   };
 
-  const processFile = async () => {
+  const processFileWithRetry = async (attempt: number = 0): Promise<void> => {
     if (!selectedFile) return;
 
     setStatus("uploading");
     setProgress(20);
+    setRetryCount(attempt);
+    setRetryingIn(null);
 
     try {
       const content = await readFileContent(selectedFile);
@@ -119,6 +132,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
 
       setProcessingResult(data);
       setProgress(100);
+      setRetryCount(0);
       
       const items = data[dataKey];
       if (items && items.length > 0) {
@@ -137,16 +151,46 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
         onUploadComplete(data);
       }
     } catch (error: any) {
-      console.error("Upload error:", error);
+      console.error(`Upload error (attempt ${attempt + 1}/${MAX_RETRIES}):`, error);
+      
+      if (attempt < MAX_RETRIES - 1) {
+        const delay = INITIAL_DELAY * Math.pow(2, attempt); // Exponential backoff: 1s, 2s, 4s
+        setStatus("uploading");
+        setRetryingIn(Math.ceil(delay / 1000));
+        
+        toast({
+          title: `Retrying... (${attempt + 2}/${MAX_RETRIES})`,
+          description: `Connection failed. Retrying in ${Math.ceil(delay / 1000)} seconds...`,
+        });
+
+        // Countdown timer
+        let remaining = Math.ceil(delay / 1000);
+        const countdown = setInterval(() => {
+          remaining -= 1;
+          if (remaining > 0) {
+            setRetryingIn(remaining);
+          } else {
+            clearInterval(countdown);
+          }
+        }, 1000);
+
+        await sleep(delay);
+        clearInterval(countdown);
+        return processFileWithRetry(attempt + 1);
+      }
+      
       setStatus("error");
-      setErrorMessage(error.message || "Failed to process file");
+      setErrorMessage(error.message || "Failed to process file after multiple attempts");
+      setRetryCount(0);
       toast({
         title: "Processing failed",
-        description: error.message || "Failed to process the uploaded file.",
+        description: `Failed after ${MAX_RETRIES} attempts. ${error.message || "Please try again later."}`,
         variant: "destructive",
       });
     }
   };
+
+  const processFile = () => processFileWithRetry(0);
 
   const handleImportLeads = async () => {
     if (!processingResult?.leads || !onLeadsImport) return;
@@ -290,6 +334,8 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
     setProcessingResult(null);
     setErrorMessage("");
     setSelectedItems(new Set());
+    setRetryCount(0);
+    setRetryingIn(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -387,9 +433,20 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-sm">
-                  {status === "uploading" ? "Uploading file..." : `AI is extracting ${type} data...`}
-                </span>
+                <div className="flex-1">
+                  <span className="text-sm">
+                    {retryingIn !== null 
+                      ? `Retrying in ${retryingIn}s...` 
+                      : status === "uploading" 
+                        ? "Uploading file..." 
+                        : `AI is extracting ${type} data...`}
+                  </span>
+                  {retryCount > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Attempt {retryCount + 1} of {MAX_RETRIES}
+                    </p>
+                  )}
+                </div>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -523,12 +580,22 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
 
           {/* Error state */}
           {status === "error" && (
-            <div className="flex items-center gap-3 p-4 bg-destructive/10 rounded-lg text-destructive">
-              <AlertCircle className="h-5 w-5" />
-              <div>
-                <p className="text-sm font-medium">Processing failed</p>
-                <p className="text-xs">{errorMessage}</p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 bg-destructive/10 rounded-lg text-destructive">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Processing failed after {MAX_RETRIES} attempts</p>
+                  <p className="text-xs">{errorMessage}</p>
+                </div>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => processFileWithRetry(0)} 
+                className="w-full"
+              >
+                Try Again
+              </Button>
             </div>
           )}
 
