@@ -42,19 +42,11 @@ import {
   ExternalLink,
   Pencil,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-interface Company {
-  id: string;
-  name: string;
-  website: string | null;
-  industry: string;
-  userCount: number;
-  activeCampaigns: number;
-  totalSpend: number;
-  createdAt: string;
-}
+import { useCompanies, useCreateCompany, useDeleteCompany } from "@/hooks/useAdminData";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AdminCompaniesTableProps {
   searchQuery: string;
@@ -66,68 +58,19 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
   const [newCompany, setNewCompany] = useState({
     name: "",
     website: "",
-    industry: "property_development",
+    industry: "residential",
   });
 
-  // Mock companies data - in production this would come from the database
-  const [companies, setCompanies] = useState<Company[]>([
-    {
-      id: "c1",
-      name: "Luxury Developments Ltd",
-      website: "https://luxurydev.com",
-      industry: "property_development",
-      userCount: 5,
-      activeCampaigns: 3,
-      totalSpend: 25000,
-      createdAt: "2024-01-10",
-    },
-    {
-      id: "c2",
-      name: "Premier Estates",
-      website: "https://premierestates.co.uk",
-      industry: "estate_agency",
-      userCount: 8,
-      activeCampaigns: 5,
-      totalSpend: 18500,
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "c3",
-      name: "City Mortgages",
-      website: "https://citymortgages.com",
-      industry: "mortgage_broker",
-      userCount: 3,
-      activeCampaigns: 2,
-      totalSpend: 12000,
-      createdAt: "2024-01-20",
-    },
-    {
-      id: "c4",
-      name: "Global Properties International",
-      website: "https://globalproperties.io",
-      industry: "property_development",
-      userCount: 12,
-      activeCampaigns: 8,
-      totalSpend: 45000,
-      createdAt: "2024-02-01",
-    },
-    {
-      id: "c5",
-      name: "HomeFind Agents",
-      website: null,
-      industry: "estate_agency",
-      userCount: 4,
-      activeCampaigns: 1,
-      totalSpend: 5500,
-      createdAt: "2024-02-05",
-    },
-  ]);
+  const { data: companies = [], isLoading, error } = useCompanies();
+  const createCompany = useCreateCompany();
+  const deleteCompany = useDeleteCompany();
 
   const industries = [
-    { value: "property_development", label: "Property Development" },
-    { value: "estate_agency", label: "Estate Agency" },
-    { value: "mortgage_broker", label: "Mortgage Broker" },
-    { value: "other", label: "Other" },
+    { value: "residential", label: "Residential Property" },
+    { value: "commercial", label: "Commercial Property" },
+    { value: "mixed", label: "Mixed Use" },
+    { value: "lettings", label: "Lettings" },
+    { value: "financial", label: "Financial Services" },
   ];
 
   const filteredCompanies = companies.filter((company) => {
@@ -138,7 +81,7 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
     return matchesSearch && matchesIndustry;
   });
 
-  const handleAddCompany = () => {
+  const handleAddCompany = async () => {
     if (!newCompany.name) {
       toast({
         title: "Validation Error",
@@ -148,55 +91,36 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
       return;
     }
 
-    const company: Company = {
-      id: `c${Date.now()}`,
-      name: newCompany.name,
-      website: newCompany.website || null,
-      industry: newCompany.industry,
-      userCount: 0,
-      activeCampaigns: 0,
-      totalSpend: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-
-    setCompanies([company, ...companies]);
-    setNewCompany({ name: "", website: "", industry: "property_development" });
-    setAddCompanyOpen(false);
-    toast({
-      title: "Company created",
-      description: `${company.name} has been added successfully.`,
-    });
+    try {
+      await createCompany.mutateAsync({
+        name: newCompany.name,
+        website: newCompany.website || undefined,
+        industry: newCompany.industry,
+      });
+      setNewCompany({ name: "", website: "", industry: "residential" });
+      setAddCompanyOpen(false);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
-  const handleDeleteCompany = (companyId: string) => {
-    const company = companies.find((c) => c.id === companyId);
-    if (company && company.userCount > 0) {
-      toast({
-        title: "Cannot delete company",
-        description: "Please reassign or remove all users before deleting this company.",
-        variant: "destructive",
-      });
-      return;
+  const handleDeleteCompany = async (companyId: string) => {
+    try {
+      await deleteCompany.mutateAsync(companyId);
+    } catch (error) {
+      // Error handled by mutation
     }
-
-    setCompanies(companies.filter((c) => c.id !== companyId));
-    toast({
-      title: "Company deleted",
-      description: "The company has been removed.",
-    });
   };
 
   const handleExport = () => {
     const csvContent = [
-      ["Name", "Website", "Industry", "Users", "Active Campaigns", "Total Spend", "Created"],
+      ["Name", "Website", "Industry", "Status", "Created"],
       ...filteredCompanies.map((c) => [
         c.name,
         c.website || "",
-        c.industry,
-        c.userCount.toString(),
-        c.activeCampaigns.toString(),
-        `£${c.totalSpend}`,
-        c.createdAt,
+        c.industry || "",
+        c.status || "active",
+        c.created_at,
       ]),
     ]
       .map((row) => row.join(","))
@@ -216,22 +140,32 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
     });
   };
 
-  const getIndustryLabel = (industry: string) => {
-    return industries.find((i) => i.value === industry)?.label || industry;
+  const getIndustryLabel = (industry: string | null) => {
+    return industries.find((i) => i.value === industry)?.label || industry || "—";
   };
 
-  const getIndustryBadgeVariant = (industry: string) => {
+  const getIndustryBadgeVariant = (industry: string | null) => {
     switch (industry) {
-      case "property_development":
+      case "residential":
         return "default";
-      case "estate_agency":
+      case "commercial":
         return "secondary";
-      case "mortgage_broker":
+      case "financial":
         return "outline";
       default:
         return "secondary";
     }
   };
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-destructive">
+          Failed to load companies. Please try again.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -311,7 +245,10 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
                     <Button variant="outline" onClick={() => setAddCompanyOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleAddCompany}>Create Company</Button>
+                    <Button onClick={handleAddCompany} disabled={createCompany.isPending}>
+                      {createCompany.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Create Company
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -326,82 +263,91 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
               <TableRow>
                 <TableHead>Company</TableHead>
                 <TableHead>Industry</TableHead>
-                <TableHead className="text-center">Users</TableHead>
-                <TableHead className="text-center">Campaigns</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total Spend</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCompanies.map((company) => (
-                <TableRow key={company.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Building2 className="h-4 w-4 text-primary" />
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-10 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20 ml-auto" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                filteredCompanies.map((company) => (
+                  <TableRow key={company.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Building2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{company.name}</p>
+                          {company.website && (
+                            <a
+                              href={company.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+                            >
+                              {company.website.replace(/^https?:\/\//, "")}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{company.name}</p>
-                        {company.website && (
-                          <a
-                            href={company.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getIndustryBadgeVariant(company.industry)}>
+                        {getIndustryLabel(company.industry)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={company.status === "active" ? "default" : "secondary"}>
+                        {company.status || "active"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      £{(company.total_spend || 0).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Users className="h-4 w-4 mr-2" />
+                            View Users
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => handleDeleteCompany(company.id)}
                           >
-                            {company.website.replace(/^https?:\/\//, "")}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getIndustryBadgeVariant(company.industry)}>
-                      {getIndustryLabel(company.industry)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Users className="h-3 w-3 text-muted-foreground" />
-                      <span>{company.userCount}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">{company.activeCampaigns}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    £{company.totalSpend.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Users className="h-4 w-4 mr-2" />
-                          View Users
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => handleDeleteCompany(company.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredCompanies.length === 0 && (
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+              {!isLoading && filteredCompanies.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No companies found
                   </TableCell>
                 </TableRow>

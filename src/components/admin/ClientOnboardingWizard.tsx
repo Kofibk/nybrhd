@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useCreateCompany, useCreateInvitation, useCreateSubscription } from "@/hooks/useAdminData";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ClientOnboardingWizardProps {
   onComplete?: (data: OnboardingData) => void;
@@ -79,6 +81,9 @@ const ClientOnboardingWizard = ({ onComplete }: ClientOnboardingWizardProps) => 
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const createCompany = useCreateCompany();
+  const createSubscription = useCreateSubscription();
   
   const [formData, setFormData] = useState<OnboardingData>({
     clientName: "",
@@ -138,36 +143,80 @@ const ClientOnboardingWizard = ({ onComplete }: ClientOnboardingWizardProps) => 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    onComplete?.(formData);
-    
-    toast({
-      title: "Client onboarded successfully",
-      description: formData.sendInvite 
-        ? `Invitation sent to ${formData.clientEmail}` 
-        : `${formData.clientName} has been added without invitation.`,
-    });
-    
-    // Reset form
-    setFormData({
-      clientName: "",
-      clientEmail: "",
-      clientPhone: "",
-      clientType: "developer",
-      companyName: "",
-      companyWebsite: "",
-      companyIndustry: "",
-      companyAddress: "",
-      assignedCampaigns: [],
-      monthlyBudget: "",
-      notes: "",
-      sendInvite: true,
-    });
-    setCurrentStep(1);
-    setIsSubmitting(false);
-    setOpen(false);
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // 1. Create the company
+      const companyResult = await createCompany.mutateAsync({
+        name: formData.companyName,
+        website: formData.companyWebsite || undefined,
+        industry: formData.companyIndustry || undefined,
+      });
+      
+      // 2. Create subscription for the company
+      if (companyResult?.id) {
+        await createSubscription.mutateAsync({
+          company_id: companyResult.id,
+          plan: "starter",
+          monthly_fee: formData.monthlyBudget ? Number(formData.monthlyBudget) : undefined,
+        });
+        
+        // 3. Create invitation record
+        if (formData.sendInvite && user) {
+          await supabase.from("client_invitations").insert([{
+            email: formData.clientEmail,
+            name: formData.clientName,
+            phone: formData.clientPhone || null,
+            company_name: formData.companyName,
+            client_type: formData.clientType as "developer" | "agent" | "broker",
+            status: "sent",
+            invitation_token: crypto.randomUUID(),
+            monthly_budget: formData.monthlyBudget ? Number(formData.monthlyBudget) : null,
+            notes: formData.notes || null,
+            invited_by: user.id,
+            sent_at: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            created_company_id: companyResult.id,
+          }]);
+        }
+      }
+      
+      onComplete?.(formData);
+      
+      toast({
+        title: "Client onboarded successfully",
+        description: formData.sendInvite 
+          ? `Invitation sent to ${formData.clientEmail}` 
+          : `${formData.clientName} has been added without invitation.`,
+      });
+      
+      // Reset form
+      setFormData({
+        clientName: "",
+        clientEmail: "",
+        clientPhone: "",
+        clientType: "developer",
+        companyName: "",
+        companyWebsite: "",
+        companyIndustry: "",
+        companyAddress: "",
+        assignedCampaigns: [],
+        monthlyBudget: "",
+        notes: "",
+        sendInvite: true,
+      });
+      setCurrentStep(1);
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Failed to onboard client",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleCampaign = (campaignId: string) => {
