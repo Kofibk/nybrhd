@@ -32,32 +32,261 @@ export type Database = {
         }
         Relationships: []
       }
+      client_invitations: {
+        Row: {
+          accepted_at: string | null
+          client_type: Database["public"]["Enums"]["client_type"]
+          company_name: string
+          created_at: string
+          created_company_id: string | null
+          created_user_id: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          invitation_token: string | null
+          invited_by: string
+          monthly_budget: number | null
+          name: string
+          notes: string | null
+          opened_at: string | null
+          phone: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["invitation_status"]
+        }
+        Insert: {
+          accepted_at?: string | null
+          client_type: Database["public"]["Enums"]["client_type"]
+          company_name: string
+          created_at?: string
+          created_company_id?: string | null
+          created_user_id?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          invitation_token?: string | null
+          invited_by: string
+          monthly_budget?: number | null
+          name: string
+          notes?: string | null
+          opened_at?: string | null
+          phone?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+        }
+        Update: {
+          accepted_at?: string | null
+          client_type?: Database["public"]["Enums"]["client_type"]
+          company_name?: string
+          created_at?: string
+          created_company_id?: string | null
+          created_user_id?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invitation_token?: string | null
+          invited_by?: string
+          monthly_budget?: number | null
+          name?: string
+          notes?: string | null
+          opened_at?: string | null
+          phone?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_invitations_created_company_id_fkey"
+            columns: ["created_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_invitations_created_user_id_fkey"
+            columns: ["created_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
+          address: string | null
           created_at: string
           id: string
           industry: string | null
+          logo_url: string | null
+          monthly_budget: number | null
           name: string
+          notes: string | null
+          onboarded_at: string | null
+          onboarded_by: string | null
+          primary_contact_id: string | null
+          status: string | null
+          total_leads: number | null
+          total_spend: number | null
           updated_at: string
           website: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string
           id?: string
           industry?: string | null
+          logo_url?: string | null
+          monthly_budget?: number | null
           name: string
+          notes?: string | null
+          onboarded_at?: string | null
+          onboarded_by?: string | null
+          primary_contact_id?: string | null
+          status?: string | null
+          total_leads?: number | null
+          total_spend?: number | null
           updated_at?: string
           website?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string
           id?: string
           industry?: string | null
+          logo_url?: string | null
+          monthly_budget?: number | null
           name?: string
+          notes?: string | null
+          onboarded_at?: string | null
+          onboarded_by?: string | null
+          primary_contact_id?: string | null
+          status?: string | null
+          total_leads?: number | null
+          total_spend?: number | null
           updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_primary_contact_id_fkey"
+            columns: ["primary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number | null
+          total: number
+          type: string | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number | null
+          total: number
+          type?: string | null
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number | null
+          total?: number
+          type?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          paid_at: string | null
+          payment_method: string | null
+          pdf_url: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          subscription_id: string | null
+          tax_amount: number | null
+          total_amount: number
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          paid_at?: string | null
+          payment_method?: string | null
+          pdf_url?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string | null
+          tax_amount?: number | null
+          total_amount: number
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          pdf_url?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string | null
+          tax_amount?: number | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -109,15 +338,143 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          auto_renew: boolean | null
+          billing_cycle: string | null
+          billing_cycle_end: string | null
+          billing_cycle_start: string | null
+          company_id: string
+          created_at: string
+          id: string
+          leads_included: number | null
+          leads_used: number | null
+          monthly_fee: number | null
+          overage_rate: number | null
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          setup_fee: number | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          billing_cycle_end?: string | null
+          billing_cycle_start?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          leads_included?: number | null
+          leads_used?: number | null
+          monthly_fee?: number | null
+          overage_rate?: number | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          setup_fee?: number | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          billing_cycle_end?: string | null
+          billing_cycle_start?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          leads_included?: number | null
+          leads_used?: number | null
+          monthly_fee?: number | null
+          overage_rate?: number | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          setup_fee?: number | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "admin" | "manager" | "member" | "viewer"
+      client_type: "developer" | "agent" | "broker"
+      invitation_status:
+        | "pending"
+        | "sent"
+        | "opened"
+        | "accepted"
+        | "expired"
+        | "cancelled"
+      invoice_status:
+        | "draft"
+        | "pending"
+        | "paid"
+        | "failed"
+        | "refunded"
+        | "cancelled"
+      subscription_plan: "starter" | "growth" | "enterprise" | "custom"
+      subscription_status:
+        | "active"
+        | "past_due"
+        | "cancelled"
+        | "trial"
+        | "paused"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -244,6 +601,33 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "admin", "manager", "member", "viewer"],
+      client_type: ["developer", "agent", "broker"],
+      invitation_status: [
+        "pending",
+        "sent",
+        "opened",
+        "accepted",
+        "expired",
+        "cancelled",
+      ],
+      invoice_status: [
+        "draft",
+        "pending",
+        "paid",
+        "failed",
+        "refunded",
+        "cancelled",
+      ],
+      subscription_plan: ["starter", "growth", "enterprise", "custom"],
+      subscription_status: [
+        "active",
+        "past_due",
+        "cancelled",
+        "trial",
+        "paused",
+      ],
+    },
   },
 } as const
