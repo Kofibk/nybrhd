@@ -522,6 +522,24 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
                 type="leads" 
                 onUploadComplete={(data) => {
                   console.log("Lead report processed:", data);
+                  const leads = (data?.leads || []) as Lead[];
+                  if (leads.length > 0) {
+                    const rawData = leads.map((lead) => ({
+                      'Name': lead.name,
+                      'Email': lead.email,
+                      'Phone': lead.phone,
+                      'Country': lead.country,
+                      'Budget': lead.budget,
+                      'Bedrooms': lead.bedrooms,
+                      'Timeline': lead.purchaseTimeline || '0-3 months',
+                      'Status': lead.status,
+                      'Source Platform': lead.source || 'Facebook',
+                      'Campaign': lead.campaignName,
+                      'Created Date': lead.createdAt,
+                    }));
+                    setLeadData(rawData);
+                    setLeadFileName('uploaded-lead-report');
+                  }
                 }}
                 onLeadsImport={handleLeadsImport}
               />

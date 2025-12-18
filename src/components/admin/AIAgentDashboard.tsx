@@ -164,9 +164,11 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const { user } = useAuth();
   const { 
     campaignData, 
+    campaignFileName,
     setCampaignData, 
     setCampaignFileName,
     leadData, 
+    leadFileName,
     setLeadData,
     setLeadFileName 
   } = useUploadedData(userType);
@@ -207,16 +209,22 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
 
   const hasUploadedData = leadData.length > 0 || campaignData.length > 0;
 
+  const toNumber = (value: unknown): number => {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    if (value === null || value === undefined) return 0;
+    const cleaned = String(value).replace(/[^0-9.-]+/g, '');
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   // Calculate real metrics from uploaded data
   const calculatedMetrics = React.useMemo(() => {
     const totalLeads = leadData.length;
-    
-    // Calculate campaign metrics
     let totalSpend = 0;
     let totalResults = 0;
     campaignData.forEach(c => {
-      const spend = parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spend || 0);
-      const results = parseFloat(c.Results || c.results || 0);
+      const spend = toNumber(c.Spend ?? c['Amount spent (GBP)'] ?? c.spend);
+      const results = toNumber(c.Results ?? c.results);
       totalSpend += spend;
       totalResults += results;
     });
@@ -300,23 +308,26 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   // Campaign performance data - from actual campaign data
   const campaignPerformance = React.useMemo(() => {
     if (campaignData.length === 0) return [];
-    // Group by development and aggregate
+
+    // Group by campaign name (fallback to index) and aggregate
     const grouped: Record<string, { spend: number; leads: number }> = {};
-    campaignData.forEach(c => {
-      const name = (c['Campaign Name'] || c['Campaign name'] || c.name || '').split(' ')[0];
+    campaignData.forEach((c, idx) => {
+      const rawName = c['Campaign Name'] || c['Campaign name'] || c.name;
+      const name = (rawName && String(rawName).trim()) ? String(rawName).trim() : `Campaign ${idx + 1}`;
       if (!grouped[name]) grouped[name] = { spend: 0, leads: 0 };
-      grouped[name].spend += parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spend || 0);
-      grouped[name].leads += parseFloat(c.Results || c.results || 0);
+      grouped[name].spend += toNumber(c.Spend ?? c['Amount spent (GBP)'] ?? c.spend);
+      grouped[name].leads += toNumber(c.Results ?? c.results);
     });
+
     return Object.entries(grouped)
       .map(([name, data]) => ({
-        name: name.slice(0, 15),
+        name: name.slice(0, 22),
         spend: Math.round(data.spend),
         leads: Math.round(data.leads),
         cpl: data.leads > 0 ? Math.round(data.spend / data.leads) : 0
       }))
       .sort((a, b) => b.spend - a.spend)
-      .slice(0, 8);
+      .slice(0, 10);
   }, [campaignData]);
 
   // Lead source breakdown - from actual lead data
@@ -438,8 +449,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const campaignAlerts: CampaignAlert[] = React.useMemo(() => {
     if (campaignData.length === 0) return [];
     return campaignData.map((c, idx) => {
-      const spend = parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spend || 0);
-      const results = parseFloat(c.Results || c.results || 1);
+      const spend = toNumber(c.Spend ?? c['Amount spent (GBP)'] ?? c.spend);
+      const results = toNumber(c.Results ?? c.results) || 1;
       const cpl = spend / Math.max(results, 1);
       if (cpl > 50) {
         return {
@@ -513,6 +524,9 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
           <div>
             <h1 className="text-2xl font-bold">{greeting}, {userName}</h1>
             <p className="text-muted-foreground">{dateString}</p>
+            <p className="text-xs text-muted-foreground">
+              Campaigns: {campaignData.length}{campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}
+            </p>
           </div>
           <div className="flex gap-2">
             <Dialog open={uploadDialogOpen && uploadType === 'campaigns'} onOpenChange={(o) => !o && setUploadDialogOpen(false)}>
