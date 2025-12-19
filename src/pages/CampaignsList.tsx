@@ -363,6 +363,29 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     return aiRecommendations[group.name] || group.aiRecommendation;
   };
 
+  // Loading state for admin (Airtable fetching)
+  if (userType === 'admin' && airtableLoading) {
+    return (
+      <DashboardLayout title="Campaigns" userType={userType}>
+        <div className="h-full flex flex-col min-h-0 space-y-6 overflow-auto">
+          <div className="flex items-center justify-between flex-shrink-0">
+            <div>
+              <h2 className="text-xl font-semibold">Campaigns</h2>
+              <p className="text-muted-foreground text-sm">Loading campaign data from Airtable...</p>
+            </div>
+          </div>
+          <Card className="p-12 text-center">
+            <Loader2 className="h-12 w-12 mx-auto text-primary mb-4 animate-spin" />
+            <h3 className="text-lg font-semibold mb-2">Loading Campaigns</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Fetching campaign data from Airtable...
+            </p>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Empty state
   if (allCampaigns.length === 0) {
     return (
@@ -374,10 +397,22 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
               <p className="text-muted-foreground text-sm">Manage your marketing campaigns</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Upload className="h-3.5 w-3.5 mr-1.5" />
-                Upload
-              </Button>
+              {userType === 'admin' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchAirtable()}
+                  disabled={airtableLoading}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${airtableLoading ? 'animate-spin' : ''}`} />
+                  Sync Airtable
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm">
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  Upload
+                </Button>
+              )}
               <Button size="sm" onClick={() => navigate(`/${userType}/campaigns/new`)}>
                 <Plus className="h-4 w-4 mr-1.5" />
                 Launch New
@@ -388,8 +423,16 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
             <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
             <h3 className="text-lg font-semibold mb-2">No Campaign Data</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Upload your campaign data CSV from the main dashboard to view performance and get AI recommendations.
+              {userType === 'admin' 
+                ? 'Click "Sync Airtable" to fetch campaign data from your Campaign_Date table.'
+                : 'Upload your campaign data CSV from the main dashboard to view performance and get AI recommendations.'}
             </p>
+            {userType === 'admin' && (
+              <Button onClick={() => refetchAirtable()} disabled={airtableLoading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${airtableLoading ? 'animate-spin' : ''}`} />
+                Sync from Airtable
+              </Button>
+            )}
           </Card>
         </div>
       </DashboardLayout>

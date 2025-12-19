@@ -33,7 +33,8 @@ import {
   Snowflake,
   X,
   Minimize2,
-  Maximize2
+  Maximize2,
+  RefreshCw
 } from 'lucide-react';
 import { useMasterAgent, MasterAgentContext } from '@/hooks/useMasterAgent';
 import { useUploadedData } from '@/contexts/DataContext';
@@ -175,7 +176,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   } = useUploadedData(userType);
   
   // Fetch campaigns from Airtable Campaign_Date table
-  const { campaignData: airtableCampaignData, isLoading: airtableLoading } = useAirtableCampaignsForDashboard();
+  const { campaignData: airtableCampaignData, isLoading: airtableLoading, refetch: refetchAirtable } = useAirtableCampaignsForDashboard();
   
   // Merge Airtable data with uploaded data (Airtable takes priority)
   const campaignData = React.useMemo(() => {
@@ -542,10 +543,24 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             <h1 className="text-xl md:text-2xl font-bold">{greeting}, {userName}</h1>
             <p className="text-sm text-muted-foreground">{dateString}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Campaigns: {campaignData.length}{campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}
+              Campaigns: {campaignData.length}{airtableCampaignData && airtableCampaignData.length > 0 ? ' (Airtable)' : campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}
+              {airtableLoading && <span className="ml-2 text-primary">Loading from Airtable...</span>}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {userType === 'admin' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => refetchAirtable()}
+                disabled={airtableLoading}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${airtableLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden xs:inline">Sync Airtable</span>
+                <span className="xs:hidden">Sync</span>
+              </Button>
+            )}
             <Dialog open={uploadDialogOpen && uploadType === 'campaigns'} onOpenChange={(o) => !o && setUploadDialogOpen(false)}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs" onClick={() => handleUpload('campaigns')}><Upload className="h-3.5 w-3.5 mr-1.5" /><span className="hidden xs:inline">Campaigns</span><span className="xs:hidden">Camp.</span></Button>
