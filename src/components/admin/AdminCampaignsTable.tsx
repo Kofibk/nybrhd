@@ -39,11 +39,14 @@ import {
   ArrowUp,
   ArrowDown,
   Filter,
-  Download
+  Download,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
 import { useUploadedData } from "@/contexts/DataContext";
+import { useAirtableCampaignsForTable } from "@/hooks/useAirtableCampaigns";
 
 interface AdminCampaignsTableProps {
   searchQuery: string;
@@ -163,14 +166,25 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "startDate", direction: "desc" });
   
+  // Fetch campaigns from Airtable Campaign_Date table
+  const { campaigns: airtableCampaigns, isLoading: airtableLoading, refetch: refetchAirtable } = useAirtableCampaignsForTable();
+  
   // Get uploaded campaign data from context
   const { campaignData, setCampaignData, setCampaignFileName } = useUploadedData('admin');
   
-  // Local campaigns state (mockCampaigns + imported campaigns)
+  // Local campaigns state (airtable + mockCampaigns + imported campaigns)
   const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>(mockCampaigns);
 
-  // Merge uploaded campaign data with local campaigns
+  // Merge Airtable + uploaded campaign data with local campaigns
   useEffect(() => {
+    const allCampaigns: Campaign[] = [];
+    
+    // Add Airtable campaigns first (priority)
+    if (airtableCampaigns && airtableCampaigns.length > 0) {
+      allCampaigns.push(...airtableCampaigns);
+    }
+    
+    // Add uploaded campaigns
     if (campaignData && campaignData.length > 0) {
       const mappedCampaigns: Campaign[] = campaignData.map((c, index) => ({
         id: `uploaded-${index}`,
@@ -186,15 +200,20 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
         cpl: parseFloat(c.CPL || c.Spend || c['Amount spent (GBP)'] || '0') / Math.max(parseInt(c.Results || '1', 10), 1),
         startDate: c['Start Date'] || c['Reporting starts'] || c.startDate || new Date().toISOString().split('T')[0],
       }));
-      
-      // Combine mock + uploaded, removing duplicates by name
-      const combined = [...mappedCampaigns, ...mockCampaigns];
-      const unique = combined.filter((c, i, arr) => 
-        arr.findIndex(x => x.name === c.name) === i
-      );
-      setLocalCampaigns(unique);
+      allCampaigns.push(...mappedCampaigns);
     }
-  }, [campaignData]);
+    
+    // Add mock campaigns as fallback if no data
+    if (allCampaigns.length === 0) {
+      allCampaigns.push(...mockCampaigns);
+    }
+    
+    // Remove duplicates by name
+    const unique = allCampaigns.filter((c, i, arr) => 
+      arr.findIndex(x => x.name === c.name) === i
+    );
+    setLocalCampaigns(unique);
+  }, [airtableCampaigns, campaignData]);
 
   // Handle importing campaigns from file upload - also save to DataContext
   const handleCampaignsImport = (importedCampaigns: Campaign[]) => {
@@ -331,8 +350,21 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   return (
     <Card>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 md:p-6">
-        <CardTitle className="text-base md:text-lg">All Campaigns ({filteredCampaigns.length})</CardTitle>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base md:text-lg">All Campaigns ({filteredCampaigns.length})</CardTitle>
+          {airtableLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+          <Button 
+            onClick={() => refetchAirtable()} 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 h-8"
+            disabled={airtableLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${airtableLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Sync Airtable</span>
+          </Button>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm h-8">
               <SelectValue placeholder="Status" />
