@@ -84,14 +84,15 @@ export const developerDevelopments = [
 ];
 
 // Demo campaigns for developer
+// Results are calibrated to match actual leads per campaign
 export const developerCampaigns = [
-  // Thames Gateway Village campaigns
+  // Thames Gateway Village campaigns (4 leads)
   {
     "Campaign Name": "Thames Gateway - Nigeria HNWI Q4",
     "Campaign name": "Thames Gateway - Nigeria HNWI Q4",
     "Amount spent (GBP)": 8500,
     Spend: 8500,
-    Results: 142,
+    Results: 1, // DEV001
     Impressions: 285000,
     Reach: 180000,
     Clicks: 4800,
@@ -106,7 +107,7 @@ export const developerCampaigns = [
     "Campaign name": "Thames Gateway - UAE Investors",
     "Amount spent (GBP)": 6200,
     Spend: 6200,
-    Results: 89,
+    Results: 1, // DEV003
     Impressions: 195000,
     Reach: 125000,
     Clicks: 3200,
@@ -121,7 +122,7 @@ export const developerCampaigns = [
     "Campaign name": "Thames Gateway - UK First Time Buyers",
     "Amount spent (GBP)": 4800,
     Spend: 4800,
-    Results: 156,
+    Results: 2, // DEV005, DEV013
     Impressions: 420000,
     Reach: 280000,
     Clicks: 6800,
@@ -131,13 +132,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-09-01",
   },
-  // Meridian Heights campaigns
+  // Meridian Heights campaigns (3 leads)
   {
     "Campaign Name": "Meridian Heights - Hong Kong Investors",
     "Campaign name": "Meridian Heights - Hong Kong Investors",
     "Amount spent (GBP)": 12500,
     Spend: 12500,
-    Results: 178,
+    Results: 3, // DEV002, DEV009, DEV014
     Impressions: 340000,
     Reach: 220000,
     Clicks: 5600,
@@ -152,7 +153,7 @@ export const developerCampaigns = [
     "Campaign name": "Meridian Heights - Singapore BTL",
     "Amount spent (GBP)": 5800,
     Spend: 5800,
-    Results: 67,
+    Results: 1, // DEV006
     Impressions: 145000,
     Reach: 95000,
     Clicks: 2400,
@@ -162,13 +163,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-10-01",
   },
-  // Parkside Quarter campaigns
+  // Parkside Quarter campaigns (2 leads)
   {
     "Campaign Name": "Parkside Quarter - Local Families",
     "Campaign name": "Parkside Quarter - Local Families",
     "Amount spent (GBP)": 3200,
     Spend: 3200,
-    Results: 98,
+    Results: 1, // DEV012
     Impressions: 280000,
     Reach: 185000,
     Clicks: 4200,
@@ -183,7 +184,7 @@ export const developerCampaigns = [
     "Campaign name": "Parkside Quarter - London Commuters",
     "Amount spent (GBP)": 2800,
     Spend: 2800,
-    Results: 72,
+    Results: 1, // DEV004
     Impressions: 195000,
     Reach: 130000,
     Clicks: 3100,
@@ -193,13 +194,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-10-20",
   },
-  // Victoria Gardens campaigns
+  // Victoria Gardens campaigns (3 leads)
   {
     "Campaign Name": "Victoria Gardens - Manchester Professionals",
     "Campaign name": "Victoria Gardens - Manchester Professionals",
     "Amount spent (GBP)": 4500,
     Spend: 4500,
-    Results: 145,
+    Results: 2, // DEV007, DEV015
     Impressions: 380000,
     Reach: 250000,
     Clicks: 5800,
@@ -214,7 +215,7 @@ export const developerCampaigns = [
     "Campaign name": "Victoria Gardens - BTL Investors UK",
     "Amount spent (GBP)": 3800,
     Spend: 3800,
-    Results: 89,
+    Results: 1, // DEV008
     Impressions: 165000,
     Reach: 110000,
     Clicks: 2800,
@@ -224,13 +225,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-10-05",
   },
-  // Kensington Place campaigns (pre-launch)
+  // Kensington Place campaigns (2 leads)
   {
     "Campaign Name": "Kensington Place - UHNWI Global",
     "Campaign name": "Kensington Place - UHNWI Global",
     "Amount spent (GBP)": 18500,
     Spend: 18500,
-    Results: 45,
+    Results: 1, // DEV010
     Impressions: 85000,
     Reach: 55000,
     Clicks: 1200,
@@ -245,7 +246,7 @@ export const developerCampaigns = [
     "Campaign name": "Kensington Place - Middle East VIP",
     "Amount spent (GBP)": 15200,
     Spend: 15200,
-    Results: 32,
+    Results: 1, // DEV011
     Impressions: 62000,
     Reach: 40000,
     Clicks: 890,
