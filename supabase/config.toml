@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.tracking-webhook]
 verify_jwt = false
+
+[functions.airtable-webhook]
+verify_jwt = false
+
+[functions.airtable-sync]
+verify_jwt = false
