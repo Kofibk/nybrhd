@@ -32,6 +32,36 @@ export type Database = {
         }
         Relationships: []
       }
+      airtable_sync: {
+        Row: {
+          airtable_record_id: string
+          airtable_table: string
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          supabase_record_id: string
+          supabase_table: string
+        }
+        Insert: {
+          airtable_record_id: string
+          airtable_table: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          supabase_record_id: string
+          supabase_table: string
+        }
+        Update: {
+          airtable_record_id?: string
+          airtable_table?: string
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          supabase_record_id?: string
+          supabase_table?: string
+        }
+        Relationships: []
+      }
       client_invitations: {
         Row: {
           accepted_at: string | null
