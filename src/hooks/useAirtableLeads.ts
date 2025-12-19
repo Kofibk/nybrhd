@@ -15,7 +15,24 @@ interface AirtableResponse {
   offset?: string;
 }
 
-// Fetch all Leads_Data records from Airtable
+// Helper to extract value from single select field (Airtable returns { name: "value" } for single select)
+function extractFieldValue(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object' && value !== null) {
+    // Single select fields in Airtable API return the value directly as a string
+    // But linked records return { name: "value" }
+    if ('name' in value) {
+      return String((value as { name: string }).name);
+    }
+    // Array of linked records
+    if (Array.isArray(value)) {
+      return value.map(v => typeof v === 'string' ? v : extractFieldValue(v)).join(', ');
+    }
+  }
+  return String(value);
+}
+
+// Fetch all Leads_Data records from Airtable with pagination
 async function fetchLeadsRecords(): Promise<AirtableLeadRecord[]> {
   const allRecords: AirtableLeadRecord[] = [];
   let offset: string | undefined;
@@ -25,7 +42,7 @@ async function fetchLeadsRecords(): Promise<AirtableLeadRecord[]> {
       body: {
         action: 'list',
         table: 'Leads_Data',
-        maxRecords: 100,
+        pageSize: 100, // Max per request - don't use maxRecords as it limits total
         offset,
       },
     });
@@ -36,11 +53,12 @@ async function fetchLeadsRecords(): Promise<AirtableLeadRecord[]> {
     }
 
     const response = data as AirtableResponse;
-    console.log('Airtable Leads_Data response:', response?.records?.length, 'records');
+    console.log('Airtable Leads_Data response:', response?.records?.length, 'records, offset:', response?.offset);
     allRecords.push(...(response?.records || []));
     offset = response?.offset;
   } while (offset);
 
+  console.log('Total Airtable leads fetched:', allRecords.length);
   return allRecords;
 }
 
@@ -49,28 +67,35 @@ export function transformToLead(record: AirtableLeadRecord) {
   const fields = record.fields;
   
   // Helper to get field value with multiple possible names
-  const getField = (possibleNames: string[]): unknown => {
+  const getField = (possibleNames: string[]): string => {
     for (const name of possibleNames) {
       if (fields[name] !== undefined && fields[name] !== null) {
-        return fields[name];
+        return extractFieldValue(fields[name]);
       }
     }
-    return undefined;
+    return '';
   };
 
-  // Extract common lead fields
-  const name = String(getField(['Name', 'Full Name', 'Lead Name', 'full_name', 'name']) || 'Unknown');
-  const email = String(getField(['Email', 'email', 'Email Address', 'email_address']) || '');
-  const phone = String(getField(['Phone', 'phone', 'Phone Number', 'phone_number', 'Mobile']) || '');
-  const country = String(getField(['Country', 'country', 'Location', 'Region']) || 'Unknown');
-  const budget = String(getField(['Budget', 'budget', 'Price Range', 'Investment']) || '');
-  const bedrooms = String(getField(['Bedrooms', 'bedrooms', 'Beds', 'No. of Bedrooms']) || '');
-  const status = String(getField(['Status', 'status', 'Lead Status']) || 'new');
-  const source = String(getField(['Source', 'source', 'Lead Source', 'Platform', 'Source Platform']) || 'Airtable');
-  const campaignName = String(getField(['Campaign', 'campaign', 'Campaign Name', 'Ad Campaign']) || '');
-  const notes = String(getField(['Notes', 'notes', 'Comments', 'Additional Notes']) || '');
-  const createdAt = String(getField(['Created Date', 'created_date', 'Date', 'Created', 'Timestamp']) || record.createdTime);
-  const purchaseTimeline = String(getField(['Timeline', 'Purchase Timeline', 'Timeframe', 'When']) || '');
+  // Extract all core fields - using exact Airtable column names
+  const dateAdded = getField(['Date Added', 'Date_Added', 'Created Date', 'created_date', 'Date', 'Created', 'Timestamp']) || record.createdTime;
+  const name = getField(['Name', 'Full Name', 'Lead Name', 'full_name', 'name']) || 'Unknown';
+  const phone = getField(['Number', 'Phone', 'phone', 'Phone Number', 'phone_number', 'Mobile']);
+  const email = getField(['Email', 'email', 'Email Address', 'email_address']);
+  const budgetRange = getField(['Budget Range', 'Budget_Range', 'Budget', 'budget', 'Price Range', 'Investment']);
+  const preferredBedrooms = getField(['Preferred Bedrooms', 'Preferred_Bedrooms', 'Bedrooms', 'bedrooms', 'Beds', 'No. of Bedrooms']);
+  const purchaseIn28Days = getField(['Are they looking to purchase within the next 28 days?', 'Purchase_28_Days', 'Timeline', 'Purchase Timeline', 'Timeframe', 'When']);
+  const developmentName = getField(['Development Name', 'Development_Name', 'Development', 'Project Name']);
+  const brokerNeeded = getField(['Broker Needed?', 'Broker_Needed', 'Needs Broker', 'Broker']);
+  const agentTranscription = getField(['Agent Transcription', 'Agent_Transcription', 'Transcription', 'Call Notes']);
+  const linkedinProfile = getField(['Linkedin/Company Profile', 'LinkedIn', 'Company Profile', 'LinkedIn_Profile', 'Company URL']);
+  const buyerSummary = getField(['Buyer Summary', 'Buyer_Summary', 'Summary', 'Lead Summary']);
+  
+  // Status - keep original value from Airtable
+  const status = getField(['Status', 'status', 'Lead Status']) || 'New';
+  const source = getField(['Source', 'source', 'Lead Source', 'Platform', 'Source Platform']) || 'Airtable';
+  const campaignName = getField(['Campaign', 'campaign', 'Campaign Name', 'Ad Campaign']);
+  const country = getField(['Country', 'country', 'Location', 'Region']) || 'Unknown';
+  const notes = getField(['Notes', 'notes', 'Comments', 'Additional Notes']);
 
   // Score fields
   const intentScore = Number(getField(['Intent Score', 'intent_score', 'Intent']) || Math.floor(Math.random() * 40) + 60);
@@ -78,35 +103,30 @@ export function transformToLead(record: AirtableLeadRecord) {
 
   return {
     id: record.id,
+    // Core fields as requested
+    dateAdded,
     name,
-    email,
     phone,
-    country,
-    budget,
-    bedrooms,
-    status: normalizeStatus(status),
+    email,
+    budgetRange,
+    preferredBedrooms,
+    purchaseIn28Days,
+    developmentName,
+    brokerNeeded,
+    agentTranscription,
+    linkedinProfile,
+    buyerSummary,
+    // Additional fields
+    status,
     source,
     campaignName,
+    country,
     notes,
-    createdAt,
-    purchaseTimeline,
     intentScore,
     qualityScore,
     // Pass through all original fields for display
     rawFields: fields,
   };
-}
-
-// Normalize status to match expected values
-function normalizeStatus(status: string): string {
-  const s = status.toLowerCase();
-  if (s.includes('new') || s.includes('fresh')) return 'new';
-  if (s.includes('contact') || s.includes('reached')) return 'contacted';
-  if (s.includes('book') || s.includes('viewing') || s.includes('scheduled')) return 'booked_viewing';
-  if (s.includes('offer') || s.includes('negotiat')) return 'offer';
-  if (s.includes('won') || s.includes('closed') || s.includes('converted')) return 'won';
-  if (s.includes('lost') || s.includes('reject') || s.includes('dead')) return 'lost';
-  return 'new';
 }
 
 // Transform to raw format for dashboard context
@@ -120,15 +140,19 @@ export function transformToRawFormat(record: AirtableLeadRecord) {
 
 type AirtableLeadsHooksOptions = {
   enabled?: boolean;
+  autoRefresh?: boolean;
 };
 
-// React Query hook to fetch Leads_Data
+// React Query hook to fetch Leads_Data with auto-refresh
 export function useAirtableLeadsData(options: AirtableLeadsHooksOptions = {}) {
+  const autoRefresh = options.autoRefresh ?? true;
+  
   return useQuery({
     queryKey: ['airtable-leads-data'],
     queryFn: fetchLeadsRecords,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: autoRefresh ? 60 * 1000 : 5 * 60 * 1000, // 1 min if auto-refresh, else 5 min
+    refetchOnWindowFocus: autoRefresh,
+    refetchInterval: autoRefresh ? 2 * 60 * 1000 : false, // Auto-refresh every 2 minutes
     enabled: options.enabled ?? true,
   });
 }
@@ -160,4 +184,13 @@ export function getAirtableLeadColumns(records: AirtableLeadRecord[]): string[] 
     Object.keys(record.fields).forEach(key => columns.add(key));
   });
   return Array.from(columns).sort();
+}
+
+// Get all unique status values from leads
+export function getUniqueStatuses(leads: ReturnType<typeof transformToLead>[]): string[] {
+  const statuses = new Set<string>();
+  leads.forEach(lead => {
+    if (lead.status) statuses.add(lead.status);
+  });
+  return Array.from(statuses).sort();
 }
