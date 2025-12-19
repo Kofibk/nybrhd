@@ -83,16 +83,16 @@ export const developerDevelopments = [
   },
 ];
 
-// Demo campaigns for developer
-// Results are calibrated to match actual leads per campaign
+// Demo campaigns for developer - realistic lead volumes for a large developer
+// Total spend: £85,800 | Total leads: 247 | Avg CPL: £347
 export const developerCampaigns = [
-  // Thames Gateway Village campaigns (4 leads)
+  // Thames Gateway Village campaigns (68 leads total)
   {
     "Campaign Name": "Thames Gateway - Nigeria HNWI Q4",
     "Campaign name": "Thames Gateway - Nigeria HNWI Q4",
     "Amount spent (GBP)": 8500,
     Spend: 8500,
-    Results: 1, // DEV001
+    Results: 24,
     Impressions: 285000,
     Reach: 180000,
     Clicks: 4800,
@@ -107,7 +107,7 @@ export const developerCampaigns = [
     "Campaign name": "Thames Gateway - UAE Investors",
     "Amount spent (GBP)": 6200,
     Spend: 6200,
-    Results: 1, // DEV003
+    Results: 18,
     Impressions: 195000,
     Reach: 125000,
     Clicks: 3200,
@@ -122,7 +122,7 @@ export const developerCampaigns = [
     "Campaign name": "Thames Gateway - UK First Time Buyers",
     "Amount spent (GBP)": 4800,
     Spend: 4800,
-    Results: 2, // DEV005, DEV013
+    Results: 26,
     Impressions: 420000,
     Reach: 280000,
     Clicks: 6800,
@@ -132,13 +132,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-09-01",
   },
-  // Meridian Heights campaigns (3 leads)
+  // Meridian Heights campaigns (56 leads total)
   {
     "Campaign Name": "Meridian Heights - Hong Kong Investors",
     "Campaign name": "Meridian Heights - Hong Kong Investors",
     "Amount spent (GBP)": 12500,
     Spend: 12500,
-    Results: 3, // DEV002, DEV009, DEV014
+    Results: 32,
     Impressions: 340000,
     Reach: 220000,
     Clicks: 5600,
@@ -153,7 +153,7 @@ export const developerCampaigns = [
     "Campaign name": "Meridian Heights - Singapore BTL",
     "Amount spent (GBP)": 5800,
     Spend: 5800,
-    Results: 1, // DEV006
+    Results: 24,
     Impressions: 145000,
     Reach: 95000,
     Clicks: 2400,
@@ -163,13 +163,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-10-01",
   },
-  // Parkside Quarter campaigns (2 leads)
+  // Parkside Quarter campaigns (38 leads total)
   {
     "Campaign Name": "Parkside Quarter - Local Families",
     "Campaign name": "Parkside Quarter - Local Families",
     "Amount spent (GBP)": 3200,
     Spend: 3200,
-    Results: 1, // DEV012
+    Results: 22,
     Impressions: 280000,
     Reach: 185000,
     Clicks: 4200,
@@ -184,7 +184,7 @@ export const developerCampaigns = [
     "Campaign name": "Parkside Quarter - London Commuters",
     "Amount spent (GBP)": 2800,
     Spend: 2800,
-    Results: 1, // DEV004
+    Results: 16,
     Impressions: 195000,
     Reach: 130000,
     Clicks: 3100,
@@ -194,13 +194,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-10-20",
   },
-  // Victoria Gardens campaigns (3 leads)
+  // Victoria Gardens campaigns (45 leads total)
   {
     "Campaign Name": "Victoria Gardens - Manchester Professionals",
     "Campaign name": "Victoria Gardens - Manchester Professionals",
     "Amount spent (GBP)": 4500,
     Spend: 4500,
-    Results: 2, // DEV007, DEV015
+    Results: 28,
     Impressions: 380000,
     Reach: 250000,
     Clicks: 5800,
@@ -215,7 +215,7 @@ export const developerCampaigns = [
     "Campaign name": "Victoria Gardens - BTL Investors UK",
     "Amount spent (GBP)": 3800,
     Spend: 3800,
-    Results: 1, // DEV008
+    Results: 17,
     Impressions: 165000,
     Reach: 110000,
     Clicks: 2800,
@@ -225,13 +225,13 @@ export const developerCampaigns = [
     Status: "Active",
     "Reporting starts": "2024-10-05",
   },
-  // Kensington Place campaigns (2 leads)
+  // Kensington Place campaigns (20 leads total - luxury = fewer leads, higher CPL)
   {
     "Campaign Name": "Kensington Place - UHNWI Global",
     "Campaign name": "Kensington Place - UHNWI Global",
     "Amount spent (GBP)": 18500,
     Spend: 18500,
-    Results: 1, // DEV010
+    Results: 12,
     Impressions: 85000,
     Reach: 55000,
     Clicks: 1200,
@@ -246,7 +246,7 @@ export const developerCampaigns = [
     "Campaign name": "Kensington Place - Middle East VIP",
     "Amount spent (GBP)": 15200,
     Spend: 15200,
-    Results: 1, // DEV011
+    Results: 8,
     Impressions: 62000,
     Reach: 40000,
     Clicks: 890,
@@ -258,284 +258,111 @@ export const developerCampaigns = [
   },
 ];
 
-// Demo leads for developer
-export const developerLeads = [
-  // Hot leads - High intent, viewing/offer stage
-  {
-    "Lead ID": "DEV001",
-    "Name": "Chukwuemeka Obi",
-    "Email": "c.obi@corporate.ng",
-    "Phone Number": "+234 803 456 7890",
-    "Country": "Nigeria",
-    "Budget Range": "£800,000 - £1,200,000",
-    "Preferred Bedrooms": "3 bed",
-    "Timeline to Purchase": "Within 28 days",
-    "Status": "Viewing Booked",
-    "Source Platform": "Facebook",
-    "Campaign": "Thames Gateway - Nigeria HNWI Q4",
-    "Development": "Thames Gateway Village",
-    "Date Added": new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "CEO of tech startup, relocating family to London. Cash buyer, very motivated.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "Yes",
-  },
-  {
-    "Lead ID": "DEV002",
-    "Name": "Sarah Chen-Williams",
-    "Email": "sarah.cw@investment.hk",
-    "Phone Number": "+852 9876 5432",
-    "Country": "Hong Kong",
-    "Budget Range": "£600,000 - £850,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "Within 28 days",
-    "Status": "Offer Made",
-    "Source Platform": "Instagram",
-    "Campaign": "Meridian Heights - Hong Kong Investors",
-    "Development": "Meridian Heights",
-    "Date Added": new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Portfolio investor, owns 4 UK properties. Made offer £720,000 for unit 1204.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "Yes",
-  },
-  {
-    "Lead ID": "DEV003",
-    "Name": "Mohammed Al-Rashid",
-    "Email": "m.alrashid@emirates.ae",
-    "Phone Number": "+971 50 123 4567",
-    "Country": "UAE",
-    "Budget Range": "£1,000,000 - £1,500,000",
-    "Preferred Bedrooms": "Penthouse",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Viewing Booked",
-    "Source Platform": "Facebook",
-    "Campaign": "Thames Gateway - UAE Investors",
-    "Development": "Thames Gateway Village",
-    "Date Added": new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Family office representative, looking for 2-3 units as investment portfolio.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "Yes",
-  },
-  // Quality leads - Engaged, high quality
-  {
-    "Lead ID": "DEV004",
-    "Name": "James Mitchell",
-    "Email": "j.mitchell@solicitors.co.uk",
-    "Phone Number": "+44 7700 900123",
-    "Country": "United Kingdom",
-    "Budget Range": "£320,000 - £400,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Contacted",
-    "Source Platform": "Facebook",
-    "Campaign": "Parkside Quarter - London Commuters",
-    "Development": "Parkside Quarter",
-    "Date Added": new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Solicitor in London, looking to buy first home closer to Reading. Pre-approved mortgage.",
-    "Cash/Mortgage": "Mortgage",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  {
-    "Lead ID": "DEV005",
-    "Name": "Emma Thompson",
-    "Email": "emma.t@nhs.net",
-    "Phone Number": "+44 7890 234567",
-    "Country": "United Kingdom",
-    "Budget Range": "£380,000 - £450,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Engaged",
-    "Source Platform": "Facebook",
-    "Campaign": "Thames Gateway - UK First Time Buyers",
-    "Development": "Thames Gateway Village",
-    "Date Added": new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "NHS consultant, using Help to Buy. Very interested in 2-bed with balcony.",
-    "Cash/Mortgage": "Mortgage",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  {
-    "Lead ID": "DEV006",
-    "Name": "David Tan",
-    "Email": "david.tan@tech.sg",
-    "Phone Number": "+65 9123 4567",
-    "Country": "Singapore",
-    "Budget Range": "£500,000 - £700,000",
-    "Preferred Bedrooms": "2-3 bed",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Contacted",
-    "Source Platform": "Instagram",
-    "Campaign": "Meridian Heights - Singapore BTL",
-    "Development": "Meridian Heights",
-    "Date Added": new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Tech executive, expanding UK property portfolio. Looking for BTL opportunity.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  // Medium leads - New, browsing
-  {
-    "Lead ID": "DEV007",
-    "Name": "Olivia Johnson",
-    "Email": "olivia.j@gmail.com",
-    "Phone Number": "+44 7555 123456",
-    "Country": "United Kingdom",
-    "Budget Range": "£220,000 - £280,000",
-    "Preferred Bedrooms": "1-2 bed",
-    "Timeline to Purchase": "3-6 months",
-    "Status": "New",
-    "Source Platform": "Facebook",
-    "Campaign": "Victoria Gardens - Manchester Professionals",
-    "Development": "Victoria Gardens",
-    "Date Added": new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Marketing manager in Manchester, first-time buyer exploring options.",
-    "Cash/Mortgage": "Mortgage",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  {
-    "Lead ID": "DEV008",
-    "Name": "Michael O'Brien",
-    "Email": "m.obrien@finance.ie",
-    "Phone Number": "+353 87 123 4567",
-    "Country": "Ireland",
-    "Budget Range": "£350,000 - £450,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "3-6 months",
-    "Status": "New",
-    "Source Platform": "Facebook",
-    "Campaign": "Victoria Gardens - BTL Investors UK",
-    "Development": "Victoria Gardens",
-    "Date Added": new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Irish investor looking at Manchester market for BTL.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  {
-    "Lead ID": "DEV009",
-    "Name": "Priya Sharma",
-    "Email": "priya.s@corporate.in",
-    "Phone Number": "+91 98765 43210",
-    "Country": "India",
-    "Budget Range": "£600,000 - £900,000",
-    "Preferred Bedrooms": "3 bed",
-    "Timeline to Purchase": "6-9 months",
-    "Status": "New",
-    "Source Platform": "Facebook",
-    "Campaign": "Meridian Heights - Hong Kong Investors",
-    "Development": "Meridian Heights",
-    "Date Added": new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "IT director, relocating to London in 2025. Looking for family home.",
-    "Cash/Mortgage": "Mortgage",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  // Luxury segment
-  {
-    "Lead ID": "DEV010",
-    "Name": "Sheikh Abdullah Al-Maktoum",
-    "Email": "office@almaktoum.ae",
-    "Phone Number": "+971 4 123 4567",
-    "Country": "UAE",
-    "Budget Range": "£3,000,000+",
-    "Preferred Bedrooms": "Penthouse",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Contacted",
-    "Source Platform": "Facebook",
-    "Campaign": "Kensington Place - UHNWI Global",
-    "Development": "Kensington Place",
-    "Date Added": new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "UHNWI, interested in full-floor penthouse. Family office handling.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "Yes",
-  },
-  {
-    "Lead ID": "DEV011",
-    "Name": "Victoria Rothschild",
-    "Email": "v.rothschild@family.ch",
-    "Phone Number": "+41 22 123 4567",
-    "Country": "Switzerland",
-    "Budget Range": "£2,500,000 - £4,000,000",
-    "Preferred Bedrooms": "3-4 bed",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "New",
-    "Source Platform": "Instagram",
-    "Campaign": "Kensington Place - Middle East VIP",
-    "Development": "Kensington Place",
-    "Date Added": new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Swiss family looking for London pied-à-terre. Very private, prefer discreet viewings.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  // More UK buyers
-  {
-    "Lead ID": "DEV012",
-    "Name": "Sophie Anderson",
-    "Email": "sophie.a@outlook.com",
-    "Phone Number": "+44 7777 888999",
-    "Country": "United Kingdom",
-    "Budget Range": "£280,000 - £350,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Engaged",
-    "Source Platform": "Facebook",
-    "Campaign": "Parkside Quarter - Local Families",
-    "Development": "Parkside Quarter",
-    "Date Added": new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Young family, expecting first child. Looking for 2-bed with good schools nearby.",
-    "Cash/Mortgage": "Mortgage",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  {
-    "Lead ID": "DEV013",
-    "Name": "Robert Williams",
-    "Email": "r.williams@pension.co.uk",
-    "Phone Number": "+44 7123 456789",
-    "Country": "United Kingdom",
-    "Budget Range": "£400,000 - £550,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "Within 28 days",
-    "Status": "Viewing Booked",
-    "Source Platform": "Facebook",
-    "Campaign": "Thames Gateway - UK First Time Buyers",
-    "Development": "Thames Gateway Village",
-    "Date Added": new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Downsizer, selling Surrey home. Cash buyer, motivated to complete quickly.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "Yes",
-  },
-  {
-    "Lead ID": "DEV014",
-    "Name": "Lucy Chen",
-    "Email": "lucy.chen@bank.uk",
-    "Phone Number": "+44 7999 111222",
-    "Country": "United Kingdom",
-    "Budget Range": "£500,000 - £650,000",
-    "Preferred Bedrooms": "2-3 bed",
-    "Timeline to Purchase": "0-3 months",
-    "Status": "Contacted",
-    "Source Platform": "Instagram",
-    "Campaign": "Meridian Heights - Hong Kong Investors",
-    "Development": "Meridian Heights",
-    "Date Added": new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Investment banker, British-Chinese. Looking for modern apartment near work.",
-    "Cash/Mortgage": "Mortgage",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-  {
-    "Lead ID": "DEV015",
-    "Name": "Thomas Baker",
-    "Email": "t.baker@property.uk",
-    "Phone Number": "+44 7444 555666",
-    "Country": "United Kingdom",
-    "Budget Range": "£240,000 - £320,000",
-    "Preferred Bedrooms": "2 bed",
-    "Timeline to Purchase": "3-6 months",
-    "Status": "New",
-    "Source Platform": "Facebook",
-    "Campaign": "Victoria Gardens - Manchester Professionals",
-    "Development": "Victoria Gardens",
-    "Date Added": new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    "Buyer Summary": "Property developer looking at BTL portfolio expansion in Manchester.",
-    "Cash/Mortgage": "Cash",
-    "Are you ready to purchase within 28 days?": "No",
-  },
-];
+// Helper to generate realistic leads
+const generateLeads = () => {
+  const leads = [];
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  
+  // Lead templates by development
+  const developments = [
+    { name: "Thames Gateway Village", campaigns: ["Thames Gateway - Nigeria HNWI Q4", "Thames Gateway - UAE Investors", "Thames Gateway - UK First Time Buyers"], count: 68 },
+    { name: "Meridian Heights", campaigns: ["Meridian Heights - Hong Kong Investors", "Meridian Heights - Singapore BTL"], count: 56 },
+    { name: "Parkside Quarter", campaigns: ["Parkside Quarter - Local Families", "Parkside Quarter - London Commuters"], count: 38 },
+    { name: "Victoria Gardens", campaigns: ["Victoria Gardens - Manchester Professionals", "Victoria Gardens - BTL Investors UK"], count: 45 },
+    { name: "Kensington Place", campaigns: ["Kensington Place - UHNWI Global", "Kensington Place - Middle East VIP"], count: 20 },
+  ];
+
+  const statuses = ["New", "Contacted", "Engaged", "Viewing Booked", "Offer Made"];
+  const statusWeights = [35, 25, 20, 15, 5]; // Distribution
+  
+  const countries = ["United Kingdom", "Nigeria", "UAE", "Hong Kong", "Singapore", "India", "Switzerland", "Ireland", "China"];
+  const platforms = ["Facebook", "Instagram"];
+  const timelines = ["Within 28 days", "0-3 months", "3-6 months", "6-9 months"];
+  const timelineWeights = [15, 35, 35, 15];
+  
+  const firstNames = ["James", "Emma", "Oliver", "Sophia", "William", "Ava", "Benjamin", "Isabella", "Lucas", "Mia", "Henry", "Charlotte", "Alexander", "Amelia", "Daniel", "Harper", "Matthew", "Evelyn", "Joseph", "Abigail", "David", "Emily", "Andrew", "Elizabeth", "Michael", "Sofia", "Christopher", "Victoria", "John", "Grace", "Ryan", "Chloe", "Nathan", "Ella", "Samuel", "Scarlett", "Tyler", "Madison", "Brandon", "Luna", "Chukwuemeka", "Adaeze", "Mohammed", "Fatima", "Wei", "Mei", "Raj", "Priya", "Abdullah", "Aisha"];
+  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Wilson", "Anderson", "Taylor", "Thomas", "Moore", "Jackson", "Martin", "Lee", "Thompson", "White", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Hall", "Young", "King", "Wright", "Hill", "Chen", "Wang", "Liu", "Zhang", "Obi", "Okonkwo", "Adeyemi", "Al-Rashid", "Khan", "Patel", "Sharma", "Singh", "Rothschild", "Cohen"];
+  
+  const budgetRanges = {
+    "Thames Gateway Village": ["£400,000 - £600,000", "£600,000 - £800,000", "£800,000 - £1,200,000"],
+    "Meridian Heights": ["£380,000 - £500,000", "£500,000 - £700,000", "£700,000 - £850,000"],
+    "Parkside Quarter": ["£295,000 - £400,000", "£400,000 - £500,000", "£500,000 - £620,000"],
+    "Victoria Gardens": ["£220,000 - £300,000", "£300,000 - £400,000", "£400,000 - £485,000"],
+    "Kensington Place": ["£1,500,000 - £2,500,000", "£2,500,000 - £3,500,000", "£3,000,000+"],
+  };
+  
+  const bedrooms = ["1 bed", "2 bed", "2-3 bed", "3 bed", "3-4 bed", "Penthouse"];
+  
+  const weightedRandom = (weights: number[]) => {
+    const total = weights.reduce((a, b) => a + b, 0);
+    let random = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      random -= weights[i];
+      if (random <= 0) return i;
+    }
+    return weights.length - 1;
+  };
+
+  let leadId = 1;
+  
+  developments.forEach(dev => {
+    for (let i = 0; i < dev.count; i++) {
+      const statusIdx = weightedRandom(statusWeights);
+      const status = statuses[statusIdx];
+      const timelineIdx = weightedRandom(timelineWeights);
+      const timeline = timelines[timelineIdx];
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const country = countries[Math.floor(Math.random() * countries.length)];
+      const platform = platforms[Math.floor(Math.random() * platforms.length)];
+      const campaign = dev.campaigns[Math.floor(Math.random() * dev.campaigns.length)];
+      const budgets = budgetRanges[dev.name as keyof typeof budgetRanges];
+      const budget = budgets[Math.floor(Math.random() * budgets.length)];
+      const bedroom = bedrooms[Math.floor(Math.random() * bedrooms.length)];
+      const daysAgo = Math.floor(Math.random() * 45) + 1;
+      const cashBuyer = Math.random() > 0.6 ? "Cash" : "Mortgage";
+      const ready28 = timeline === "Within 28 days" || (timeline === "0-3 months" && Math.random() > 0.7) ? "Yes" : "No";
+      
+      const summaries = [
+        `Interested in ${bedroom} property. ${cashBuyer} buyer.`,
+        `Looking for investment opportunity. ${timeline} timeline.`,
+        `Relocating to area. Motivated buyer.`,
+        `Portfolio investor seeking BTL opportunity.`,
+        `First-time buyer with mortgage pre-approval.`,
+        `Downsizer looking for modern apartment.`,
+        `Family expanding, needs more space.`,
+        `Professional relocating for work.`,
+      ];
+      
+      leads.push({
+        "Lead ID": `DEV${String(leadId).padStart(3, '0')}`,
+        "Name": `${firstName} ${lastName}`,
+        "Email": `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+        "Phone Number": country === "United Kingdom" ? `+44 7${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 900000 + 100000)}` : `+${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 9000000 + 1000000)}`,
+        "Country": country,
+        "Budget Range": budget,
+        "Preferred Bedrooms": bedroom,
+        "Timeline to Purchase": timeline,
+        "Status": status,
+        "Source Platform": platform,
+        "Campaign": campaign,
+        "Development": dev.name,
+        "Date Added": new Date(now - daysAgo * day).toISOString(),
+        "Buyer Summary": summaries[Math.floor(Math.random() * summaries.length)],
+        "Cash/Mortgage": cashBuyer,
+        "Are you ready to purchase within 28 days?": ready28,
+      });
+      
+      leadId++;
+    }
+  });
+  
+  return leads;
+};
+
+// Generate 247 leads to match campaign results
+export const developerLeads = generateLeads();
 
 // Calculate summary stats
 export const getDeveloperStats = () => {
