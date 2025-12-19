@@ -125,20 +125,25 @@ export function transformToRawFormat(record: AirtableCampaignDate) {
   };
 }
 
+type AirtableCampaignHooksOptions = {
+  enabled?: boolean;
+};
+
 // React Query hook to fetch Campaign_Date data
-export function useAirtableCampaignDate() {
+export function useAirtableCampaignDate(options: AirtableCampaignHooksOptions = {}) {
   return useQuery({
     queryKey: ['airtable-campaign-date'],
     queryFn: fetchCampaignDateRecords,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
+    enabled: options.enabled ?? true,
   });
 }
 
 // Hook that returns transformed campaigns for the table
-export function useAirtableCampaignsForTable() {
-  const query = useAirtableCampaignDate();
-  
+export function useAirtableCampaignsForTable(options: AirtableCampaignHooksOptions = {}) {
+  const query = useAirtableCampaignDate(options);
+
   return {
     ...query,
     campaigns: query.data?.map(transformToCampaign) || [],
@@ -146,9 +151,9 @@ export function useAirtableCampaignsForTable() {
 }
 
 // Hook that returns raw format for dashboard context
-export function useAirtableCampaignsForDashboard() {
-  const query = useAirtableCampaignDate();
-  
+export function useAirtableCampaignsForDashboard(options: AirtableCampaignHooksOptions = {}) {
+  const query = useAirtableCampaignDate(options);
+
   return {
     ...query,
     campaignData: query.data?.map(transformToRawFormat) || [],

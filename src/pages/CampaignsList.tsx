@@ -8,12 +8,29 @@ import { Progress } from "@/components/ui/progress";
 import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useMasterAgent } from "@/hooks/useMasterAgent";
+import { useAirtableCampaignsForDashboard } from "@/hooks/useAirtableCampaigns";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
-import { 
-  Plus, Upload, Download, Calendar, ChevronDown, ChevronRight,
-  TrendingUp, AlertCircle, CheckCircle, Pause, Play, Eye,
-  Lightbulb, Sparkles, Target, PoundSterling, Users, BarChart3,
-  Loader2, RefreshCw
+import {
+  Plus,
+  Upload,
+  Download,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Pause,
+  Play,
+  Eye,
+  Lightbulb,
+  Sparkles,
+  Target,
+  PoundSterling,
+  Users,
+  BarChart3,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import {
   Table,
@@ -130,9 +147,24 @@ const getRoleConfig = (userType: string) => {
 
 const CampaignsList = ({ userType }: CampaignsListProps) => {
   const navigate = useNavigate();
-  const { campaignData, leadData } = useUploadedData(userType);
+  const { campaignData: uploadedCampaignData, leadData } = useUploadedData(userType);
   const { getCampaignRecommendations, isLoading: aiLoading } = useMasterAgent();
-  
+
+  const {
+    campaignData: airtableCampaignData,
+    isLoading: airtableLoading,
+    refetch: refetchAirtable,
+  } = useAirtableCampaignsForDashboard({ enabled: userType === 'admin' });
+
+  const campaignData = useMemo(() => {
+    if (userType !== 'admin') return uploadedCampaignData;
+    if (!airtableCampaignData || airtableCampaignData.length === 0) return uploadedCampaignData;
+
+    const combined = [...airtableCampaignData, ...uploadedCampaignData];
+    return combined.filter(
+      (c, i, arr) => arr.findIndex((x) => x['Campaign Name'] === c['Campaign Name']) === i
+    );
+  }, [airtableCampaignData, uploadedCampaignData, userType]);
   const [performingExpanded, setPerformingExpanded] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -376,6 +408,21 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
             </p>
           </div>
           <div className="flex gap-2">
+            {userType === 'admin' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchAirtable()}
+                disabled={airtableLoading}
+              >
+                {airtableLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                Sync Airtable
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
