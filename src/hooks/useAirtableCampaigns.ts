@@ -104,24 +104,68 @@ export function transformToCampaign(record: AirtableCampaignDate) {
   };
 }
 
-// Transform to raw format for dashboard context
+// Transform to raw format for dashboard context - passes all Airtable fields
 export function transformToRawFormat(record: AirtableCampaignDate) {
   const fields = record.fields;
+  
+  // Calculate CPL if not provided
+  const spend = Number(fields['Spend'] || fields['Amount spent (GBP)'] || 0);
+  const results = Number(fields['Results'] || fields['Leads'] || 0);
+  const calculatedCpl = results > 0 ? spend / results : 0;
+  
   return {
+    // Core identifiers
     'Campaign Name': fields['Campaign Name'] || fields['Campaign name'] || 'Unknown Campaign',
+    'Campaign name': fields['Campaign Name'] || fields['Campaign name'] || 'Unknown Campaign',
+    'Ad set name': fields['Ad set name'] || '',
     'Platform': fields['Platform'] || 'Facebook',
-    'Spend': Number(fields['Spend'] || fields['Amount spent (GBP)'] || 0),
-    'Results': Number(fields['Results'] || fields['Leads'] || 0),
-    'CPL': Number(fields['CPL'] || fields['Cost per result'] || 0),
+    
+    // Status
     'Status': fields['Status'] || fields['Campaign delivery'] || 'Active',
+    'Campaign delivery': fields['Campaign delivery'] || fields['Status'] || 'Active',
+    
+    // Budget & Spend
+    'Budget': Number(fields['Budget'] || 0),
+    'Spend': spend,
+    'Amount spent (GBP)': spend,
+    
+    // Results & Conversions
+    'Results': results,
+    'Leads': results,
+    'CPL': Number(fields['CPL'] || fields['Cost per result'] || calculatedCpl),
+    'Cost per result': Number(fields['Cost per result'] || fields['CPL'] || calculatedCpl),
+    
+    // Dates
     'Start Date': fields['Start Date'] || fields['Reporting starts'] || '',
+    'Reporting starts': fields['Reporting starts'] || fields['Start Date'] || '',
+    'End Date': fields['End Date'] || fields['Reporting ends'] || '',
+    'Reporting ends': fields['Reporting ends'] || fields['End Date'] || '',
+    
+    // Reach & Impressions
     'Impressions': Number(fields['Impressions'] || 0),
     'Reach': Number(fields['Reach'] || 0),
+    'Frequency': Number(fields['Frequency'] || 0),
+    'Cost per 1,000 people reached': Number(fields['Cost per 1,000 people reached'] || 0),
+    
+    // Clicks & Engagement
     'Clicks': Number(fields['Clicks'] || fields['Link clicks'] || 0),
+    'Link clicks': Number(fields['Link clicks'] || fields['Clicks'] || 0),
     'CTR': Number(fields['CTR'] || 0),
     'CPC': Number(fields['CPC'] || 0),
-    'Ad set name': fields['Ad set name'] || '',
-    'Frequency': Number(fields['Frequency'] || 0),
+    
+    // Client info
+    'Client': fields['Client'] || '',
+    
+    // Pass through any additional fields from Airtable
+    ...Object.fromEntries(
+      Object.entries(fields).filter(([key]) => 
+        !['Campaign Name', 'Campaign name', 'Ad set name', 'Platform', 'Status', 'Campaign delivery',
+          'Budget', 'Spend', 'Amount spent (GBP)', 'Results', 'Leads', 'CPL', 'Cost per result',
+          'Start Date', 'Reporting starts', 'End Date', 'Reporting ends', 'Impressions', 'Reach',
+          'Frequency', 'Cost per 1,000 people reached', 'Clicks', 'Link clicks', 'CTR', 'CPC', 'Client'
+        ].includes(key)
+      )
+    ),
   };
 }
 

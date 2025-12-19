@@ -71,6 +71,14 @@ interface Campaign {
   cpl: number;
   startDate: string;
   platform: string;
+  // Additional metrics from Airtable
+  impressions: number;
+  reach: number;
+  clicks: number;
+  ctr: number;
+  cpc: number;
+  frequency: number;
+  adSetName: string;
 }
 
 interface DevelopmentGroup {
@@ -205,8 +213,33 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
           row['Start Date'] || row.date || row.Date || new Date().toISOString();
         
         const platform = row.Platform || row.platform || 'Facebook';
+        
+        // Additional metrics
+        const impressions = Number(row.Impressions || row.impressions || 0);
+        const reach = Number(row.Reach || row.reach || 0);
+        const clicks = Number(row.Clicks || row['Link clicks'] || row.clicks || 0);
+        const ctr = Number(row.CTR || row.ctr || 0);
+        const cpc = Number(row.CPC || row.cpc || 0);
+        const frequency = Number(row.Frequency || row.frequency || 0);
+        const adSetName = row['Ad set name'] || row.adSetName || '';
 
-        return { id: `campaign_${index}`, name, status, spent, leads, cpl, startDate, platform };
+        return { 
+          id: `campaign_${index}`, 
+          name, 
+          status, 
+          spent, 
+          leads, 
+          cpl, 
+          startDate, 
+          platform,
+          impressions,
+          reach,
+          clicks,
+          ctr,
+          cpc,
+          frequency,
+          adSetName
+        };
       });
   }, [campaignData]);
 
@@ -340,12 +373,25 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
   };
 
   const exportToCSV = () => {
-    const headers = ["Development", "Campaign", "Platform", "Spend", "Leads", "CPL", "Status"];
+    const headers = ["Development", "Campaign", "Platform", "Spend", "Impressions", "Reach", "Clicks", "CTR", "CPC", "Leads", "CPL", "Status"];
     const rows: string[][] = [];
     
     [...needsAttention, ...performingWell].forEach(group => {
       group.campaigns.forEach(c => {
-        rows.push([group.name, c.name, c.platform, c.spent.toString(), c.leads.toString(), c.cpl.toFixed(2), c.status]);
+        rows.push([
+          group.name, 
+          c.name, 
+          c.platform, 
+          c.spent.toString(), 
+          c.impressions.toString(),
+          c.reach.toString(),
+          c.clicks.toString(),
+          c.ctr.toFixed(2),
+          c.cpc.toFixed(2),
+          c.leads.toString(), 
+          c.cpl.toFixed(2), 
+          c.status
+        ]);
       });
     });
     
@@ -653,16 +699,26 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                             <TableHead className="text-xs h-8">Campaign</TableHead>
                             <TableHead className="text-xs h-8">Platform</TableHead>
                             <TableHead className="text-xs h-8 text-right">Spend</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Impressions</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Reach</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Clicks</TableHead>
+                            <TableHead className="text-xs h-8 text-right">CTR</TableHead>
+                            <TableHead className="text-xs h-8 text-right">CPC</TableHead>
                             <TableHead className="text-xs h-8 text-center">Leads</TableHead>
                             <TableHead className="text-xs h-8 text-right">CPL</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {group.campaigns.slice(0, 5).map((campaign) => (
+                          {group.campaigns.slice(0, 10).map((campaign) => (
                             <TableRow key={campaign.id} className="hover:bg-muted/30">
-                              <TableCell className="text-xs py-2 max-w-[200px] truncate">{campaign.name}</TableCell>
+                              <TableCell className="text-xs py-2 max-w-[180px] truncate" title={campaign.name}>{campaign.name}</TableCell>
                               <TableCell className="text-xs py-2">{campaign.platform}</TableCell>
                               <TableCell className="text-xs py-2 text-right">£{campaign.spent.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.impressions.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.reach.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.clicks.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.ctr > 0 ? `${campaign.ctr.toFixed(2)}%` : '-'}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.cpc > 0 ? `£${campaign.cpc.toFixed(2)}` : '-'}</TableCell>
                               <TableCell className="text-xs py-2 text-center">{campaign.leads}</TableCell>
                               <TableCell className={cn(
                                 "text-xs py-2 text-right font-medium",
@@ -758,12 +814,18 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                     </div>
 
                     <div className="border-t bg-muted/20 px-4 py-2">
+                      <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="hover:bg-transparent">
                             <TableHead className="text-xs h-8">Campaign</TableHead>
                             <TableHead className="text-xs h-8">Platform</TableHead>
                             <TableHead className="text-xs h-8 text-right">Spend</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Impressions</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Reach</TableHead>
+                            <TableHead className="text-xs h-8 text-right">Clicks</TableHead>
+                            <TableHead className="text-xs h-8 text-right">CTR</TableHead>
+                            <TableHead className="text-xs h-8 text-right">CPC</TableHead>
                             <TableHead className="text-xs h-8 text-center">Leads</TableHead>
                             <TableHead className="text-xs h-8 text-right">CPL</TableHead>
                           </TableRow>
@@ -771,9 +833,14 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                         <TableBody>
                           {group.campaigns.map((campaign) => (
                             <TableRow key={campaign.id} className="hover:bg-muted/30">
-                              <TableCell className="text-xs py-2 max-w-[200px] truncate">{campaign.name}</TableCell>
+                              <TableCell className="text-xs py-2 max-w-[180px] truncate" title={campaign.name}>{campaign.name}</TableCell>
                               <TableCell className="text-xs py-2">{campaign.platform}</TableCell>
                               <TableCell className="text-xs py-2 text-right">£{campaign.spent.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.impressions.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.reach.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.clicks.toLocaleString()}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.ctr > 0 ? `${campaign.ctr.toFixed(2)}%` : '-'}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.cpc > 0 ? `£${campaign.cpc.toFixed(2)}` : '-'}</TableCell>
                               <TableCell className="text-xs py-2 text-center">{campaign.leads}</TableCell>
                               <TableCell className="text-xs py-2 text-right font-medium text-green-500">
                                 £{campaign.cpl.toFixed(0)}
@@ -782,6 +849,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                           ))}
                         </TableBody>
                       </Table>
+                      </div>
                     </div>
                   </Card>
                 ))}
