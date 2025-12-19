@@ -11,8 +11,8 @@ const AdminLeadsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { leadData, campaignData } = useUploadedData('admin');
   
-  // Fetch Airtable leads
-  const { leads: airtableLeads, isLoading: airtableLoading, refetch: refetchAirtable } = useAirtableLeadsForTable();
+  // Fetch Airtable leads with auto-refresh enabled
+  const { leads: airtableLeads, isLoading: airtableLoading, isFetching, refetch: refetchAirtable } = useAirtableLeadsForTable({ autoRefresh: true });
 
   return (
     <section aria-label="Admin leads" className="h-full flex flex-col min-h-0">
@@ -23,15 +23,16 @@ const AdminLeadsPage = () => {
             variant="outline"
             size="sm"
             onClick={() => refetchAirtable()}
-            disabled={airtableLoading}
+            disabled={airtableLoading || isFetching}
             className="gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${airtableLoading ? 'animate-spin' : ''}`} />
-            Sync Airtable
+            <RefreshCw className={`h-4 w-4 ${(airtableLoading || isFetching) ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Syncing...' : 'Sync Airtable'}
           </Button>
           {airtableLeads.length > 0 && (
             <span className="text-sm text-muted-foreground">
               {airtableLeads.length} leads from Airtable
+              <span className="text-xs ml-2 text-primary">(auto-refresh enabled)</span>
             </span>
           )}
         </div>
@@ -56,7 +57,7 @@ const AdminLeadsPage = () => {
         <AdminLeadsTable 
           searchQuery={searchQuery} 
           airtableLeads={airtableLeads}
-          airtableLoading={airtableLoading}
+          airtableLoading={airtableLoading || isFetching}
         />
       </div>
     </section>
