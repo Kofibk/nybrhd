@@ -77,8 +77,29 @@ import { formatBudget } from "@/lib/utils";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 import { useUploadedData } from "@/contexts/DataContext";
 
+interface AirtableLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  budget: string;
+  bedrooms: string;
+  status: string;
+  source: string;
+  campaignName: string;
+  notes: string;
+  createdAt: string;
+  purchaseTimeline: string;
+  intentScore: number;
+  qualityScore: number;
+  rawFields: { [key: string]: unknown };
+}
+
 interface AdminLeadsTableProps {
   searchQuery: string;
+  airtableLeads?: AirtableLead[];
+  airtableLoading?: boolean;
 }
 
 type SortDirection = "asc" | "desc" | null;
@@ -88,7 +109,7 @@ interface ColumnSort {
   direction: SortDirection;
 }
 
-const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
+const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = false }: AdminLeadsTableProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("all");
@@ -105,8 +126,30 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   // Get DataContext for syncing with dashboard
   const { setLeadData, setLeadFileName } = useUploadedData('admin');
   
-  // Local leads state (demoLeads + imported leads)
+  // Convert Airtable leads to Lead format and merge with demo leads
+  const airtableLeadsAsLeads: Lead[] = airtableLeads.map(al => ({
+    id: al.id,
+    name: al.name,
+    email: al.email,
+    phone: al.phone,
+    country: al.country,
+    countryCode: al.country.substring(0, 2).toUpperCase(),
+    budget: al.budget,
+    bedrooms: al.bedrooms,
+    status: al.status as Lead['status'],
+    source: (al.source || 'other') as Lead['source'],
+    campaignId: al.campaignName || '',
+    campaignName: al.campaignName,
+    notes: al.notes,
+    createdAt: al.createdAt,
+    purchaseTimeline: (al.purchaseTimeline || '0_3_months') as Lead['purchaseTimeline'],
+    intentScore: al.intentScore,
+    qualityScore: al.qualityScore,
+  }));
+  
+  // Use Airtable leads if available, otherwise fall back to demo leads
   const [localLeads, setLocalLeads] = useState<Lead[]>(demoLeads);
+  const allLeads = airtableLeads.length > 0 ? airtableLeadsAsLeads : localLeads;
   
   // New lead form state
   const [newLead, setNewLead] = useState({
@@ -142,8 +185,8 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
   };
 
   // Get unique clients/campaigns for filter
-  const uniqueClients = [...new Set(localLeads.map(lead => lead.campaignName))].filter(Boolean);
-  const uniqueCountries = [...new Set(localLeads.map(lead => lead.country))];
+  const uniqueClients = [...new Set(allLeads.map(lead => lead.campaignName))].filter(Boolean);
+  const uniqueCountries = [...new Set(allLeads.map(lead => lead.country))];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -204,7 +247,7 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
     });
   };
 
-  const filteredLeads = localLeads
+  const filteredLeads = allLeads
     .filter((lead) => {
       const matchesSearch =
         lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -510,11 +553,17 @@ const AdminLeadsTable = ({ searchQuery }: AdminLeadsTableProps) => {
         <CardHeader className="px-4 py-4 sm:px-6 flex-shrink-0">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="text-lg font-semibold">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
               All Leads
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
+              <span className="text-sm font-normal text-muted-foreground">
                 ({filteredLeads.length})
               </span>
+              {airtableLoading && (
+                <span className="text-xs text-muted-foreground animate-pulse">Loading from Airtable...</span>
+              )}
+              {airtableLeads.length > 0 && !airtableLoading && (
+                <span className="text-xs text-primary">(Airtable)</span>
+              )}
             </CardTitle>
             <div className="flex items-center gap-2">
               {/* Report Upload */}
