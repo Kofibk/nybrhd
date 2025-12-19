@@ -299,70 +299,74 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
     );
   }
 
-  // Lead row component with inline actions
+  // Lead row component with inline actions - Mobile optimized
   const LeadRow = ({ lead, showActions = true }: { lead: Lead; showActions?: boolean }) => {
     const classification = classifyLead(lead.intentScore, lead.qualityScore);
     const config = getClassificationConfig(classification);
     
     return (
       <div 
-        className="flex items-center justify-between p-3 hover:bg-muted/30 rounded-lg cursor-pointer transition-colors"
+        className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 md:p-3 hover:bg-muted/30 rounded-lg cursor-pointer transition-colors gap-2"
         onClick={() => handleLeadClick(lead)}
       >
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium truncate">{lead.name}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="font-medium text-sm truncate">{lead.name}</span>
               <LeadSourceBadge source={lead.source} size="sm" />
               {lead.sourceDetail && (
-                <span className="text-muted-foreground text-xs truncate hidden sm:inline">— {lead.sourceDetail}</span>
+                <span className="text-muted-foreground text-xs truncate hidden lg:inline">— {lead.sourceDetail}</span>
               )}
             </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span>{formatBudget(lead.budget)}</span>
-              <span className="hidden sm:inline">•</span>
-              <span className="hidden sm:inline">{lead.country}</span>
+            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mt-0.5">
+              <span className="truncate">{formatBudget(lead.budget)}</span>
+              <span className="hidden xs:inline">•</span>
+              <span className="hidden xs:inline truncate">{lead.country}</span>
+              {/* Show scores on mobile inline */}
+              <span className="sm:hidden text-[10px]">
+                Q:{lead.qualityScore} I:{lead.intentScore}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
-            <div className="text-right hidden md:block">
-              <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div className="text-right hidden sm:block">
+              <div className="flex items-center gap-2 text-xs sm:text-sm">
                 <span className={getScoreColor(lead.qualityScore)}>{lead.qualityScore}</span>
                 <span className="text-muted-foreground">/</span>
                 <span className={getScoreColor(lead.intentScore)}>{lead.intentScore}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Q / I</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">Q / I</span>
             </div>
-            {showActions && (
-              <div className="flex gap-1">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => handleAction('call', lead, e)}
-                >
-                  <Phone className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => handleAction('booking', lead, e)}
-                >
-                  <Calendar className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => handleAction('whatsapp', lead, e)}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
         </div>
+        {showActions && (
+          <div className="flex gap-1 sm:gap-1 shrink-0 self-end sm:self-center">
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+              onClick={(e) => handleAction('call', lead, e)}
+            >
+              <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+              onClick={(e) => handleAction('booking', lead, e)}
+            >
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+              onClick={(e) => handleAction('whatsapp', lead, e)}
+            >
+              <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     );
   };
@@ -382,25 +386,25 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
   }, [groupedLeads, sourceFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">{roleConfig.leadLabelPlural}</h2>
-          <p className="text-muted-foreground text-sm">{allLeads.length} {roleConfig.leadLabelPlural.toLowerCase()} in pipeline</p>
+          <h2 className="text-lg md:text-xl font-semibold">{roleConfig.leadLabelPlural}</h2>
+          <p className="text-muted-foreground text-xs md:text-sm">{allLeads.length} {roleConfig.leadLabelPlural.toLowerCase()} in pipeline</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="h-8 text-xs">
             <Upload className="h-3.5 w-3.5 mr-1.5" />
-            Upload
+            <span className="hidden xs:inline">Upload</span>
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="h-8 text-xs">
             <Download className="h-3.5 w-3.5 mr-1.5" />
-            Export
+            <span className="hidden xs:inline">Export</span>
           </Button>
           <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-[140px] h-8">
-              <Filter className="h-3.5 w-3.5 mr-1.5" />
+            <SelectTrigger className="w-[120px] sm:w-[140px] h-8 text-xs">
+              <Filter className="h-3.5 w-3.5 mr-1 shrink-0" />
               <SelectValue placeholder="Source" />
             </SelectTrigger>
             <SelectContent className="bg-background border shadow-lg z-50">
@@ -419,60 +423,60 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
       </div>
 
       {/* Pipeline Funnel */}
-      <Card className="p-4">
-        <div className="flex items-center gap-2 mb-4">
+      <Card className="p-3 md:p-4">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">PIPELINE SUMMARY</span>
+          <span className="font-medium text-xs md:text-sm">PIPELINE SUMMARY</span>
         </div>
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-1 md:gap-2 overflow-x-auto pb-2">
+          <div className="flex items-center gap-1 md:gap-2 flex-1 min-w-0">
             {/* Hot */}
-            <div className="flex flex-col items-center p-3 bg-orange-500/10 rounded-lg min-w-[80px]">
-              <div className="flex items-center gap-1">
-                <Flame className="h-4 w-4 text-orange-500" />
-                <span className="text-2xl font-bold">{pipelineStats.hot}</span>
+            <div className="flex flex-col items-center p-2 md:p-3 bg-orange-500/10 rounded-lg min-w-[60px] md:min-w-[80px]">
+              <div className="flex items-center gap-0.5 md:gap-1">
+                <Flame className="h-3 w-3 md:h-4 md:w-4 text-orange-500" />
+                <span className="text-lg md:text-2xl font-bold">{pipelineStats.hot}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Hot</span>
+              <span className="text-[10px] md:text-xs text-muted-foreground">Hot</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            <ArrowRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             
             {/* Contacted */}
-            <div className="flex flex-col items-center p-3 bg-blue-500/10 rounded-lg min-w-[80px]">
-              <div className="flex items-center gap-1">
-                <Phone className="h-4 w-4 text-blue-500" />
-                <span className="text-2xl font-bold">{pipelineStats.contacted}</span>
+            <div className="flex flex-col items-center p-2 md:p-3 bg-blue-500/10 rounded-lg min-w-[60px] md:min-w-[80px]">
+              <div className="flex items-center gap-0.5 md:gap-1">
+                <Phone className="h-3 w-3 md:h-4 md:w-4 text-blue-500" />
+                <span className="text-lg md:text-2xl font-bold">{pipelineStats.contacted}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Contacted</span>
+              <span className="text-[10px] md:text-xs text-muted-foreground">Contact</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            <ArrowRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             
             {/* Viewing */}
-            <div className="flex flex-col items-center p-3 bg-purple-500/10 rounded-lg min-w-[80px]">
-              <div className="flex items-center gap-1">
-                <Eye className="h-4 w-4 text-purple-500" />
-                <span className="text-2xl font-bold">{pipelineStats.viewing}</span>
+            <div className="flex flex-col items-center p-2 md:p-3 bg-purple-500/10 rounded-lg min-w-[60px] md:min-w-[80px]">
+              <div className="flex items-center gap-0.5 md:gap-1">
+                <Eye className="h-3 w-3 md:h-4 md:w-4 text-purple-500" />
+                <span className="text-lg md:text-2xl font-bold">{pipelineStats.viewing}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Viewing</span>
+              <span className="text-[10px] md:text-xs text-muted-foreground">Viewing</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            <ArrowRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             
             {/* Offer */}
-            <div className="flex flex-col items-center p-3 bg-amber-500/10 rounded-lg min-w-[80px]">
-              <div className="flex items-center gap-1">
-                <DollarSign className="h-4 w-4 text-amber-500" />
-                <span className="text-2xl font-bold">{pipelineStats.offer}</span>
+            <div className="flex flex-col items-center p-2 md:p-3 bg-amber-500/10 rounded-lg min-w-[60px] md:min-w-[80px]">
+              <div className="flex items-center gap-0.5 md:gap-1">
+                <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-amber-500" />
+                <span className="text-lg md:text-2xl font-bold">{pipelineStats.offer}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Offer</span>
+              <span className="text-[10px] md:text-xs text-muted-foreground">Offer</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            <ArrowRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground shrink-0" />
             
             {/* Won */}
-            <div className="flex flex-col items-center p-3 bg-green-500/10 rounded-lg min-w-[80px]">
-              <div className="flex items-center gap-1">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-2xl font-bold">{pipelineStats.won}</span>
+            <div className="flex flex-col items-center p-2 md:p-3 bg-green-500/10 rounded-lg min-w-[60px] md:min-w-[80px]">
+              <div className="flex items-center gap-0.5 md:gap-1">
+                <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
+                <span className="text-lg md:text-2xl font-bold">{pipelineStats.won}</span>
               </div>
-              <span className="text-xs text-muted-foreground">Won</span>
+              <span className="text-[10px] md:text-xs text-muted-foreground">Won</span>
             </div>
           </div>
         </div>

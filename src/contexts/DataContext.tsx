@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { developerCampaigns, developerLeads } from '@/lib/developerDemoData';
 
 interface DataInsights {
   recommendations: string[];
@@ -95,12 +96,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const initial: Record<string, UserData> = {};
     
     userTypes.forEach(userType => {
+      // Check if developer has stored data, otherwise use demo data
+      const storedCampaignData = loadFromStorage(getStorageKey(userType, 'campaign_data'), []);
+      const storedLeadData = loadFromStorage(getStorageKey(userType, 'lead_data'), []);
+      
+      // Use demo data for developer if no data is stored
+      const useDemoData = userType === 'developer' && storedCampaignData.length === 0 && storedLeadData.length === 0;
+      
       initial[userType] = {
-        campaignData: loadFromStorage(getStorageKey(userType, 'campaign_data'), []),
-        campaignFileName: loadFromStorage(getStorageKey(userType, 'campaign_filename'), ''),
+        campaignData: useDemoData ? developerCampaigns : storedCampaignData,
+        campaignFileName: useDemoData ? 'Horizon Homes Demo Data' : loadFromStorage(getStorageKey(userType, 'campaign_filename'), ''),
         campaignInsights: loadFromStorage(getStorageKey(userType, 'campaign_insights'), null),
-        leadData: loadFromStorage(getStorageKey(userType, 'lead_data'), []),
-        leadFileName: loadFromStorage(getStorageKey(userType, 'lead_filename'), ''),
+        leadData: useDemoData ? developerLeads : storedLeadData,
+        leadFileName: useDemoData ? 'Horizon Homes Demo Leads' : loadFromStorage(getStorageKey(userType, 'lead_filename'), ''),
         leadInsights: loadFromStorage(getStorageKey(userType, 'lead_insights'), null),
       };
     });
