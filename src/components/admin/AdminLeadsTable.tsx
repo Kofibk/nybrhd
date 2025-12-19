@@ -50,7 +50,15 @@ import {
   ArrowDown,
   Plus,
   Upload,
-  ExternalLink
+  ExternalLink,
+  LayoutGrid,
+  LayoutList,
+  Phone,
+  Mail,
+  Building2,
+  Calendar,
+  User,
+  MessageSquare
 } from "lucide-react";
 import { demoLeads, demoCampaigns } from "@/lib/demoData";
 import { Lead } from "@/lib/types";
@@ -97,6 +105,8 @@ interface ColumnSort {
   direction: SortDirection;
 }
 
+type ViewMode = "table" | "cards";
+
 const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = false }: AdminLeadsTableProps) => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [developmentFilter, setDevelopmentFilter] = useState<string>("all");
@@ -105,6 +115,7 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [addLeadOpen, setAddLeadOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   
@@ -476,6 +487,25 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
                 <Badge variant="outline" className="text-xs bg-primary/10 text-primary">Airtable</Badge>
               </CardTitle>
               <div className="flex items-center gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex items-center border rounded-md overflow-hidden">
+                  <Button
+                    variant={viewMode === "table" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-9 px-2.5 rounded-none"
+                    onClick={() => setViewMode("table")}
+                  >
+                    <LayoutList className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "cards" ? "secondary" : "ghost"}
+                    size="sm"
+                    className="h-9 px-2.5 rounded-none"
+                    onClick={() => setViewMode("cards")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
                 <ReportUploadDialog 
                   type="leads" 
                   onUploadComplete={(data) => {
@@ -493,7 +523,7 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
                   className="h-9 gap-2"
                 >
                   <Download className="h-4 w-4" />
-                  Export All
+                  <span className="hidden sm:inline">Export All</span>
                 </Button>
               </div>
             </div>
@@ -551,126 +581,285 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
           </CardHeader>
 
           <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
-            {/* Mobile hint */}
-            <div className="sm:hidden px-4 py-2 bg-muted/30 border-b text-xs text-muted-foreground flex items-center gap-2">
-              <span>← Scroll horizontally to see all columns →</span>
-            </div>
-            <div ref={tableContainerRef} className="overflow-auto h-full">
-              <Table className="min-w-[1400px]">
-                <TableHeader className="sticky top-0 z-10 bg-card">
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="w-10 sm:w-12 pl-2 sm:pl-4">
-                      <Checkbox
-                        checked={selectedLeads.size === filteredAirtableLeads.length && filteredAirtableLeads.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                    <SortableHeader field="dateAdded" label="Date" />
-                    <SortableHeader field="name" label="Name" />
-                    <TableHead className="text-xs whitespace-nowrap">Number</TableHead>
-                    <SortableHeader field="email" label="Email" />
-                    <TableHead className="text-xs whitespace-nowrap">Budget</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">Beds</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">28 Days?</TableHead>
-                    <SortableHeader field="developmentName" label="Development" />
-                    <TableHead className="text-xs whitespace-nowrap">Broker?</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap min-w-[180px]">Transcription</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">LinkedIn</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap min-w-[180px]">Summary</TableHead>
-                    <SortableHeader field="status" label="Status" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0]?.start ?? 0}px` }} />
-                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const lead = filteredAirtableLeads[virtualRow.index];
-                    if (!lead) return null;
-                    return (
-                      <TableRow 
+            {viewMode === "cards" ? (
+              /* Card View */
+              <ScrollArea className="h-full">
+                <div className="p-3 sm:p-4 space-y-3">
+                  {filteredAirtableLeads.length === 0 && !airtableLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No leads found matching your criteria.
+                    </div>
+                  ) : (
+                    filteredAirtableLeads.map((lead) => (
+                      <div
                         key={lead.id}
-                        data-index={virtualRow.index}
-                        className="cursor-pointer transition-colors hover:bg-muted/40"
-                        style={{ height: `${virtualRow.size}px` }}
+                        className="bg-card border rounded-lg p-4 space-y-3 cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => setSelectedLead(convertToLead(lead))}
                       >
-                        <TableCell className="pl-2 sm:pl-4" onClick={(e) => e.stopPropagation()}>
+                        {/* Header Row */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-sm truncate">{lead.name || 'Unknown'}</h3>
+                              <Badge 
+                                variant="outline" 
+                                className={`text-[10px] shrink-0 ${getStatusColor(lead.status)}`}
+                              >
+                                {lead.status || 'Unknown'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Added {formatDate(lead.dateAdded)}
+                            </p>
+                          </div>
                           <Checkbox
                             checked={selectedLeads.has(lead.id)}
                             onCheckedChange={() => toggleSelectLead(lead.id)}
+                            onClick={(e) => e.stopPropagation()}
                           />
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDate(lead.dateAdded)}
-                        </TableCell>
-                        <TableCell 
-                          className="font-medium text-xs sm:text-sm whitespace-nowrap" 
-                          onClick={() => setSelectedLead(convertToLead(lead))}
-                        >
-                          {lead.name || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
-                          {lead.phone || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs text-muted-foreground max-w-[120px] truncate">
-                          {lead.email || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
-                          {lead.budgetRange || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs text-center">
-                          {lead.preferredBedrooms || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
-                          {lead.purchaseIn28Days || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs max-w-[120px] truncate">
-                          {lead.developmentName || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
-                          {lead.brokerNeeded || '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs max-w-[180px]">
-                          <span title={lead.agentTranscription}>
-                            {truncateText(lead.agentTranscription, 50)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs">
-                          {lead.linkedinProfile ? (
+                        </div>
+
+                        {/* Contact Info */}
+                        <div className="flex flex-wrap gap-3 text-xs">
+                          {lead.phone && (
                             <a 
-                              href={lead.linkedinProfile.startsWith('http') ? lead.linkedinProfile : `https://${lead.linkedinProfile}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline inline-flex items-center gap-1"
+                              href={`tel:${lead.phone}`} 
+                              className="flex items-center gap-1.5 text-muted-foreground hover:text-primary"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <ExternalLink className="h-3 w-3" />
-                              <span className="hidden sm:inline">View</span>
+                              <Phone className="h-3 w-3" />
+                              <span>{lead.phone}</span>
                             </a>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell className="text-[10px] sm:text-xs max-w-[180px]">
-                          <span title={lead.buyerSummary}>
-                            {truncateText(lead.buyerSummary, 50)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-[10px] sm:text-xs whitespace-nowrap ${getStatusColor(lead.status)}`}
-                          >
-                            {lead.status || 'Unknown'}
-                          </Badge>
-                        </TableCell>
+                          )}
+                          {lead.email && (
+                            <a 
+                              href={`mailto:${lead.email}`} 
+                              className="flex items-center gap-1.5 text-muted-foreground hover:text-primary truncate max-w-[180px]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Mail className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{lead.email}</span>
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Key Details Grid */}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {lead.developmentName && (
+                            <div className="flex items-center gap-1.5">
+                              <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <span className="truncate">{lead.developmentName}</span>
+                            </div>
+                          )}
+                          {lead.budgetRange && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-muted-foreground">Budget:</span>
+                              <span className="font-medium">{lead.budgetRange}</span>
+                            </div>
+                          )}
+                          {lead.preferredBedrooms && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-muted-foreground">Beds:</span>
+                              <span>{lead.preferredBedrooms}</span>
+                            </div>
+                          )}
+                          {lead.purchaseIn28Days && (
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <span className={lead.purchaseIn28Days.toLowerCase().includes('yes') ? 'text-green-600 font-medium' : ''}>
+                                {lead.purchaseIn28Days}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Summary */}
+                        {lead.buyerSummary && (
+                          <div className="text-xs text-muted-foreground border-t pt-2">
+                            <div className="flex items-start gap-1.5">
+                              <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
+                              <p className="line-clamp-2">{lead.buyerSummary}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 pt-1 border-t">
+                          {lead.phone && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(`tel:${lead.phone}`, '_blank');
+                              }}
+                            >
+                              <Phone className="h-3 w-3 mr-1" />
+                              Call
+                            </Button>
+                          )}
+                          {lead.phone && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank');
+                              }}
+                            >
+                              <MessageSquare className="h-3 w-3 mr-1" />
+                              WhatsApp
+                            </Button>
+                          )}
+                          {lead.linkedinProfile && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(
+                                  lead.linkedinProfile.startsWith('http') ? lead.linkedinProfile : `https://${lead.linkedinProfile}`,
+                                  '_blank'
+                                );
+                              }}
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            ) : (
+              /* Table View */
+              <>
+                {/* Mobile hint */}
+                <div className="sm:hidden px-4 py-2 bg-muted/30 border-b text-xs text-muted-foreground flex items-center gap-2">
+                  <span>← Scroll horizontally to see all columns →</span>
+                </div>
+                <div ref={tableContainerRef} className="overflow-auto h-full">
+                  <Table className="min-w-[1400px]">
+                    <TableHeader className="sticky top-0 z-10 bg-card">
+                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                        <TableHead className="w-10 sm:w-12 pl-2 sm:pl-4">
+                          <Checkbox
+                            checked={selectedLeads.size === filteredAirtableLeads.length && filteredAirtableLeads.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
+                        <SortableHeader field="dateAdded" label="Date" />
+                        <SortableHeader field="name" label="Name" />
+                        <TableHead className="text-xs whitespace-nowrap">Number</TableHead>
+                        <SortableHeader field="email" label="Email" />
+                        <TableHead className="text-xs whitespace-nowrap">Budget</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">Beds</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">28 Days?</TableHead>
+                        <SortableHeader field="developmentName" label="Development" />
+                        <TableHead className="text-xs whitespace-nowrap">Broker?</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap min-w-[180px]">Transcription</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">LinkedIn</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap min-w-[180px]">Summary</TableHead>
+                        <SortableHeader field="status" label="Status" />
                       </TableRow>
-                    );
-                  })}
-                  <tr style={{ height: `${rowVirtualizer.getTotalSize() - (rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]?.end ?? 0)}px` }} />
-                </TableBody>
-              </Table>
-            </div>
-            {filteredAirtableLeads.length === 0 && !airtableLoading && (
-              <div className="text-center py-12 text-muted-foreground">
-                No leads found matching your criteria.
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0]?.start ?? 0}px` }} />
+                      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                        const lead = filteredAirtableLeads[virtualRow.index];
+                        if (!lead) return null;
+                        return (
+                          <TableRow 
+                            key={lead.id}
+                            data-index={virtualRow.index}
+                            className="cursor-pointer transition-colors hover:bg-muted/40"
+                            style={{ height: `${virtualRow.size}px` }}
+                          >
+                            <TableCell className="pl-2 sm:pl-4" onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={selectedLeads.has(lead.id)}
+                                onCheckedChange={() => toggleSelectLead(lead.id)}
+                              />
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
+                              {formatDate(lead.dateAdded)}
+                            </TableCell>
+                            <TableCell 
+                              className="font-medium text-xs sm:text-sm whitespace-nowrap" 
+                              onClick={() => setSelectedLead(convertToLead(lead))}
+                            >
+                              {lead.name || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
+                              {lead.phone || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs text-muted-foreground max-w-[120px] truncate">
+                              {lead.email || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
+                              {lead.budgetRange || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs text-center">
+                              {lead.preferredBedrooms || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
+                              {lead.purchaseIn28Days || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs max-w-[120px] truncate">
+                              {lead.developmentName || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
+                              {lead.brokerNeeded || '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs max-w-[180px]">
+                              <span title={lead.agentTranscription}>
+                                {truncateText(lead.agentTranscription, 50)}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs">
+                              {lead.linkedinProfile ? (
+                                <a 
+                                  href={lead.linkedinProfile.startsWith('http') ? lead.linkedinProfile : `https://${lead.linkedinProfile}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-center gap-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  <span className="hidden sm:inline">View</span>
+                                </a>
+                              ) : '-'}
+                            </TableCell>
+                            <TableCell className="text-[10px] sm:text-xs max-w-[180px]">
+                              <span title={lead.buyerSummary}>
+                                {truncateText(lead.buyerSummary, 50)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="outline" 
+                                className={`text-[10px] sm:text-xs whitespace-nowrap ${getStatusColor(lead.status)}`}
+                              >
+                                {lead.status || 'Unknown'}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      <tr style={{ height: `${rowVirtualizer.getTotalSize() - (rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1]?.end ?? 0)}px` }} />
+                    </TableBody>
+                  </Table>
+                </div>
+                {filteredAirtableLeads.length === 0 && !airtableLoading && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No leads found matching your criteria.
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
