@@ -44,6 +44,7 @@ import { useNavigate } from 'react-router-dom';
 import { classifyLead } from '@/lib/leadClassification';
 import Papa from 'papaparse';
 import { AnimatedNumber } from '@/hooks/useAnimatedCounter';
+import { useAirtableCampaignsForDashboard } from '@/hooks/useAirtableCampaigns';
 import {
   Dialog,
   DialogContent,
@@ -163,7 +164,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const { askAgent, isLoading, error } = useMasterAgent();
   const { user } = useAuth();
   const { 
-    campaignData, 
+    campaignData: uploadedCampaignData, 
     campaignFileName,
     setCampaignData, 
     setCampaignFileName,
@@ -172,6 +173,22 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     setLeadData,
     setLeadFileName 
   } = useUploadedData(userType);
+  
+  // Fetch campaigns from Airtable Campaign_Date table
+  const { campaignData: airtableCampaignData, isLoading: airtableLoading } = useAirtableCampaignsForDashboard();
+  
+  // Merge Airtable data with uploaded data (Airtable takes priority)
+  const campaignData = React.useMemo(() => {
+    if (airtableCampaignData && airtableCampaignData.length > 0) {
+      // Combine Airtable + uploaded data, removing duplicates
+      const combined = [...airtableCampaignData, ...uploadedCampaignData];
+      const unique = combined.filter((c, i, arr) => 
+        arr.findIndex(x => x['Campaign Name'] === c['Campaign Name']) === i
+      );
+      return unique;
+    }
+    return uploadedCampaignData;
+  }, [airtableCampaignData, uploadedCampaignData]);
 
   const roleConfig = getRoleConfig(userType);
   const userName = user?.name?.split(' ')[0] || 'there';
@@ -207,7 +224,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     ...(campaignData?.length > 0 && { campaigns: campaignData })
   });
 
-  const hasUploadedData = leadData.length > 0 || campaignData.length > 0;
+  const hasUploadedData = leadData.length > 0 || campaignData.length > 0 || airtableLoading;
 
   const toNumber = (value: unknown): number => {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
