@@ -121,14 +121,14 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
 
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <CardTitle className="text-lg">Users Management</CardTitle>
-          <div className="flex flex-wrap items-center gap-2">
+      <CardHeader className="pb-4 px-4 md:px-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <CardTitle className="text-base md:text-lg">Users Management</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[120px] h-9">
+                <SelectTrigger className="w-full sm:w-[120px] h-8 sm:h-9 text-xs sm:text-sm">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -138,7 +138,7 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
                 </SelectContent>
               </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[130px] h-9">
+                <SelectTrigger className="w-full sm:w-[130px] h-8 sm:h-9 text-xs sm:text-sm">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -150,23 +150,27 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 sm:h-9 text-xs sm:text-sm">
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
               Export
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 md:px-6">
+        {/* Mobile hint */}
+        <div className="md:hidden px-4 py-2 bg-muted/30 border-b text-xs text-muted-foreground">
+          ← Scroll to see all columns →
+        </div>
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-xs">User</TableHead>
+                <TableHead className="text-xs hidden sm:table-cell">Company</TableHead>
+                <TableHead className="text-xs">Type</TableHead>
+                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-right text-xs">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -185,53 +189,60 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
                   <TableRow key={user.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{user.full_name || "Unnamed"}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                        <p className="font-medium text-xs sm:text-sm">{user.full_name || "Unnamed"}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-none">{user.email}</p>
+                        {/* Show company on mobile under email */}
+                        {user.company && (
+                          <div className="flex items-center gap-1 mt-0.5 sm:hidden">
+                            <Building2 className="h-2.5 w-2.5 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">{user.company.name}</span>
+                          </div>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       {user.company ? (
                         <div className="flex items-center gap-1.5">
                           <Building2 className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm">{user.company.name}</span>
+                          <span className="text-xs sm:text-sm">{user.company.name}</span>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">—</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getUserTypeBadgeVariant(user.user_type)}>
+                      <Badge variant={getUserTypeBadgeVariant(user.user_type)} className="text-[10px] sm:text-xs">
                         {user.user_type}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.status === "active" ? "default" : "secondary"}>
+                      <Badge variant={user.status === "active" ? "default" : "secondary"} className="text-[10px] sm:text-xs">
                         {user.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)}>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)} className="text-xs">
                             {user.status === "active" ? (
                               <>
-                                <UserX className="h-4 w-4 mr-2" />
+                                <UserX className="h-3.5 w-3.5 mr-2" />
                                 Deactivate
                               </>
                             ) : (
                               <>
-                                <UserCheck className="h-4 w-4 mr-2" />
+                                <UserCheck className="h-3.5 w-3.5 mr-2" />
                                 Activate
                               </>
                             )}
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Mail className="h-4 w-4 mr-2" />
+                          <DropdownMenuItem className="text-xs">
+                            <Mail className="h-3.5 w-3.5 mr-2" />
                             Send Email
                           </DropdownMenuItem>
                         </DropdownMenuContent>
