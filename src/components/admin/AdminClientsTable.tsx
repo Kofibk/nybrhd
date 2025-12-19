@@ -387,14 +387,18 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
           </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6 md:pt-0">
+          {/* Mobile hint */}
+          <div className="md:hidden px-4 py-2 bg-muted/30 border-b text-xs text-muted-foreground">
+            ← Scroll horizontally to see all columns →
+          </div>
           <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <ColumnHeader field="name" label="Client" />
-                <ColumnHeader field="contact" label="Contact" />
+                <ColumnHeader field="contact" label="Contact" className="hidden sm:table-cell" />
                 <ColumnHeader field="type" label="Type" />
-                <ColumnHeader field="plan" label="Plan" />
+                <ColumnHeader field="plan" label="Plan" className="hidden md:table-cell" />
                 <ColumnHeader field="campaigns" label="Campaigns" className="text-center" />
                 <ColumnHeader field="leads" label="Leads" className="text-center" />
                 <ColumnHeader field="spend" label="Spend" className="text-right" />
@@ -407,28 +411,28 @@ const AdminClientsTable = ({ searchQuery }: AdminClientsTableProps) => {
                 <TableRow key={client.id} className="cursor-pointer" onClick={() => navigate(`/admin/clients/${client.id}`)}>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{client.name}</p>
-                      <p className="text-sm text-muted-foreground">{client.email}</p>
+                      <p className="font-medium text-xs sm:text-sm">{client.name}</p>
+                      <p className="text-[10px] sm:text-sm text-muted-foreground truncate max-w-[150px] sm:max-w-none">{client.email}</p>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <p className="text-sm">{client.contactName}</p>
-                    <p className="text-xs text-muted-foreground">{client.phone}</p>
+                  <TableCell className="hidden sm:table-cell">
+                    <p className="text-xs sm:text-sm">{client.contactName}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">{client.phone}</p>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       {getTypeIcon(client.type)}
-                      <span className="text-sm">{getTypeLabel(client.type)}</span>
+                      <span className="text-xs sm:text-sm hidden sm:inline">{getTypeLabel(client.type)}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{client.plan}</Badge>
+                  <TableCell className="hidden md:table-cell">
+                    <Badge variant="outline" className="text-xs">{client.plan}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">{client.activeCampaigns}</TableCell>
-                  <TableCell className="text-center">{client.totalLeads.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">£{client.totalSpend.toLocaleString()}</TableCell>
+                  <TableCell className="text-center text-xs sm:text-sm">{client.activeCampaigns}</TableCell>
+                  <TableCell className="text-center text-xs sm:text-sm">{client.totalLeads.toLocaleString()}</TableCell>
+                  <TableCell className="text-right text-xs sm:text-sm">£{client.totalSpend.toLocaleString()}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={client.status === "active" ? "default" : "secondary"}>
+                    <Badge variant={client.status === "active" ? "default" : "secondary"} className="text-[10px] sm:text-xs">
                       {client.status}
                     </Badge>
                   </TableCell>

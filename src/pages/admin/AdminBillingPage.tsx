@@ -7,16 +7,17 @@ const AdminBillingPage = () => {
 
   return (
     <section aria-label="Admin billing" className="h-full flex flex-col min-h-0">
-      <div className="mb-4 flex items-center justify-between gap-3 flex-shrink-0">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
         <div className="min-w-0">
           <h1 className="sr-only">Billing</h1>
         </div>
-        <div className="w-full max-w-sm">
+        <div className="w-full sm:w-auto sm:max-w-sm">
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search billing…"
             aria-label="Search billing"
+            className="h-8 sm:h-9 text-sm"
           />
         </div>
       </div>

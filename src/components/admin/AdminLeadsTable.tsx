@@ -522,10 +522,10 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
             )}
 
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-2 mt-4">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-4">
               <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px] h-9 text-xs">
+                <SelectTrigger className="w-full sm:w-[160px] h-8 sm:h-9 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -537,7 +537,7 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
               </Select>
 
               <Select value={developmentFilter} onValueChange={setDevelopmentFilter}>
-                <SelectTrigger className="w-[180px] h-9 text-xs">
+                <SelectTrigger className="w-full sm:w-[180px] h-8 sm:h-9 text-xs">
                   <SelectValue placeholder="Development" />
                 </SelectTrigger>
                 <SelectContent>
@@ -551,28 +551,32 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
           </CardHeader>
 
           <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
+            {/* Mobile hint */}
+            <div className="sm:hidden px-4 py-2 bg-muted/30 border-b text-xs text-muted-foreground flex items-center gap-2">
+              <span>← Scroll horizontally to see all columns →</span>
+            </div>
             <div ref={tableContainerRef} className="overflow-auto h-full">
-              <Table>
+              <Table className="min-w-[1400px]">
                 <TableHeader className="sticky top-0 z-10 bg-card">
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="w-12 pl-4">
+                    <TableHead className="w-10 sm:w-12 pl-2 sm:pl-4">
                       <Checkbox
                         checked={selectedLeads.size === filteredAirtableLeads.length && filteredAirtableLeads.length > 0}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <SortableHeader field="dateAdded" label="Date Added" />
+                    <SortableHeader field="dateAdded" label="Date" />
                     <SortableHeader field="name" label="Name" />
                     <TableHead className="text-xs whitespace-nowrap">Number</TableHead>
                     <SortableHeader field="email" label="Email" />
-                    <TableHead className="text-xs whitespace-nowrap">Budget Range</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">Bedrooms</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">Purchase 28 Days?</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap">Budget</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap">Beds</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap">28 Days?</TableHead>
                     <SortableHeader field="developmentName" label="Development" />
-                    <TableHead className="text-xs whitespace-nowrap">Broker Needed?</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap min-w-[200px]">Agent Transcription</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap">LinkedIn/Profile</TableHead>
-                    <TableHead className="text-xs whitespace-nowrap min-w-[200px]">Buyer Summary</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap">Broker?</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap min-w-[180px]">Transcription</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap">LinkedIn</TableHead>
+                    <TableHead className="text-xs whitespace-nowrap min-w-[180px]">Summary</TableHead>
                     <SortableHeader field="status" label="Status" />
                   </TableRow>
                 </TableHeader>
@@ -588,48 +592,48 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
                         className="cursor-pointer transition-colors hover:bg-muted/40"
                         style={{ height: `${virtualRow.size}px` }}
                       >
-                        <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                        <TableCell className="pl-2 sm:pl-4" onClick={(e) => e.stopPropagation()}>
                           <Checkbox
                             checked={selectedLeads.has(lead.id)}
                             onCheckedChange={() => toggleSelectLead(lead.id)}
                           />
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        <TableCell className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                           {formatDate(lead.dateAdded)}
                         </TableCell>
                         <TableCell 
-                          className="font-medium text-sm whitespace-nowrap" 
+                          className="font-medium text-xs sm:text-sm whitespace-nowrap" 
                           onClick={() => setSelectedLead(convertToLead(lead))}
                         >
                           {lead.name || '-'}
                         </TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">
+                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
                           {lead.phone || '-'}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-[10px] sm:text-xs text-muted-foreground max-w-[120px] truncate">
                           {lead.email || '-'}
                         </TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">
+                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
                           {lead.budgetRange || '-'}
                         </TableCell>
-                        <TableCell className="text-xs text-center">
+                        <TableCell className="text-[10px] sm:text-xs text-center">
                           {lead.preferredBedrooms || '-'}
                         </TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">
+                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
                           {lead.purchaseIn28Days || '-'}
                         </TableCell>
-                        <TableCell className="text-xs max-w-[150px] truncate">
+                        <TableCell className="text-[10px] sm:text-xs max-w-[120px] truncate">
                           {lead.developmentName || '-'}
                         </TableCell>
-                        <TableCell className="text-xs whitespace-nowrap">
+                        <TableCell className="text-[10px] sm:text-xs whitespace-nowrap">
                           {lead.brokerNeeded || '-'}
                         </TableCell>
-                        <TableCell className="text-xs max-w-[200px]">
+                        <TableCell className="text-[10px] sm:text-xs max-w-[180px]">
                           <span title={lead.agentTranscription}>
-                            {truncateText(lead.agentTranscription, 60)}
+                            {truncateText(lead.agentTranscription, 50)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-xs">
+                        <TableCell className="text-[10px] sm:text-xs">
                           {lead.linkedinProfile ? (
                             <a 
                               href={lead.linkedinProfile.startsWith('http') ? lead.linkedinProfile : `https://${lead.linkedinProfile}`}
@@ -639,19 +643,19 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
                               onClick={(e) => e.stopPropagation()}
                             >
                               <ExternalLink className="h-3 w-3" />
-                              View
+                              <span className="hidden sm:inline">View</span>
                             </a>
                           ) : '-'}
                         </TableCell>
-                        <TableCell className="text-xs max-w-[200px]">
+                        <TableCell className="text-[10px] sm:text-xs max-w-[180px]">
                           <span title={lead.buyerSummary}>
-                            {truncateText(lead.buyerSummary, 60)}
+                            {truncateText(lead.buyerSummary, 50)}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Badge 
                             variant="outline" 
-                            className={`text-xs whitespace-nowrap ${getStatusColor(lead.status)}`}
+                            className={`text-[10px] sm:text-xs whitespace-nowrap ${getStatusColor(lead.status)}`}
                           >
                             {lead.status || 'Unknown'}
                           </Badge>
