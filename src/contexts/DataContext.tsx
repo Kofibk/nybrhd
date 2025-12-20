@@ -60,7 +60,7 @@ const saveToStorage = (key: string, value: any) => {
 
 const DataContext = createContext<UploadedDataContextType | undefined>(undefined);
 
-// Clear old shared localStorage keys (one-time migration)
+// Clear old shared localStorage keys and force new demo data (migration)
 const clearOldSharedKeys = () => {
   const oldKeys = [
     'naybourhood_campaign_data',
@@ -71,11 +71,17 @@ const clearOldSharedKeys = () => {
     'naybourhood_lead_insights',
   ];
   
-  const migrationKey = 'naybourhood_data_migration_v2';
+  // Force reload developer demo data with v3 migration
+  const migrationKey = 'naybourhood_data_migration_v3';
   if (!localStorage.getItem(migrationKey)) {
     oldKeys.forEach(key => localStorage.removeItem(key));
+    // Clear developer-specific data to force reload of new demo data
+    localStorage.removeItem(getStorageKey('developer', 'campaign_data'));
+    localStorage.removeItem(getStorageKey('developer', 'lead_data'));
+    localStorage.removeItem(getStorageKey('developer', 'campaign_filename'));
+    localStorage.removeItem(getStorageKey('developer', 'lead_filename'));
     localStorage.setItem(migrationKey, 'true');
-    console.log('Cleared old shared localStorage keys');
+    console.log('Cleared old data and forcing new demo data for developer');
   }
 };
 
