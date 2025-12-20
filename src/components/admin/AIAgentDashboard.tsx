@@ -246,33 +246,70 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
       totalSpend += spend;
       totalResults += results;
     });
-    const avgCPL = totalResults > 0 ? Math.round(totalSpend / totalResults) : 0;
+    
+    // CPL based on total leads, not campaign results
+    const avgCPL = totalLeads > 0 ? Math.round(totalSpend / totalLeads) : 0;
 
-    // Classify leads
+    // Check if leads have Lead Score field (from demo data)
+    const hasLeadScores = leadData.some(lead => lead['Lead Score'] !== undefined);
+
+    // Calculate hot leads and avg score from actual Lead Score field if available
+    let hotLeads = 0;
+    let totalScore = 0;
     const classifications = { hot: 0, star: 0, lightning: 0, valid: 0, cold: 0, warning: 0, disqualified: 0 };
+    
     leadData.forEach(lead => {
-      const status = (lead.Status || lead.status || '').toLowerCase();
-      const timeline = (lead.Timeline || lead['Timeline to Purchase'] || '').toLowerCase();
+      const score = toNumber(lead['Lead Score'] || lead.leadScore || 0);
       
-      // Hot: Viewing booked or Offer made with short timeline
-      if (status.includes('offer') || (status.includes('viewing') && timeline.includes('28'))) {
-        classifications.hot++;
-      } else if (status.includes('viewing')) {
-        classifications.star++;
-      } else if (timeline.includes('28') || timeline.includes('0-3')) {
-        classifications.lightning++;
-      } else if (status.includes('engaged') || status.includes('new')) {
-        classifications.valid++;
-      } else if (status.includes('cold')) {
-        classifications.cold++;
+      if (hasLeadScores && score > 0) {
+        totalScore += score;
+        // Classify by score
+        if (score >= 80) {
+          classifications.hot++;
+          hotLeads++;
+        } else if (score >= 70) {
+          classifications.star++;
+        } else if (score >= 55) {
+          classifications.lightning++;
+        } else if (score >= 40) {
+          classifications.valid++;
+        } else {
+          classifications.cold++;
+        }
       } else {
-        classifications.valid++;
+        // Fallback to status-based classification
+        const status = (lead.Status || lead.status || '').toLowerCase();
+        const timeline = (lead.Timeline || lead['Timeline to Purchase'] || '').toLowerCase();
+        
+        if (status.includes('offer') || (status.includes('viewing') && timeline.includes('28'))) {
+          classifications.hot++;
+        } else if (status.includes('viewing')) {
+          classifications.star++;
+        } else if (timeline.includes('28') || timeline.includes('0-3')) {
+          classifications.lightning++;
+        } else if (status.includes('engaged') || status.includes('new')) {
+          classifications.valid++;
+        } else if (status.includes('cold')) {
+          classifications.cold++;
+        } else {
+          classifications.valid++;
+        }
       }
     });
 
-    const hotLeads = classifications.hot + classifications.star;
+    // If no Lead Score field, calculate hot leads from classifications
+    if (!hasLeadScores) {
+      hotLeads = classifications.hot + classifications.star;
+    }
+
     const qualifiedRate = totalLeads > 0 ? Math.round(((classifications.hot + classifications.star + classifications.lightning) / totalLeads) * 100) : 0;
-    const avgScore = totalLeads > 0 ? Math.round((classifications.hot * 90 + classifications.star * 75 + classifications.lightning * 65 + classifications.valid * 50 + classifications.cold * 25) / totalLeads) : 0;
+    
+    // Use actual average if Lead Score exists, otherwise estimate
+    const avgScore = hasLeadScores && totalLeads > 0 
+      ? Math.round(totalScore / totalLeads)
+      : totalLeads > 0 
+        ? Math.round((classifications.hot * 90 + classifications.star * 75 + classifications.lightning * 65 + classifications.valid * 50 + classifications.cold * 25) / totalLeads) 
+        : 0;
 
     return {
       totalLeads,
