@@ -83,21 +83,20 @@ export const developerDevelopments = [
   },
 ];
 
-// Demo campaigns for developer - realistic lead volumes for a large developer
-// Total spend: £85,800 | Total leads: 247 | Avg CPL: £347
+// Demo campaigns for developer
+// Target: Total spend £86,678 | Total leads: 1565 | CPL: £55.40 | Hot leads: 115 | Avg score: 67
 export const developerCampaigns = [
-  // Thames Gateway Village campaigns (68 leads total)
   {
     "Campaign Name": "Thames Gateway - Nigeria HNWI Q4",
     "Campaign name": "Thames Gateway - Nigeria HNWI Q4",
-    "Amount spent (GBP)": 8500,
-    Spend: 8500,
-    Results: 24,
-    Impressions: 285000,
-    Reach: 180000,
-    Clicks: 4800,
-    CTR: 1.68,
-    CPC: 1.77,
+    "Amount spent (GBP)": 12500,
+    Spend: 12500,
+    Results: 226,
+    Impressions: 485000,
+    Reach: 280000,
+    Clicks: 8800,
+    CTR: 1.81,
+    CPC: 1.42,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-10-01",
@@ -105,14 +104,14 @@ export const developerCampaigns = [
   {
     "Campaign Name": "Thames Gateway - UAE Investors",
     "Campaign name": "Thames Gateway - UAE Investors",
-    "Amount spent (GBP)": 6200,
-    Spend: 6200,
-    Results: 18,
-    Impressions: 195000,
-    Reach: 125000,
-    Clicks: 3200,
-    CTR: 1.64,
-    CPC: 1.94,
+    "Amount spent (GBP)": 9800,
+    Spend: 9800,
+    Results: 178,
+    Impressions: 395000,
+    Reach: 225000,
+    Clicks: 6200,
+    CTR: 1.57,
+    CPC: 1.58,
     Platform: "Instagram",
     Status: "Active",
     "Reporting starts": "2024-10-15",
@@ -120,30 +119,29 @@ export const developerCampaigns = [
   {
     "Campaign Name": "Thames Gateway - UK First Time Buyers",
     "Campaign name": "Thames Gateway - UK First Time Buyers",
-    "Amount spent (GBP)": 4800,
-    Spend: 4800,
-    Results: 26,
-    Impressions: 420000,
-    Reach: 280000,
-    Clicks: 6800,
-    CTR: 1.62,
-    CPC: 0.71,
+    "Amount spent (GBP)": 8200,
+    Spend: 8200,
+    Results: 148,
+    Impressions: 620000,
+    Reach: 380000,
+    Clicks: 9800,
+    CTR: 1.58,
+    CPC: 0.84,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-09-01",
   },
-  // Meridian Heights campaigns (56 leads total)
   {
     "Campaign Name": "Meridian Heights - Hong Kong Investors",
     "Campaign name": "Meridian Heights - Hong Kong Investors",
-    "Amount spent (GBP)": 12500,
-    Spend: 12500,
-    Results: 32,
-    Impressions: 340000,
-    Reach: 220000,
-    Clicks: 5600,
-    CTR: 1.65,
-    CPC: 2.23,
+    "Amount spent (GBP)": 14500,
+    Spend: 14500,
+    Results: 262,
+    Impressions: 540000,
+    Reach: 320000,
+    Clicks: 9600,
+    CTR: 1.78,
+    CPC: 1.51,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-09-15",
@@ -151,30 +149,29 @@ export const developerCampaigns = [
   {
     "Campaign Name": "Meridian Heights - Singapore BTL",
     "Campaign name": "Meridian Heights - Singapore BTL",
-    "Amount spent (GBP)": 5800,
-    Spend: 5800,
-    Results: 24,
-    Impressions: 145000,
-    Reach: 95000,
-    Clicks: 2400,
-    CTR: 1.66,
-    CPC: 2.42,
+    "Amount spent (GBP)": 8800,
+    Spend: 8800,
+    Results: 159,
+    Impressions: 345000,
+    Reach: 195000,
+    Clicks: 5400,
+    CTR: 1.57,
+    CPC: 1.63,
     Platform: "Instagram",
     Status: "Active",
     "Reporting starts": "2024-10-01",
   },
-  // Parkside Quarter campaigns (38 leads total)
   {
     "Campaign Name": "Parkside Quarter - Local Families",
     "Campaign name": "Parkside Quarter - Local Families",
-    "Amount spent (GBP)": 3200,
-    Spend: 3200,
-    Results: 22,
-    Impressions: 280000,
-    Reach: 185000,
-    Clicks: 4200,
+    "Amount spent (GBP)": 6200,
+    Spend: 6200,
+    Results: 112,
+    Impressions: 480000,
+    Reach: 285000,
+    Clicks: 7200,
     CTR: 1.50,
-    CPC: 0.76,
+    CPC: 0.86,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-10-10",
@@ -182,30 +179,29 @@ export const developerCampaigns = [
   {
     "Campaign Name": "Parkside Quarter - London Commuters",
     "Campaign name": "Parkside Quarter - London Commuters",
-    "Amount spent (GBP)": 2800,
-    Spend: 2800,
-    Results: 16,
-    Impressions: 195000,
-    Reach: 130000,
-    Clicks: 3100,
-    CTR: 1.59,
-    CPC: 0.90,
+    "Amount spent (GBP)": 5400,
+    Spend: 5400,
+    Results: 98,
+    Impressions: 395000,
+    Reach: 230000,
+    Clicks: 6100,
+    CTR: 1.54,
+    CPC: 0.89,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-10-20",
   },
-  // Victoria Gardens campaigns (45 leads total)
   {
     "Campaign Name": "Victoria Gardens - Manchester Professionals",
     "Campaign name": "Victoria Gardens - Manchester Professionals",
-    "Amount spent (GBP)": 4500,
-    Spend: 4500,
-    Results: 28,
-    Impressions: 380000,
-    Reach: 250000,
-    Clicks: 5800,
-    CTR: 1.53,
-    CPC: 0.78,
+    "Amount spent (GBP)": 7500,
+    Spend: 7500,
+    Results: 136,
+    Impressions: 580000,
+    Reach: 350000,
+    Clicks: 8800,
+    CTR: 1.52,
+    CPC: 0.85,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-09-01",
@@ -213,30 +209,29 @@ export const developerCampaigns = [
   {
     "Campaign Name": "Victoria Gardens - BTL Investors UK",
     "Campaign name": "Victoria Gardens - BTL Investors UK",
-    "Amount spent (GBP)": 3800,
-    Spend: 3800,
-    Results: 17,
-    Impressions: 165000,
-    Reach: 110000,
-    Clicks: 2800,
-    CTR: 1.70,
-    CPC: 1.36,
+    "Amount spent (GBP)": 5800,
+    Spend: 5800,
+    Results: 105,
+    Impressions: 365000,
+    Reach: 210000,
+    Clicks: 5800,
+    CTR: 1.59,
+    CPC: 1.00,
     Platform: "Instagram",
     Status: "Active",
     "Reporting starts": "2024-10-05",
   },
-  // Kensington Place campaigns (20 leads total - luxury = fewer leads, higher CPL)
   {
     "Campaign Name": "Kensington Place - UHNWI Global",
     "Campaign name": "Kensington Place - UHNWI Global",
-    "Amount spent (GBP)": 18500,
-    Spend: 18500,
-    Results: 12,
-    Impressions: 85000,
-    Reach: 55000,
-    Clicks: 1200,
-    CTR: 1.41,
-    CPC: 15.42,
+    "Amount spent (GBP)": 4500,
+    Spend: 4500,
+    Results: 81,
+    Impressions: 185000,
+    Reach: 95000,
+    Clicks: 3200,
+    CTR: 1.73,
+    CPC: 1.41,
     Platform: "Facebook",
     Status: "Active",
     "Reporting starts": "2024-11-01",
@@ -244,14 +239,14 @@ export const developerCampaigns = [
   {
     "Campaign Name": "Kensington Place - Middle East VIP",
     "Campaign name": "Kensington Place - Middle East VIP",
-    "Amount spent (GBP)": 15200,
-    Spend: 15200,
-    Results: 8,
-    Impressions: 62000,
-    Reach: 40000,
-    Clicks: 890,
-    CTR: 1.44,
-    CPC: 17.08,
+    "Amount spent (GBP)": 3478,
+    Spend: 3478,
+    Results: 60,
+    Impressions: 162000,
+    Reach: 80000,
+    Clicks: 2890,
+    CTR: 1.78,
+    CPC: 1.20,
     Platform: "Instagram",
     Status: "Active",
     "Reporting starts": "2024-11-10",
@@ -259,18 +254,19 @@ export const developerCampaigns = [
 ];
 
 // Helper to generate realistic leads
+// Target: 1565 leads, 115 hot leads, avg score 67
 const generateLeads = () => {
   const leads = [];
   const now = Date.now();
   const day = 24 * 60 * 60 * 1000;
   
-  // Lead templates by development
+  // Lead distribution by development - total 1565
   const developments = [
-    { name: "Thames Gateway Village", campaigns: ["Thames Gateway - Nigeria HNWI Q4", "Thames Gateway - UAE Investors", "Thames Gateway - UK First Time Buyers"], count: 68 },
-    { name: "Meridian Heights", campaigns: ["Meridian Heights - Hong Kong Investors", "Meridian Heights - Singapore BTL"], count: 56 },
-    { name: "Parkside Quarter", campaigns: ["Parkside Quarter - Local Families", "Parkside Quarter - London Commuters"], count: 38 },
-    { name: "Victoria Gardens", campaigns: ["Victoria Gardens - Manchester Professionals", "Victoria Gardens - BTL Investors UK"], count: 45 },
-    { name: "Kensington Place", campaigns: ["Kensington Place - UHNWI Global", "Kensington Place - Middle East VIP"], count: 20 },
+    { name: "Thames Gateway Village", campaigns: ["Thames Gateway - Nigeria HNWI Q4", "Thames Gateway - UAE Investors", "Thames Gateway - UK First Time Buyers"], count: 552 },
+    { name: "Meridian Heights", campaigns: ["Meridian Heights - Hong Kong Investors", "Meridian Heights - Singapore BTL"], count: 421 },
+    { name: "Parkside Quarter", campaigns: ["Parkside Quarter - Local Families", "Parkside Quarter - London Commuters"], count: 210 },
+    { name: "Victoria Gardens", campaigns: ["Victoria Gardens - Manchester Professionals", "Victoria Gardens - BTL Investors UK"], count: 241 },
+    { name: "Kensington Place", campaigns: ["Kensington Place - UHNWI Global", "Kensington Place - Middle East VIP"], count: 141 },
   ];
 
   const statuses = ["New", "Contacted", "Engaged", "Viewing Booked", "Offer Made"];
@@ -304,10 +300,34 @@ const generateLeads = () => {
     return weights.length - 1;
   };
 
+  // Generate scores: 115 hot leads (80+), rest average to 67 overall
+  // Total target score = 1565 * 67 = 104,855
+  // Hot leads (115) avg ~90 = 10,350
+  // Regular leads (1450) need avg ~65 = 94,250
+  const generateScore = (isHot: boolean) => {
+    if (isHot) {
+      return Math.floor(Math.random() * 20) + 80; // 80-99
+    }
+    // Regular: bias toward 50-75 range to get avg ~65
+    const rand = Math.random();
+    if (rand < 0.2) return Math.floor(Math.random() * 20) + 30; // 30-49
+    if (rand < 0.7) return Math.floor(Math.random() * 25) + 55; // 55-79
+    return Math.floor(Math.random() * 25) + 50; // 50-74
+  };
+
   let leadId = 1;
+  let hotLeadCount = 0;
+  const totalLeads = 1565;
+  const targetHotLeads = 115;
   
   developments.forEach(dev => {
+    // Distribute hot leads proportionally across developments
+    const devHotLeads = Math.round((dev.count / totalLeads) * targetHotLeads);
+    
     for (let i = 0; i < dev.count; i++) {
+      const isHot = hotLeadCount < targetHotLeads && i < devHotLeads;
+      if (isHot) hotLeadCount++;
+      
       const statusIdx = weightedRandom(statusWeights);
       const status = statuses[statusIdx];
       const timelineIdx = weightedRandom(timelineWeights);
@@ -320,9 +340,10 @@ const generateLeads = () => {
       const budgets = budgetRanges[dev.name as keyof typeof budgetRanges];
       const budget = budgets[Math.floor(Math.random() * budgets.length)];
       const bedroom = bedrooms[Math.floor(Math.random() * bedrooms.length)];
-      const daysAgo = Math.floor(Math.random() * 45) + 1;
+      const daysAgo = Math.floor(Math.random() * 90) + 1;
       const cashBuyer = Math.random() > 0.6 ? "Cash" : "Mortgage";
       const ready28 = timeline === "Within 28 days" || (timeline === "0-3 months" && Math.random() > 0.7) ? "Yes" : "No";
+      const score = generateScore(isHot);
       
       const summaries = [
         `Interested in ${bedroom} property. ${cashBuyer} buyer.`,
@@ -336,9 +357,9 @@ const generateLeads = () => {
       ];
       
       leads.push({
-        "Lead ID": `DEV${String(leadId).padStart(3, '0')}`,
+        "Lead ID": `DEV${String(leadId).padStart(4, '0')}`,
         "Name": `${firstName} ${lastName}`,
-        "Email": `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+        "Email": `${firstName.toLowerCase()}.${lastName.toLowerCase()}${leadId}@email.com`,
         "Phone Number": country === "United Kingdom" ? `+44 7${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 900000 + 100000)}` : `+${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 9000000 + 1000000)}`,
         "Country": country,
         "Budget Range": budget,
@@ -352,6 +373,7 @@ const generateLeads = () => {
         "Buyer Summary": summaries[Math.floor(Math.random() * summaries.length)],
         "Cash/Mortgage": cashBuyer,
         "Are you ready to purchase within 28 days?": ready28,
+        "Lead Score": score,
       });
       
       leadId++;
@@ -361,19 +383,17 @@ const generateLeads = () => {
   return leads;
 };
 
-// Generate 247 leads to match campaign results
+// Generate 1565 leads to match campaign results
 export const developerLeads = generateLeads();
 
 // Calculate summary stats
 export const getDeveloperStats = () => {
   const totalLeads = developerLeads.length;
-  const hotLeads = developerLeads.filter(l => 
-    l.Status.includes('Viewing') || l.Status.includes('Offer')
-  ).length;
+  const hotLeads = developerLeads.filter(l => (l["Lead Score"] || 0) >= 80).length;
+  const avgScore = Math.round(developerLeads.reduce((sum, l) => sum + (l["Lead Score"] || 0), 0) / totalLeads);
   
   const totalSpend = developerCampaigns.reduce((sum, c) => sum + (c.Spend || 0), 0);
-  const totalResults = developerCampaigns.reduce((sum, c) => sum + (c.Results || 0), 0);
-  const avgCPL = totalResults > 0 ? totalSpend / totalResults : 0;
+  const cpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
   
   const viewingsBooked = developerLeads.filter(l => l.Status.includes('Viewing')).length;
   const offersReceived = developerLeads.filter(l => l.Status.includes('Offer')).length;
@@ -381,8 +401,9 @@ export const getDeveloperStats = () => {
   return {
     totalLeads,
     hotLeads,
+    avgScore,
     totalSpend,
-    avgCPL,
+    cpl,
     viewingsBooked,
     offersReceived,
     totalDevelopments: developerDevelopments.filter(d => d.status === 'live').length,
