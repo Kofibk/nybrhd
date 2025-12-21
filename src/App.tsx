@@ -27,6 +27,7 @@ import CampaignsList from "./pages/CampaignsList";
 import CampaignWizard from "./pages/CampaignWizard";
 import CampaignDetail from "./pages/CampaignDetail";
 import LeadsManagement from "./components/LeadsManagement";
+import DeveloperLeadsPage from "./pages/DeveloperLeadsPage";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import Settings from "./pages/Settings";
 import DashboardLayout from "./components/DashboardLayout";
@@ -72,7 +73,7 @@ const AppRoutes = () => {
       <Route path="/developer/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="developer">
-            <LeadsManagement userType="developer" />
+            <DeveloperLeadsPage />
           </DashboardLayout>
         </ProtectedRoute>
       } />
