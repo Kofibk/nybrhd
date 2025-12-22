@@ -41,12 +41,12 @@ interface AirtableResponse {
   offset?: string;
 }
 
-// Fetch all Campaign_Date records from Airtable
+// Fetch all Campaign_Data records from Airtable
 async function fetchCampaignDateRecords(): Promise<AirtableCampaignDate[]> {
   const { data, error } = await supabase.functions.invoke('airtable-api', {
     body: {
       action: 'list',
-      table: 'Campaign_Date',
+      table: 'Campaign_Data',
       maxRecords: 1000,
     },
   });

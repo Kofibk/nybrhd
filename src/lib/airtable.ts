@@ -7,7 +7,7 @@ export const AirtableTables = {
   USER_ROLES: 'User_Roles',
   DEVELOPMENTS: 'Developments',
   CAMPAIGNS: 'Campaigns',
-  CAMPAIGN_DATE: 'Campaign_Date',
+  CAMPAIGN_DATA: 'Campaign_Data',
   CREATIVE_ASSETS: 'Creative_Assets',
   AD_COPIES: 'Ad_Copies',
   CAMPAIGN_METRICS: 'Campaign_Metrics',
