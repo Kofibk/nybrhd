@@ -71,7 +71,15 @@ serve(async (req) => {
     }
 
     let response: Response;
-    const encodedTable = encodeURIComponent(table);
+
+    // Backwards-compatible table name aliases (prevents hard failures if UI uses an older table name)
+    const tableAliases: Record<string, string> = {
+      // Legacy campaigns table name used in earlier UI versions
+      Campaign_Date: 'Campaign_Data',
+    };
+
+    const resolvedTable = tableAliases[table] ?? table;
+    const encodedTable = encodeURIComponent(resolvedTable);
 
     switch (action) {
       case 'list': {
