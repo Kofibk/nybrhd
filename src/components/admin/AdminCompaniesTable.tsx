@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Eye,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useCompanies, useCreateCompany, useDeleteCompany } from "@/hooks/useAdminData";
@@ -53,6 +55,7 @@ interface AdminCompaniesTableProps {
 }
 
 const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
+  const navigate = useNavigate();
   const [industryFilter, setIndustryFilter] = useState<string>("all");
   const [addCompanyOpen, setAddCompanyOpen] = useState(false);
   const [newCompany, setNewCompany] = useState({
@@ -324,6 +327,10 @@ const AdminCompaniesTable = ({ searchQuery }: AdminCompaniesTableProps) => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/admin/companies/${company.id}`)}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
                           <DropdownMenuItem>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit

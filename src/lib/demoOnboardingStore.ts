@@ -108,3 +108,7 @@ export function getDemoProfiles(): Array<Profile & { company?: { id: string; nam
     company: { id: s.company.id, name: s.company.name },
   }));
 }
+
+export function getDemoOnboardingSubmissions(): DemoOnboardingSubmission[] {
+  return safeParse<DemoOnboardingSubmission[]>(localStorage.getItem(STORAGE_KEY), []);
+}

@@ -34,6 +34,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ClientDetail from "./pages/admin/ClientDetail";
+import AdminCompanyDetail from "./pages/admin/AdminCompanyDetail";
 import AdminLeadsPage from "./pages/admin/AdminLeadsPage";
 import AdminCompaniesPage from "./pages/admin/AdminCompaniesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
@@ -149,6 +150,7 @@ const AppRoutes = () => {
           </DashboardLayout>
         </AdminRoute>
       } />
+      <Route path="/admin/companies/:companyId" element={<AdminRoute><AdminCompanyDetail /></AdminRoute>} />
       <Route path="/admin/users" element={
         <AdminRoute>
           <DashboardLayout title="Users" userType="admin">
