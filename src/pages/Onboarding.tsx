@@ -235,22 +235,8 @@ const Onboarding = () => {
   };
 
   const validateStep = (): boolean => {
-    switch (currentStep) {
-      case 1:
-        return !!formData.userType;
-      case 2:
-        return !!(formData.firstName && formData.lastName && formData.phone && formData.jobTitle);
-      case 3:
-        return !!(formData.companyName && formData.regions.length > 0);
-      case 4:
-        return true; // Optional step
-      case 5:
-        return formData.goals.length > 0;
-      case 6:
-        return true;
-      default:
-        return true;
-    }
+    // All fields optional during build phase
+    return true;
   };
 
   const saveProgress = async (step: number) => {
