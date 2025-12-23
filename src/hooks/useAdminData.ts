@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { getDemoCompanies, getDemoProfiles } from "@/lib/demoOnboardingStore";
 
 // Types
 export interface Company {
@@ -29,6 +30,13 @@ export interface Profile {
   company_id: string | null;
   user_type: string;
   status: string;
+  // Onboarding fields (optional in types to avoid breaking existing callers)
+  job_title?: string | null;
+  goals?: string[] | null;
+  regions_covered?: string[] | null;
+  upsell_interest?: boolean | null;
+  onboarding_completed?: boolean | null;
+  onboarding_step?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -90,8 +98,9 @@ export function useCompanies() {
         .from("companies")
         .select("*")
         .order("created_at", { ascending: false });
-      
-      if (error) throw error;
+
+      // In demo mode there is no backend-auth session, so RLS will block reads.
+      if (error) return getDemoCompanies();
       return data as Company[];
     },
   });
@@ -175,13 +184,16 @@ export function useProfiles() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select(`
+        .select(
+          `
           *,
           company:companies(id, name)
-        `)
+        `
+        )
         .order("created_at", { ascending: false });
-      
-      if (error) throw error;
+
+      // In demo mode there is no backend-auth session, so RLS will block reads.
+      if (error) return getDemoProfiles();
       return data;
     },
   });

@@ -8,14 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Building2, 
-  Home, 
-  Landmark, 
-  User, 
-  Building, 
-  Users, 
-  Target, 
+import {
+  addDemoOnboardingSubmission,
+  getDemoOnboardingStep,
+  isDemoOnboardingComplete,
+  isUuid,
+  markDemoOnboardingComplete,
+  setDemoOnboardingStep,
+} from "@/lib/demoOnboardingStore";
+import {
+  Building2,
+  Home,
+  Landmark,
+  User,
+  Building,
+  Users,
+  Target,
   Rocket,
   Megaphone,
   UserSearch,
@@ -29,8 +37,9 @@ import {
   ArrowRight,
   Upload,
   Check,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
+
 
 // Step definitions
 const STEPS = [
@@ -170,13 +179,24 @@ const Onboarding = () => {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (!user?.id) return;
-      
+
+      // Demo auth users are not UUIDs; use local storage progress so onboarding works.
+      if (!isUuid(user.id)) {
+        if (isDemoOnboardingComplete(user.id)) {
+          navigate('/developer');
+          return;
+        }
+        const step = getDemoOnboardingStep(user.id);
+        if (step > 1) setCurrentStep(step);
+        return;
+      }
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('onboarding_completed, onboarding_step')
         .eq('user_id', user.id)
         .single();
-      
+
       if (profile?.onboarding_completed) {
         // Redirect to appropriate dashboard
         navigate('/developer');
@@ -184,7 +204,7 @@ const Onboarding = () => {
         setCurrentStep(profile.onboarding_step);
       }
     };
-    
+
     checkOnboardingStatus();
   }, [user, navigate]);
 
@@ -241,7 +261,12 @@ const Onboarding = () => {
 
   const saveProgress = async (step: number) => {
     if (!user?.id) return;
-    
+
+    if (!isUuid(user.id)) {
+      setDemoOnboardingStep(user.id, step);
+      return;
+    }
+
     try {
       await supabase
         .from('profiles')
@@ -277,9 +302,42 @@ const Onboarding = () => {
   const handleComplete = async (withUpsell: boolean) => {
     setIsSubmitting(true);
     updateFormData('upsellInterest', withUpsell);
-    
+
     try {
       if (!user?.id) throw new Error("User not authenticated");
+
+      // Demo auth path: persist locally so users can progress and admins can review in the demo admin tables.
+      if (!isUuid(user.id)) {
+        const companyId = crypto.randomUUID();
+
+        addDemoOnboardingSubmission({
+          submitted_at: new Date().toISOString(),
+          company: {
+            id: companyId,
+            name: formData.companyName || "(No company name)",
+            website: formData.website || null,
+            industry: formData.userType || null,
+            address: formData.address || null,
+            logo_url: formData.companyLogo,
+          },
+          user: {
+            id: user.id,
+            email: formData.email || user.email || "",
+            full_name: `${formData.firstName} ${formData.lastName}`.trim() || null,
+            phone: formData.phone || null,
+            job_title: formData.jobTitle || null,
+            user_type: formData.userType || "developer",
+            goals: formData.goals,
+            regions_covered: formData.regions,
+            upsell_interest: withUpsell,
+          },
+          invited_team_emails: formData.teamEmails.filter((e) => e.trim()),
+        });
+
+        markDemoOnboardingComplete(user.id);
+        setIsComplete(true);
+        return;
+      }
 
       // Create or update company
       const { data: company, error: companyError } = await supabase
@@ -321,13 +379,13 @@ const Onboarding = () => {
       if (profileError) throw profileError;
 
       // Save team invitations
-      const validEmails = formData.teamEmails.filter(email => email.trim());
+      const validEmails = formData.teamEmails.filter((email) => email.trim());
       if (validEmails.length > 0) {
-        const invitations = validEmails.map(email => ({
+        const invitations = validEmails.map((email) => ({
           inviter_id: user.id,
           email: email.trim(),
           company_id: company.id,
-          status: 'pending'
+          status: 'pending',
         }));
 
         await supabase.from('team_invitations').insert(invitations);
@@ -339,7 +397,7 @@ const Onboarding = () => {
       toast({
         title: "Error completing onboarding",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

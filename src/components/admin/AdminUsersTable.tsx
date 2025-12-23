@@ -163,13 +163,14 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
           ← Scroll to see all columns →
         </div>
         <div className="overflow-x-auto">
-          <Table className="min-w-[600px]">
+          <Table className="min-w-[860px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs">User</TableHead>
                 <TableHead className="text-xs hidden sm:table-cell">Company</TableHead>
+                <TableHead className="text-xs hidden lg:table-cell">Job Title</TableHead>
                 <TableHead className="text-xs">Type</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs hidden sm:table-cell">Onboarding</TableHead>
                 <TableHead className="text-right text-xs">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -178,9 +179,10 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-10 w-48" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-6 w-32" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-6 w-28" /></TableCell>
                     <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-6 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                   </TableRow>
                 ))
@@ -190,7 +192,9 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
                     <TableCell>
                       <div>
                         <p className="font-medium text-xs sm:text-sm">{user.full_name || "Unnamed"}</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-none">{user.email}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-none">
+                          {user.email}
+                        </p>
                         {/* Show company on mobile under email */}
                         {user.company && (
                           <div className="flex items-center gap-1 mt-0.5 sm:hidden">
@@ -210,14 +214,17 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
                         <span className="text-muted-foreground text-xs sm:text-sm">—</span>
                       )}
                     </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <span className="text-xs sm:text-sm text-muted-foreground">{user.job_title || "—"}</span>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={getUserTypeBadgeVariant(user.user_type)} className="text-[10px] sm:text-xs">
                         {user.user_type}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={user.status === "active" ? "default" : "secondary"} className="text-[10px] sm:text-xs">
-                        {user.status}
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge variant={user.onboarding_completed ? "default" : "secondary"} className="text-[10px] sm:text-xs">
+                        {user.onboarding_completed ? "Complete" : "Pending"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -253,7 +260,7 @@ const AdminUsersTable = ({ searchQuery }: AdminUsersTableProps) => {
               )}
               {!isLoading && filteredUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     No users found
                   </TableCell>
                 </TableRow>
