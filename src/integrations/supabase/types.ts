@@ -321,40 +321,73 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company_address: string | null
           company_id: string | null
+          company_instagram: string | null
+          company_linkedin: string | null
+          company_logo_url: string | null
+          company_website: string | null
           created_at: string
           email: string
           full_name: string | null
+          goals: string[] | null
           id: string
+          job_title: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
           phone: string | null
+          regions_covered: string[] | null
           status: string
           updated_at: string
+          upsell_interest: boolean | null
           user_id: string
           user_type: string
         }
         Insert: {
           avatar_url?: string | null
+          company_address?: string | null
           company_id?: string | null
+          company_instagram?: string | null
+          company_linkedin?: string | null
+          company_logo_url?: string | null
+          company_website?: string | null
           created_at?: string
           email: string
           full_name?: string | null
+          goals?: string[] | null
           id?: string
+          job_title?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone?: string | null
+          regions_covered?: string[] | null
           status?: string
           updated_at?: string
+          upsell_interest?: boolean | null
           user_id: string
           user_type?: string
         }
         Update: {
           avatar_url?: string | null
+          company_address?: string | null
           company_id?: string | null
+          company_instagram?: string | null
+          company_linkedin?: string | null
+          company_logo_url?: string | null
+          company_website?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
+          goals?: string[] | null
           id?: string
+          job_title?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           phone?: string | null
+          regions_covered?: string[] | null
           status?: string
           updated_at?: string
+          upsell_interest?: boolean | null
           user_id?: string
           user_type?: string
         }
@@ -434,6 +467,44 @@ export type Database = {
             foreignKeyName: "subscriptions_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          company_id: string | null
+          created_at: string
+          email: string
+          id: string
+          inviter_id: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          inviter_id: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          inviter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },

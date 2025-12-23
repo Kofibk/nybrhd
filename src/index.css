@@ -56,6 +56,10 @@
     
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
+    
+    /* Gold accent for selected states */
+    --gold: 45 93% 47%;
+    --gold-foreground: 0 0% 0%;
 
     /* Chart Colors for Dashboards */
     --chart-1: 142 76% 36%;
