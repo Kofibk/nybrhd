@@ -1,33 +1,26 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ScoreBreakdown {
+  timeline: number;
+  cash_or_mortgage: number;
+  reason_for_purchase: number;
+  budget: number;
+  contact_preference: number;
+  linkedin_or_website: number;
+}
+
 export interface LeadScoreResult {
-  lead_id: string;
-  quality_score: number;
-  quality_breakdown: {
-    financial: number;
-    property_match: number;
-    credentials: number;
-    operational_fit: number;
-    penalties: number;
-  };
-  intent_score: number;
-  intent_breakdown: {
-    timeline_commitment: number;
-    form_completion: number;
-    responsiveness: number;
-  };
-  classification: string;
-  classification_icon: string;
-  sla: string;
-  missing_fields: string[];
-  score_improvement_potential: string;
-  recommended_next_action: string;
-  follow_up_priority: 'immediate' | 'today' | 'this_week' | 'nurture';
-  risk_flags: Array<{
-    type: 'timewaster' | 'budget_mismatch' | 'unresponsive' | 'incomplete_profile';
-    detail: string;
-  }>;
+  status: 'scored' | 'flagged';
+  score: number;
+  priority: number | null;
+  priority_label: string;
+  reason?: string; // For flagged leads
+  score_breakdown?: ScoreBreakdown;
+  modifiers_applied: string[];
+  recommended_action: string;
+  next_steps: string[];
+  risk_flags: string[];
 }
 
 export function useLeadScoring() {
