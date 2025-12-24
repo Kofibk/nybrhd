@@ -6,173 +6,251 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `You are Naybourhood's lead qualification analyst. Score and classify property buyer leads.
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-LEAD QUALITY SCORE (0-100):
-Financial Qualification (0-35 points):
-- Budget within 10% of property price: +20
-- Budget 20%+ under property price: -10
-- Cash buyer: +15
-- Mortgage: +10
-- Proof of funds provided: +10
+const SYSTEM_PROMPT = `You are the lead scoring engine for Naybourhood, a property buyer intelligence platform.
 
-Property Match (0-25 points):
-- Bedroom requirement matches availability: +15
-- Has preferred development: +5
-- Preferred area matches development location: +5
+## YOUR TASK
+Analyse the lead data and return a score out of 100.
 
-Buyer Credentials (0-25 points):
-- LinkedIn or company website verified: +10
-- Has UK mortgage broker: +5
-- Has UK solicitor: +5
-- Previous UK property buyer: +5
+## STEP 1: SPAM/FRAUD CHECK
+Flag lead for review if ANY of these are true:
+- Name contains 4+ consecutive consonants with no vowels (gibberish pattern like "bdfgh", "xzqwrt")
+- Name has repeated words (e.g., "Khan Khan", "Test Test")
+- Name contains numbers or special characters (@, #, $, %)
+- Name contains keywords: "test", "fake", "asdf", "qwerty"
+- Budget ≥ £2,000,000 AND cash_or_mortgage = "Cash" AND country IN [Nigeria, Kenya, Ghana, India]
+- Budget ≥ £10,000,000 AND country IN [Nigeria, Kenya, Ghana, India, Unknown]
+- Country = "Unknown" or blank or missing
 
-Operational Fit (0-15 points):
-- Source of funds is UK: +5
-- Country is UK or EMEA: +5
-- Reason for purchase is investment: +5
-
-Penalties (up to -30 points):
-- Missing budget: -10
-- No property/development interest: -15
-- No LinkedIn or company website: -5
-- 2+ no-shows: -10
-
-INTENT SCORE (0-100):
-Timeline & Commitment (0-40 points):
-- Timeline 0-3 months: +25
-- Timeline 3-6 months: +15
-- Timeline 6-9 months: +5
-- Timeline not sure: -10
-- Viewing booked: +15
-- Actively buying: +10
-
-Form Completion (0-20 points):
-- 90-100% complete: +20
-- 70-89% complete: +10
-- 50-69% complete: +5
-
-Responsiveness (0-40 points):
-- WhatsApp response under 24 hours: +15
-- WhatsApp response 24-48 hours: +10
-- WhatsApp response 48+ hours: +5
-- No response 7+ days: -10
-- Opened links/materials: +10
-- Last contact under 7 days: +10
-- Last contact 14-21 days: -10
-- Last contact 21+ days: -15
-
-CLASSIFICATIONS:
-🔥 Hot Lead: Quality 80+ AND Intent 80+ → SLA: 1 hour
-⭐ High Quality, Medium Intent: Quality 80+ AND Intent 60-79 → SLA: 4 hours
-⚡ Medium Quality, High Intent: Quality 60-79 AND Intent 80+ → SLA: 2 hours
-✓ Warm Lead: Quality 60-79 AND Intent 60-79 → SLA: 24 hours
-💤 High Quality, Low Intent: Quality 80+ AND Intent <60 → SLA: 1 week
-⚠️ Low Quality, High Intent: Quality <60 AND Intent 80+ → SLA: 24 hours (potential timewaster)
-❌ Cold Lead: Quality <60 AND Intent <60 → Automated nurture only
-
-SOURCE EXPECTATIONS:
-- Meta Campaign: Initial Quality 45-60, Intent 40-60
-- Rightmove/Zoopla: Initial Quality 20-35, Intent 10-25
-- Agent Referral: Initial Quality 30-50, Intent 20-50
-- JLL/Knight Frank: Initial Quality 30-60, Intent 15-40
-- CRM Import: Initial Quality 15-40, Intent 5-30
-
-RETURN JSON ONLY (no markdown, no explanation):
+If flagged: Return:
 {
-  "lead_id": string,
-  "quality_score": number,
-  "quality_breakdown": {
-    "financial": number,
-    "property_match": number,
-    "credentials": number,
-    "operational_fit": number,
-    "penalties": number
+  "status": "flagged",
+  "reason": "[specific reason]",
+  "score": 0,
+  "priority": null,
+  "priority_label": "Review Required",
+  "recommended_action": "Manual review required before contact"
+}
+
+## STEP 2: INITIAL SCORE (max 100)
+Calculate points from form data:
+
+Timeline to purchase (max 30):
+- Within 28 days = 30
+- 1-3 months = 24
+- 3-6 months = 18
+- 6-12 months = 10
+- 12+ months = 5
+
+Cash or Mortgage (max 20):
+- Cash = 20
+- Mortgage = 15
+
+Reason for purchase (max 20):
+- Primary residence = 20
+- Investment = 18
+- For child = 15
+- Holiday home = 8
+
+Budget range (max 15):
+- £500K - £1M = 15
+- £400K - £500K = 12
+- £1M - £2M = 12
+- £2M - £3M = 10
+- £3M - £5M = 8
+- £5M+ = 5
+
+Preferred contact method (max 10):
+- WhatsApp = 10
+- Call = 10
+- Email = 5
+
+LinkedIn or Company website (max 5):
+- Provided = 5
+- Not provided = 0
+
+Initial Score = Sum of all points
+
+## STEP 3: ENGAGEMENT MODIFIERS
+If engagement data exists, apply these modifiers to the initial score:
+
+Positive modifiers (add points):
+- WhatsApp reply (substantive, detailed response) = +10
+- WhatsApp reply (brief, short response) = +5
+- Email opened (3+ times) = +10
+- Email opened (1-2 times) = +5
+- Brochure downloaded = +5
+- Viewing requested = +15
+- Return visit to site = +5
+- Named specific unit or plot = +10
+- Verified AIP (Agreement in Principle) = +15
+- Proof of funds submitted = +15
+- No chain (FTB/Investor/Renter) = +10
+- Chain but SSTC (Sold Subject to Contract) = +5
+- UK resident confirmed = +10
+- Senior professional confirmed (via LinkedIn) = +10
+
+Negative modifiers (subtract points):
+- No response after 7 days = -5
+- No response after 14 days = -10
+- No response after 30 days = -15
+- Said "not interested" = -30
+- Said "just browsing" = -10
+- Chain not sold = -5
+- Budget mismatch confirmed on call = -10
+
+Final Score = Initial Score + Modifiers (capped at 0 minimum, 100 maximum)
+
+## STEP 4: DETERMINE PRIORITY
+Based on final score:
+- 70-100 = Priority 1 (P1)
+- 50-69 = Priority 2 (P2)
+- 30-49 = Priority 3 (P3)
+- 0-29 = Priority 4 (P4)
+
+## STEP 5: GENERATE RECOMMENDED ACTION
+Based on score and data:
+- P1: Immediate call focus, book viewing
+- P2: Call within 24 hours, qualify further
+- P3: Email nurture, build relationship
+- P4: Long-term nurture, low priority
+
+## OUTPUT FORMAT
+Return a JSON object with this exact structure:
+
+{
+  "status": "scored",
+  "score": [0-100],
+  "priority": [1-4],
+  "priority_label": "[P1/P2/P3/P4] - [Action timeframe]",
+  "score_breakdown": {
+    "timeline": [points],
+    "cash_or_mortgage": [points],
+    "reason_for_purchase": [points],
+    "budget": [points],
+    "contact_preference": [points],
+    "linkedin_or_website": [points]
   },
-  "intent_score": number,
-  "intent_breakdown": {
-    "timeline_commitment": number,
-    "form_completion": number,
-    "responsiveness": number
-  },
-  "classification": string,
-  "classification_icon": string,
-  "sla": string,
-  "missing_fields": [string],
-  "score_improvement_potential": string,
-  "recommended_next_action": string,
-  "follow_up_priority": "immediate" | "today" | "this_week" | "nurture",
+  "modifiers_applied": [
+    "[modifier name]: [+/- points]"
+  ],
+  "recommended_action": "[Specific action based on lead profile]",
+  "next_steps": [
+    "[Step 1]",
+    "[Step 2]",
+    "[Step 3]"
+  ],
   "risk_flags": [
-    {
-      "type": "timewaster" | "budget_mismatch" | "unresponsive" | "incomplete_profile",
-      "detail": string
-    }
+    "[Any concerns identified]"
   ]
-}`;
+}
+
+IMPORTANT: Return ONLY the JSON object, no additional text or markdown formatting.`;
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { lead } = await req.json();
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY is not configured');
+    if (!lead) {
+      return new Response(
+        JSON.stringify({ error: 'Lead data is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const userPrompt = `Score this lead and return JSON only:\n\n${JSON.stringify(lead, null, 2)}`;
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY is not set');
+      return new Response(
+        JSON.stringify({ error: 'API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    console.log('Scoring lead:', lead.name || lead.email);
+
+    const userPrompt = `Score this lead:
+
+${JSON.stringify(lead, null, 2)}`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }]
-      })
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Claude API error:', response.status, errorText);
-      throw new Error(`Claude API error: ${response.status}`);
+      console.error('AI gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limits exceeded, please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Payment required, please add funds to your workspace.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: 'AI scoring failed', details: errorText }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();
-    const content = data.content[0]?.text || '';
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    console.log('Raw AI response:', content);
 
-    // Parse JSON from response
-    let result;
+    // Parse the JSON response
+    let scoreResult;
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found in response');
-      }
+      // Remove any markdown code blocks if present
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      scoreResult = JSON.parse(cleanContent);
     } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'Content:', content);
-      throw new Error('Failed to parse scoring response');
+      console.error('Failed to parse AI response:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to parse scoring result',
+          raw_response: content 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.log('Lead scored successfully:', lead.name || lead.email, 'Score:', scoreResult.score);
 
-  } catch (error) {
-    console.error('Lead scoring error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify(scoreResult),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: unknown) {
+    console.error('Error in lead-scoring function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });
