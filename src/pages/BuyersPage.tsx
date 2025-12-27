@@ -22,7 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import ContactBuyerModal from '@/components/messaging/ContactBuyerModal';
 
 interface BuyersPageProps {
   userType: 'developer' | 'agent' | 'broker';
@@ -37,6 +37,7 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   const [timelineFilter, setTimelineFilter] = useState('all');
   const [scoreFilter, setScoreFilter] = useState('all');
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
+  const [contactBuyer, setContactBuyer] = useState<Buyer | null>(null);
 
   const allBuyers = getBuyersByTier(currentTier);
 
@@ -70,9 +71,7 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   };
 
   const handleContact = (buyer: Buyer) => {
-    toast.success(`Contacting ${buyer.name}`, {
-      description: 'Opening conversation...',
-    });
+    setContactBuyer(buyer);
   };
 
   const scoreSubtext = currentTier === 'access' 
@@ -375,6 +374,14 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Contact Buyer Modal */}
+      <ContactBuyerModal
+        isOpen={!!contactBuyer}
+        onClose={() => setContactBuyer(null)}
+        buyer={contactBuyer}
+        userType={userType}
+      />
     </DashboardLayout>
   );
 };
