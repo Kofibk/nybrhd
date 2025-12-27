@@ -1,6 +1,7 @@
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
+import { TierSwitcher } from '@/components/TierSwitcher';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +92,9 @@ const AIInsightsPage: React.FC<AIInsightsPageProps> = ({ userType }) => {
   return (
     <DashboardLayout title="AI Insights" userType={userType} userName={userName}>
       <div className="space-y-6">
+        {/* Demo Tier Switcher */}
+        <TierSwitcher className="w-fit" />
+
         {/* Header with tier info */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
