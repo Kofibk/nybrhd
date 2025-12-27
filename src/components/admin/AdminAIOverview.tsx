@@ -62,7 +62,7 @@ type SortField = "name" | "totalLeads" | "avgCPL" | "avgLeadScore";
 type SortOrder = "asc" | "desc";
 
 const AdminAIOverview = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
