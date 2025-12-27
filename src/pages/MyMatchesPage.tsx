@@ -109,7 +109,7 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
               {currentTier === 'enterprise' && (
                 <TabsTrigger value="first-refusal" className="gap-2">
                   <Crown className="h-3.5 w-3.5 text-amber-500" />
-                  First Refusal
+                  Priority
                   <Badge className="ml-1 bg-amber-500 text-white text-xs">
                     {filteredFirstRefusal.length}
                   </Badge>
@@ -167,7 +167,7 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-amber-500" />
-                    <h3 className="font-semibold">First Refusal Buyers</h3>
+                    <h3 className="font-semibold">Priority Buyers</h3>
                     <Badge className="bg-amber-500 text-white text-xs">Score 80+</Badge>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -185,7 +185,7 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
                       className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/5"
                       onClick={() => setActiveTab('first-refusal')}
                     >
-                      View all {filteredFirstRefusal.length} First Refusal buyers
+                      View all {filteredFirstRefusal.length} Priority buyers
                     </Button>
                   )}
                 </div>
@@ -240,7 +240,7 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
                     </div>
                     <div>
                       <h2 className="font-semibold flex items-center gap-2">
-                        First Refusal Buyers
+                        Priority Buyers
                         <Badge className="bg-amber-500 text-white">Score 80+</Badge>
                       </h2>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -355,7 +355,7 @@ const FirstRefusalCard: React.FC<FirstRefusalCardProps> = ({ buyer, onContact })
     <CardContent className="p-4">
       <Badge className="bg-amber-500 text-white text-[10px] mb-3">
         <Crown className="h-2.5 w-2.5 mr-1" />
-        First Refusal
+        Priority
       </Badge>
 
       <div className="flex items-start justify-between mb-3">
