@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { SplashScreen } from "./components/SplashScreen";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
@@ -30,6 +31,7 @@ import LeadsManagement from "./components/LeadsManagement";
 import DeveloperLeadsPage from "./pages/DeveloperLeadsPage";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import Settings from "./pages/Settings";
+import AIInsightsPage from "./pages/AIInsightsPage";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -85,6 +87,7 @@ const AppRoutes = () => {
           </DashboardLayout>
         </ProtectedRoute>
       } />
+      <Route path="/developer/insights" element={<ProtectedRoute><AIInsightsPage userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/settings" element={<ProtectedRoute><Settings userType="developer" /></ProtectedRoute>} />
 
       {/* Agent Routes */}
@@ -107,6 +110,7 @@ const AppRoutes = () => {
           </DashboardLayout>
         </ProtectedRoute>
       } />
+      <Route path="/agent/insights" element={<ProtectedRoute><AIInsightsPage userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/settings" element={<ProtectedRoute><Settings userType="agent" /></ProtectedRoute>} />
 
       {/* Broker Routes */}
