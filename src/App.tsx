@@ -16,6 +16,7 @@ import Solutions from "./pages/Solutions";
 import About from "./pages/About";
 import CaseStudies from "./pages/CaseStudies";
 import Resources from "./pages/Resources";
+import Pricing from "./pages/Pricing";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import DeveloperDashboard from "./pages/DeveloperDashboard";
@@ -70,6 +71,7 @@ const AppRoutes = () => {
       <Route path="/about" element={<About />} />
       <Route path="/case-studies" element={<CaseStudies />} />
       <Route path="/resources" element={<Resources />} />
+      <Route path="/pricing" element={<Pricing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/dashboard" element={<Dashboard />} />

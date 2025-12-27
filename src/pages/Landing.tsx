@@ -36,6 +36,7 @@ const Landing = () => {
     { label: "How It Works", href: "/how-it-works" },
     { label: "Solutions", href: "/solutions" },
     { label: "Case Studies", href: "/case-studies" },
+    { label: "Pricing", href: "/pricing" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
   ];
