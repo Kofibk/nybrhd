@@ -62,6 +62,27 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_contacts: {
+        Row: {
+          buyer_id: string
+          contacted_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          buyer_id: string
+          contacted_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          buyer_id?: string
+          contacted_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_invitations: {
         Row: {
           accepted_at: string | null
@@ -205,6 +226,42 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          status: Database["public"]["Enums"]["conversation_status"]
+          unread_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          status?: Database["public"]["Enums"]["conversation_status"]
+          unread_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          status?: Database["public"]["Enums"]["conversation_status"]
+          unread_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoice_line_items: {
         Row: {
           created_at: string
@@ -314,6 +371,89 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          last_used_at: string | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          delivered: boolean | null
+          delivered_at: string | null
+          id: string
+          media_url: string | null
+          read: boolean | null
+          read_at: string | null
+          sender_id: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          sent_via: Database["public"]["Enums"]["message_channel"]
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          delivered?: boolean | null
+          delivered_at?: string | null
+          id?: string
+          media_url?: string | null
+          read?: boolean | null
+          read_at?: string | null
+          sender_id: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          sent_via?: Database["public"]["Enums"]["message_channel"]
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          delivered?: boolean | null
+          delivered_at?: string | null
+          id?: string
+          media_url?: string | null
+          read?: boolean | null
+          read_at?: string | null
+          sender_id?: string
+          sender_type?: Database["public"]["Enums"]["message_sender_type"]
+          sent_via?: Database["public"]["Enums"]["message_channel"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -510,6 +650,27 @@ export type Database = {
           },
         ]
       }
+      user_contacts: {
+        Row: {
+          buyer_id: string
+          contacted_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          buyer_id: string
+          contacted_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          buyer_id?: string
+          contacted_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -555,6 +716,11 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "admin" | "manager" | "member" | "viewer"
       client_type: "developer" | "agent" | "broker"
+      conversation_status:
+        | "active"
+        | "buyer_responded"
+        | "awaiting_response"
+        | "closed"
       invitation_status:
         | "pending"
         | "sent"
@@ -569,6 +735,8 @@ export type Database = {
         | "failed"
         | "refunded"
         | "cancelled"
+      message_channel: "platform" | "email" | "whatsapp" | "web"
+      message_sender_type: "user" | "buyer"
       subscription_plan: "starter" | "growth" | "enterprise" | "custom"
       subscription_status:
         | "active"
@@ -705,6 +873,12 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "admin", "manager", "member", "viewer"],
       client_type: ["developer", "agent", "broker"],
+      conversation_status: [
+        "active",
+        "buyer_responded",
+        "awaiting_response",
+        "closed",
+      ],
       invitation_status: [
         "pending",
         "sent",
@@ -721,6 +895,8 @@ export const Constants = {
         "refunded",
         "cancelled",
       ],
+      message_channel: ["platform", "email", "whatsapp", "web"],
+      message_sender_type: ["user", "buyer"],
       subscription_plan: ["starter", "growth", "enterprise", "custom"],
       subscription_status: [
         "active",
