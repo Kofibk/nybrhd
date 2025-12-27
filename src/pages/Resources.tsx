@@ -227,7 +227,7 @@ const Resources = () => {
             Still Have Questions?
           </h2>
           <p className="text-base lg:text-lg font-body text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Get in touch and we will help you find the right solution for your business.
+            Ready to get started? Let's talk.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
