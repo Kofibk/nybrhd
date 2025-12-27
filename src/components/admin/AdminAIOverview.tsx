@@ -62,7 +62,7 @@ type SortField = "name" | "totalLeads" | "avgCPL" | "avgLeadScore";
 type SortOrder = "asc" | "desc";
 
 const AdminAIOverview = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignData[]>([]);
@@ -281,7 +281,7 @@ const AdminAIOverview = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold">
-            Welcome Back, {user?.name || user?.email?.split('@')[0] || 'Admin'}
+            Welcome Back, {profile?.full_name || user?.email?.split('@')[0] || 'Admin'}
           </h2>
           <p className="text-sm text-muted-foreground">
             Here's the latest updates: • Last refreshed: {lastUpdated.toLocaleTimeString()}

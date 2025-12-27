@@ -3,8 +3,8 @@ import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
-  const userName = user?.name || 'Admin';
+  const { profile } = useAuth();
+  const userName = profile?.full_name || 'Admin';
 
   return (
     <DashboardLayout 

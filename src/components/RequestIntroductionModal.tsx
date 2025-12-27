@@ -45,7 +45,7 @@ const RequestIntroductionModal: React.FC<RequestIntroductionModalProps> = ({
   buyer,
   onSuccess,
 }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { currentTier } = useSubscription();
   const [channel, setChannel] = useState<'email' | 'whatsapp'>('email');
   const [message, setMessage] = useState('');
@@ -65,20 +65,18 @@ const RequestIntroductionModal: React.FC<RequestIntroductionModalProps> = ({
     }
   };
 
-  // Mock profile data - in production this would come from the user's profile
-  const profile = {
-    contact_name: user?.name || 'Your Name',
-    company_name: 'Your Company',
-    email: user?.email || 'your.email@example.com',
-    phone: '+44 20 7946 0958',
-  };
+  // Profile data from auth context
+  const contactName = profile?.full_name || 'Your Name';
+  const companyName = 'Your Company';
+  const contactEmail = user?.email || 'your.email@example.com';
+  const contactPhone = '+44 20 7946 0958';
 
   // Generate default message template
   const generateTemplate = () => {
     if (!buyer) return '';
     return `Hi ${buyer.name},
 
-I'm ${profile.contact_name} from ${profile.company_name}. We have properties in ${buyer.location} that match your requirements.
+I'm ${contactName} from ${companyName}. We have properties in ${buyer.location} that match your requirements.
 
 I'd love to discuss what we have available and arrange a viewing at your convenience.`;
   };
@@ -277,19 +275,19 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 <span className="flex items-center gap-1.5">
                   <User className="h-3 w-3 text-muted-foreground" />
-                  {profile.contact_name}
+                  {contactName}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Building2 className="h-3 w-3 text-muted-foreground" />
-                  {profile.company_name}
+                  {companyName}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Mail className="h-3 w-3 text-muted-foreground" />
-                  {profile.email}
+                  {contactEmail}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Phone className="h-3 w-3 text-muted-foreground" />
-                  {profile.phone}
+                  {contactPhone}
                 </span>
               </div>
             </div>

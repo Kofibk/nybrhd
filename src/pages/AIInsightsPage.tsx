@@ -29,10 +29,10 @@ interface AIInsightsPageProps {
 }
 
 const AIInsightsPage: React.FC<AIInsightsPageProps> = ({ userType }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { currentTier, tierConfig, contactsUsed, contactsRemaining } = useSubscription();
 
-  const userName = user?.name || 'User';
+  const userName = profile?.full_name || 'User';
 
   // Stats based on tier
   const stats = [

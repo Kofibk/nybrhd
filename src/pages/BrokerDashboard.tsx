@@ -12,9 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, MessageCircle, Mail, Users, Crown, Sparkles } from 'lucide-react';
 
 const BrokerDashboard = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const { tierConfig, contactsUsed } = useSubscription();
-  const userName = user?.name || 'User';
+  const userName = profile?.full_name || 'User';
 
   return (
     <DashboardLayout 
