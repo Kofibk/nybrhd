@@ -1,17 +1,20 @@
 import DashboardLayout from '@/components/DashboardLayout';
-import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
-import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
 import { TierSwitcher } from '@/components/TierSwitcher';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { UsageTracker } from '@/components/dashboard/UsageTracker';
+import { StatsGrid } from '@/components/dashboard/StatsGrid';
+import { AccountManagerCard } from '@/components/dashboard/AccountManagerCard';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { RecentConversations } from '@/components/dashboard/RecentConversations';
+import { ActiveCampaigns } from '@/components/dashboard/ActiveCampaigns';
+import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt';
+import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { developerCompany } from '@/lib/developerDemoData';
-import { Users, Crown, Sparkles } from 'lucide-react';
 
 const DeveloperDashboard = () => {
   const { user } = useAuth();
-  const { tierConfig, contactsUsed, contactsRemaining } = useSubscription();
+  const { currentTier } = useSubscription();
   const userName = user?.name || developerCompany.name;
 
   return (
@@ -24,51 +27,42 @@ const DeveloperDashboard = () => {
         {/* Demo Tier Switcher */}
         <TierSwitcher className="w-fit" />
 
-        {/* Tier Status Banner */}
-        <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Crown className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{tierConfig.name} Plan</span>
-                    {tierConfig.isPopular && (
-                      <Badge className="bg-amber-500 text-black text-[10px]">Popular</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{tierConfig.priceDisplay}/month</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    <span className="font-medium">{contactsUsed}</span>
-                    <span className="text-muted-foreground"> / {tierConfig.monthlyContactsDisplay} contacts</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{tierConfig.aiInsightsCount} insights</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Account Manager Card - Tier 3 Only */}
+        {currentTier === 'enterprise' && (
+          <AccountManagerCard />
+        )}
 
-        {/* Main Dashboard Grid */}
+        {/* Usage Tracker */}
+        <UsageTracker />
+
+        {/* Stats Grid */}
+        <StatsGrid />
+
+        {/* Quick Actions - Tier 3 Only */}
+        {currentTier === 'enterprise' && (
+          <QuickActions userType="developer" />
+        )}
+
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="xl:col-span-2">
-            <AIAgentDashboard userType="developer" />
+          {/* Left Column - Conversations & Campaigns */}
+          <div className="xl:col-span-2 space-y-6">
+            <RecentConversations userType="developer" />
+            
+            {/* Active Campaigns - Tier 2+ */}
+            {currentTier !== 'access' && (
+              <ActiveCampaigns userType="developer" />
+            )}
           </div>
           
-          {/* AI Insights Sidebar */}
-          <div className="xl:col-span-1">
+          {/* Right Column - AI Insights & Upgrade */}
+          <div className="space-y-6">
             <AIInsightsDashboard variant="panel" userType="developer" />
+            
+            {/* Upgrade Prompt - Tier 1 & 2 */}
+            {currentTier !== 'enterprise' && (
+              <UpgradePrompt />
+            )}
           </div>
         </div>
       </div>

@@ -23,13 +23,22 @@ import {
   Building2,
   CreditCard,
   UserCog,
-  Sparkles
+  Sparkles,
+  MessageSquare,
+  Heart,
+  Zap,
+  Lock,
+  Phone,
+  Mail
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogoWithTransparency } from "./LogoWithTransparency";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProductTour } from "./ProductTour";
+import { cn } from "@/lib/utils";
+import { getBuyersByTier, getFirstRefusalBuyers, demoConversations, demoCampaigns, accountManager } from "@/lib/buyerData";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -38,40 +47,133 @@ interface DashboardLayoutProps {
   userName?: string;
 }
 
+interface NavItem {
+  name: string;
+  icon: React.ElementType;
+  href: string;
+  tourId?: string;
+  badge?: string | number;
+  locked?: boolean;
+  lockedBadge?: string;
+}
+
 const DashboardLayout = ({ children, title, userType, userName = "User" }: DashboardLayoutProps) => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentTier } = useSubscription();
   
   const basePath = `/${userType}`;
-  
-  // Base navigation items for all user types
-  const baseNavigation = [
-    { name: "Dashboard", icon: LayoutDashboard, href: basePath, tourId: "dashboard" },
-    { name: "AI Insights", icon: Sparkles, href: `${basePath}/insights`, tourId: "insights" },
-    { name: "Campaigns", icon: Megaphone, href: `${basePath}/campaigns`, tourId: "campaigns" },
-    { name: "Leads", icon: Users, href: `${basePath}/leads`, tourId: "leads" },
-  ];
+
+  // Calculate badge counts
+  const buyerCount = getBuyersByTier(currentTier).length;
+  const firstRefusalCount = getFirstRefusalBuyers().length;
+  const conversationCount = demoConversations.filter(c => c.unread).length;
+  const activeCampaignCount = demoCampaigns.filter(c => c.status === 'active').length;
+
+  // Tier-specific navigation
+  const getTieredNavigation = (): NavItem[] => {
+    const baseNav: NavItem[] = [
+      { 
+        name: "Dashboard", 
+        icon: LayoutDashboard, 
+        href: basePath, 
+        tourId: "dashboard" 
+      },
+      { 
+        name: "Buyers", 
+        icon: Users, 
+        href: `${basePath}/buyers`, 
+        tourId: "buyers",
+        badge: buyerCount
+      },
+    ];
+
+    // First Refusal - Tier 3 only
+    if (currentTier === 'enterprise') {
+      baseNav.push({
+        name: "First Refusal",
+        icon: Zap,
+        href: `${basePath}/first-refusal`,
+        badge: firstRefusalCount
+      });
+    }
+
+    // Conversations - all tiers
+    baseNav.push({
+      name: "Conversations",
+      icon: MessageSquare,
+      href: `${basePath}/conversations`,
+      badge: conversationCount > 0 ? conversationCount : undefined
+    });
+
+    // My Matches - all tiers
+    baseNav.push({
+      name: "My Matches",
+      icon: Heart,
+      href: `${basePath}/matches`
+    });
+
+    // Campaigns - locked for Tier 1
+    if (currentTier === 'access') {
+      baseNav.push({
+        name: "Campaigns",
+        icon: Megaphone,
+        href: `${basePath}/campaigns`,
+        locked: true,
+        lockedBadge: "Tier 2+"
+      });
+    } else {
+      baseNav.push({
+        name: "Campaigns",
+        icon: Megaphone,
+        href: `${basePath}/campaigns`,
+        badge: activeCampaignCount > 0 ? activeCampaignCount : undefined
+      });
+    }
+
+    // AI Insights - all tiers
+    baseNav.push({
+      name: "AI Insights",
+      icon: Sparkles,
+      href: `${basePath}/insights`,
+      tourId: "insights"
+    });
+
+    // Settings - all tiers
+    baseNav.push({
+      name: "Settings",
+      icon: Settings,
+      href: `${basePath}/settings`,
+      tourId: "settings"
+    });
+
+    return baseNav;
+  };
   
   // Admin-specific navigation items
-  const adminNavigation = userType === 'admin' ? [
-    { name: "Companies", icon: Building2, href: `${basePath}/companies`, tourId: "companies" },
-    { name: "Users", icon: UserCog, href: `${basePath}/users`, tourId: "users" },
-    { name: "Billing", icon: CreditCard, href: `${basePath}/billing`, tourId: "billing" },
-  ] : [];
-  
-  // Common navigation items for all user types
-  const commonNavigation = [
-    { name: "Analytics", icon: BarChart3, href: `${basePath}/analytics`, tourId: "analytics" },
-    { name: "Settings", icon: Settings, href: `${basePath}/settings`, tourId: "settings" },
-  ];
-  
-  const navigation = [...baseNavigation, ...adminNavigation, ...commonNavigation];
+  const getAdminNavigation = (): NavItem[] => {
+    if (userType !== 'admin') return [];
+    return [
+      { name: "Companies", icon: Building2, href: `${basePath}/companies`, tourId: "companies" },
+      { name: "Users", icon: UserCog, href: `${basePath}/users`, tourId: "users" },
+      { name: "Billing", icon: CreditCard, href: `${basePath}/billing`, tourId: "billing" },
+      { name: "Analytics", icon: BarChart3, href: `${basePath}/analytics`, tourId: "analytics" },
+    ];
+  };
+
+  const navigation: NavItem[] = userType === 'admin' 
+    ? [...getAdminNavigation(), { name: "Settings", icon: Settings, href: `${basePath}/settings`, tourId: "settings" }]
+    : getTieredNavigation();
 
   const isActive = (href: string) => location.pathname === href;
 
   const handleLogout = () => {
     navigate("/");
+  };
+
+  const handleLockedClick = () => {
+    // Could show upgrade modal here
   };
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -84,27 +186,95 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 p-3">
+      <nav className="flex-1 p-3 overflow-y-auto">
         <ul className="space-y-1">
           {navigation.map((item) => (
             <li key={item.name} data-tour={item.tourId}>
-              <Link to={item.href} onClick={() => isMobile && setOpen(false)}>
+              {item.locked ? (
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start text-sm transition-all ${
-                    isActive(item.href)
-                      ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  }`}
+                  className="w-full justify-start text-sm text-sidebar-foreground/40 cursor-not-allowed"
+                  disabled
+                  onClick={handleLockedClick}
                 >
                   <item.icon className="h-5 w-5 mr-3" />
                   {item.name}
+                  <div className="ml-auto flex items-center gap-1">
+                    <Lock className="h-3 w-3" />
+                    {item.lockedBadge && (
+                      <Badge variant="outline" className="text-[9px] border-muted-foreground/30">
+                        {item.lockedBadge}
+                      </Badge>
+                    )}
+                  </div>
                 </Button>
-              </Link>
+              ) : (
+                <Link to={item.href} onClick={() => isMobile && setOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start text-sm transition-all",
+                      isActive(item.href)
+                        ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-5 w-5 mr-3",
+                      item.name === "First Refusal" && "text-amber-500"
+                    )} />
+                    {item.name}
+                    {item.badge !== undefined && (
+                      <Badge 
+                        variant="secondary" 
+                        className={cn(
+                          "ml-auto text-[10px] h-5 px-1.5",
+                          item.name === "First Refusal" && "bg-amber-500/20 text-amber-500"
+                        )}
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+              )}
             </li>
           ))}
         </ul>
       </nav>
+
+      {/* Account Manager - Tier 3 only */}
+      {currentTier === 'enterprise' && userType !== 'admin' && (
+        <div className="p-3 border-t border-sidebar-border">
+          <div className="p-3 rounded-lg bg-sidebar-accent/30">
+            <p className="text-[10px] text-sidebar-foreground/60 uppercase tracking-wider mb-2">
+              Account Manager
+            </p>
+            <p className="text-sm font-medium text-sidebar-foreground">{accountManager.name}</p>
+            <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">{accountManager.availability}</p>
+            <div className="flex gap-2 mt-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs flex-1"
+                onClick={() => window.location.href = `tel:${accountManager.phone}`}
+              >
+                <Phone className="h-3 w-3 mr-1" />
+                Call
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 text-xs flex-1"
+                onClick={() => window.location.href = `mailto:${accountManager.email}`}
+              >
+                <Mail className="h-3 w-3 mr-1" />
+                Email
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* User Profile & Logout */}
       <div className="p-3 border-t border-sidebar-border space-y-3">
