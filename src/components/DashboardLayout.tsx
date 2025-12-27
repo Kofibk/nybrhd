@@ -22,7 +22,8 @@ import {
   Menu,
   Building2,
   CreditCard,
-  UserCog
+  UserCog,
+  Sparkles
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -47,6 +48,7 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   // Base navigation items for all user types
   const baseNavigation = [
     { name: "Dashboard", icon: LayoutDashboard, href: basePath, tourId: "dashboard" },
+    { name: "AI Insights", icon: Sparkles, href: `${basePath}/insights`, tourId: "insights" },
     { name: "Campaigns", icon: Megaphone, href: `${basePath}/campaigns`, tourId: "campaigns" },
     { name: "Leads", icon: Users, href: `${basePath}/leads`, tourId: "leads" },
   ];
