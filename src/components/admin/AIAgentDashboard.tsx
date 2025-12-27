@@ -163,7 +163,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const navigate = useNavigate();
   
   const { askAgent, isLoading, error } = useMasterAgent();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { 
     campaignData: uploadedCampaignData, 
     campaignFileName,
