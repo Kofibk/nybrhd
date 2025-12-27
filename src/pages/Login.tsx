@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 import { useAuth } from "@/contexts/AuthContext";
-import { authRequestCode, authVerifyCode } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, KeyRound } from "lucide-react";
 
@@ -27,11 +27,22 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      await authRequestCode(email);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setStep("code");
       toast.success("Verification code sent to your email");
-    } catch (error) {
-      toast.error("Failed to send code. Please try again.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to send code";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -46,15 +57,40 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const result = await authVerifyCode(email, code);
-      login(result.token, result.user);
-      toast.success("Successfully logged in");
-      
-      // Navigate to the appropriate dashboard based on role
-      const dashboardPath = `/${result.user.role === "broker" ? "broker" : result.user.role}`;
-      navigate(dashboardPath);
-    } catch (error) {
-      toast.error("Invalid code. Please try again.");
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.session) {
+        login(data.session);
+        toast.success("Successfully logged in");
+
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed, user_type")
+          .eq("user_id", data.session.user.id)
+          .single();
+
+        if (profile?.onboarding_completed) {
+          // Navigate to appropriate dashboard
+          const userType = profile.user_type || "developer";
+          const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
+          navigate(dashboardPath);
+        } else {
+          // Redirect to onboarding
+          navigate("/onboarding");
+        }
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Invalid code";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -149,9 +185,7 @@ const Login = () => {
 
         <div className="mt-6 pt-6 border-t border-border">
           <p className="text-xs text-center text-muted-foreground">
-            Demo accounts: developer@naybourhood.ai, agent@naybourhood.ai, broker@naybourhood.ai
-            <br />
-            Any code works in demo mode.
+            Don't have an account? Enter your email above to get started.
           </p>
         </div>
       </Card>
