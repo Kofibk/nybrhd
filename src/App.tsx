@@ -76,10 +76,15 @@ const AppRoutes = () => {
       
       {/* Developer Routes */}
       <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
-      <Route path="/developer/developments" element={<ProtectedRoute><DevelopmentsPage /></ProtectedRoute>} />
-      <Route path="/developer/campaigns" element={<ProtectedRoute><CampaignsList userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/buyers" element={<ProtectedRoute><BuyersPage userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/first-refusal" element={<ProtectedRoute><FirstRefusalPage userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/conversations" element={<ProtectedRoute><ConversationsPage userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/conversations/:id" element={<ProtectedRoute><ChatPage userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/matches" element={<ProtectedRoute><MyMatchesPage userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/campaigns" element={<ProtectedRoute><TieredCampaignsPage userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/developments" element={<ProtectedRoute><DevelopmentsPage /></ProtectedRoute>} />
       <Route path="/developer/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="developer">
@@ -95,14 +100,19 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/developer/insights" element={<ProtectedRoute><AIInsightsPage userType="developer" /></ProtectedRoute>} />
-      <Route path="/developer/settings" element={<ProtectedRoute><Settings userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/settings" element={<ProtectedRoute><TieredSettingsPage userType="developer" /></ProtectedRoute>} />
 
       {/* Agent Routes */}
       <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
-      <Route path="/agent/properties" element={<ProtectedRoute><PropertiesPage /></ProtectedRoute>} />
-      <Route path="/agent/campaigns" element={<ProtectedRoute><CampaignsList userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/buyers" element={<ProtectedRoute><BuyersPage userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/first-refusal" element={<ProtectedRoute><FirstRefusalPage userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/conversations" element={<ProtectedRoute><ConversationsPage userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/conversations/:id" element={<ProtectedRoute><ChatPage userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/matches" element={<ProtectedRoute><MyMatchesPage userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/campaigns" element={<ProtectedRoute><TieredCampaignsPage userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/properties" element={<ProtectedRoute><PropertiesPage /></ProtectedRoute>} />
       <Route path="/agent/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="agent">
@@ -118,14 +128,19 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/agent/insights" element={<ProtectedRoute><AIInsightsPage userType="agent" /></ProtectedRoute>} />
-      <Route path="/agent/settings" element={<ProtectedRoute><Settings userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/settings" element={<ProtectedRoute><TieredSettingsPage userType="agent" /></ProtectedRoute>} />
 
       {/* Broker Routes */}
       <Route path="/broker" element={<ProtectedRoute><BrokerDashboard /></ProtectedRoute>} />
-      <Route path="/broker/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
-      <Route path="/broker/campaigns" element={<ProtectedRoute><CampaignsList userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/buyers" element={<ProtectedRoute><BuyersPage userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/first-refusal" element={<ProtectedRoute><FirstRefusalPage userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/conversations" element={<ProtectedRoute><ConversationsPage userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/conversations/:id" element={<ProtectedRoute><ChatPage userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/matches" element={<ProtectedRoute><MyMatchesPage userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/campaigns" element={<ProtectedRoute><TieredCampaignsPage userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/campaigns/new" element={<ProtectedRoute><CampaignWizard userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/campaigns/:id" element={<ProtectedRoute><CampaignDetail userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
       <Route path="/broker/leads" element={
         <ProtectedRoute>
           <DashboardLayout title="Leads" userType="broker">
@@ -141,7 +156,7 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       <Route path="/broker/insights" element={<ProtectedRoute><AIInsightsPage userType="broker" /></ProtectedRoute>} />
-      <Route path="/broker/settings" element={<ProtectedRoute><Settings userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/settings" element={<ProtectedRoute><TieredSettingsPage userType="broker" /></ProtectedRoute>} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
