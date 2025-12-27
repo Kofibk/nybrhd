@@ -1,6 +1,7 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
 import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
+import { TierSwitcher } from '@/components/TierSwitcher';
 import WhatsAppLeadNurturing from '@/components/WhatsAppLeadNurturing';
 import EmailAutomation from '@/components/EmailAutomation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,6 +23,9 @@ const BrokerDashboard = () => {
       userName={userName}
     >
       <div className="space-y-6">
+        {/* Demo Tier Switcher */}
+        <TierSwitcher className="w-fit" />
+
         {/* Tier Status Banner */}
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="py-4">
