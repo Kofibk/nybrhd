@@ -39,6 +39,7 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
+import whiteLogo from "@/assets/naybourhood-logo-white.svg";
 
 
 // Step definitions
@@ -838,12 +839,9 @@ const Onboarding = () => {
       <header className="p-6 border-b border-border">
         <div className="max-w-4xl mx-auto">
           <img 
-            src="/naybourhood-logo-white.svg" 
+            src={whiteLogo} 
             alt="Naybourhood" 
             className="h-8"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
           />
         </div>
       </header>

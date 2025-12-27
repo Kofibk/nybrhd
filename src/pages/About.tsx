@@ -19,7 +19,6 @@ const About = () => {
     { label: "Case Studies", href: "/case-studies" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
-    { label: "Admin", href: "/admin" },
   ];
 
   const team = [
@@ -29,11 +28,7 @@ const About = () => {
     },
     {
       name: "Ahmad Tahir",
-      role: "CPO"
-    },
-    {
-      name: "Stephanie De Sousa",
-      role: "COO"
+      role: "Digital Lead"
     }
   ];
 
@@ -221,7 +216,7 @@ const About = () => {
               size="lg" 
               variant="outline" 
               className="font-body text-base h-14 px-8 border-border hover:bg-muted"
-              onClick={() => navigate('/landing')}
+              onClick={() => navigate('/developer')}
             >
               Tour Platform
             </Button>
