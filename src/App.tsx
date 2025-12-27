@@ -22,7 +22,7 @@ import DeveloperDashboard from "./pages/DeveloperDashboard";
 import AgentDashboard from "./pages/AgentDashboard";
 import BrokerDashboard from "./pages/BrokerDashboard";
 import BuyersPage from "./pages/BuyersPage";
-import FirstRefusalPage from "./pages/FirstRefusalPage";
+
 import ConversationsPage from "./pages/ConversationsPage";
 import ChatPage from "./pages/ChatPage";
 import MyMatchesPage from "./pages/MyMatchesPage";
@@ -77,7 +77,7 @@ const AppRoutes = () => {
       {/* Developer Routes */}
       <Route path="/developer" element={<ProtectedRoute><DeveloperDashboard /></ProtectedRoute>} />
       <Route path="/developer/buyers" element={<ProtectedRoute><BuyersPage userType="developer" /></ProtectedRoute>} />
-      <Route path="/developer/first-refusal" element={<ProtectedRoute><FirstRefusalPage userType="developer" /></ProtectedRoute>} />
+      
       <Route path="/developer/conversations" element={<ProtectedRoute><ConversationsPage userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/conversations/:id" element={<ProtectedRoute><ChatPage userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/matches" element={<ProtectedRoute><MyMatchesPage userType="developer" /></ProtectedRoute>} />
@@ -105,7 +105,7 @@ const AppRoutes = () => {
       {/* Agent Routes */}
       <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
       <Route path="/agent/buyers" element={<ProtectedRoute><BuyersPage userType="agent" /></ProtectedRoute>} />
-      <Route path="/agent/first-refusal" element={<ProtectedRoute><FirstRefusalPage userType="agent" /></ProtectedRoute>} />
+      
       <Route path="/agent/conversations" element={<ProtectedRoute><ConversationsPage userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/conversations/:id" element={<ProtectedRoute><ChatPage userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/matches" element={<ProtectedRoute><MyMatchesPage userType="agent" /></ProtectedRoute>} />
@@ -133,7 +133,7 @@ const AppRoutes = () => {
       {/* Broker Routes */}
       <Route path="/broker" element={<ProtectedRoute><BrokerDashboard /></ProtectedRoute>} />
       <Route path="/broker/buyers" element={<ProtectedRoute><BuyersPage userType="broker" /></ProtectedRoute>} />
-      <Route path="/broker/first-refusal" element={<ProtectedRoute><FirstRefusalPage userType="broker" /></ProtectedRoute>} />
+      
       <Route path="/broker/conversations" element={<ProtectedRoute><ConversationsPage userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/conversations/:id" element={<ProtectedRoute><ChatPage userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/matches" element={<ProtectedRoute><MyMatchesPage userType="broker" /></ProtectedRoute>} />
