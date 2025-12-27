@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,10 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the return URL from state, or default to developer dashboard
+  const from = (location.state as { from?: Location })?.from?.pathname || "/developer";
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,10 +83,14 @@ const Login = () => {
           .single();
 
         if (profile?.onboarding_completed) {
-          // Navigate to appropriate dashboard
-          const userType = profile.user_type || "developer";
-          const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
-          navigate(dashboardPath);
+          // Navigate to the original destination or user's appropriate dashboard
+          if (from && from !== "/login") {
+            navigate(from);
+          } else {
+            const userType = profile.user_type || "developer";
+            const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
+            navigate(dashboardPath);
+          }
         } else {
           // Redirect to onboarding
           navigate("/onboarding");
