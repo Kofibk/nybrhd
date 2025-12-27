@@ -69,7 +69,7 @@ const RequestIntroductionModal: React.FC<RequestIntroductionModalProps> = ({
   const contactName = profile?.full_name || 'Your Name';
   const companyName = 'Your Company';
   const contactEmail = user?.email || 'your.email@example.com';
-  const contactPhone = profile?.phone || '+44 20 7946 0958';
+  const contactPhone = '+44 20 7946 0958';
 
   // Generate default message template
   const generateTemplate = () => {
