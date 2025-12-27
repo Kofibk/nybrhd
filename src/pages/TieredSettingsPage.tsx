@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/subscriptionTiers';
 import { accountManager } from '@/lib/buyerData';
+import { 
+  getDemoOnboardingSubmissions, 
+  isUuid,
+  type DemoOnboardingSubmission 
+} from '@/lib/demoOnboardingStore';
 import { 
   Crown, 
   Check, 
@@ -28,7 +34,9 @@ import {
   User,
   Camera,
   Download,
-  FileText
+  FileText,
+  Upload,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -37,25 +45,255 @@ interface TieredSettingsPageProps {
   userType: 'developer' | 'agent' | 'broker';
 }
 
+// UK Regions for selection
+const REGIONS = [
+  "London", "South East", "South West", "East of England", 
+  "East Midlands", "West Midlands", "Yorkshire", "North West", 
+  "North East", "Wales", "Scotland", "Northern Ireland"
+];
+
 const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => {
   const { currentTier, tierConfig, setTier, contactsUsed } = useSubscription();
   const { user } = useAuth();
+  
+  // Get guest ID for unauthenticated users
+  const guestId = localStorage.getItem('guest_onboarding_id') || '';
+  const effectiveUserId = user?.id || guestId;
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  
   const [profileData, setProfileData] = useState({
-    fullName: user?.email?.split('@')[0] || 'User',
+    fullName: '',
     email: user?.email || '',
-    phone: '+44 20 7946 0958',
-    jobTitle: userType === 'developer' ? 'Property Developer' : userType === 'agent' ? 'Estate Agent' : 'Mortgage Broker',
+    phone: '',
+    jobTitle: '',
+    avatarUrl: '',
   });
+
+  const [companyData, setCompanyData] = useState({
+    companyName: '',
+    website: '',
+    linkedin: '',
+    instagram: '',
+    address: '',
+    logoUrl: '',
+    regions: [] as string[],
+  });
+
+  // Load profile and company data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      
+      // For demo/guest users, load from localStorage
+      if (!user?.id || !isUuid(effectiveUserId)) {
+        const submissions = getDemoOnboardingSubmissions();
+        const userSubmission = submissions.find(s => s.user.id === effectiveUserId);
+        
+        if (userSubmission) {
+          setProfileData({
+            fullName: userSubmission.user.full_name || '',
+            email: userSubmission.user.email || '',
+            phone: userSubmission.user.phone || '',
+            jobTitle: userSubmission.user.job_title || '',
+            avatarUrl: '',
+          });
+          setCompanyData({
+            companyName: userSubmission.company.name || '',
+            website: userSubmission.company.website || '',
+            linkedin: '',
+            instagram: '',
+            address: userSubmission.company.address || '',
+            logoUrl: userSubmission.company.logo_url || '',
+            regions: userSubmission.user.regions_covered || [],
+          });
+          if (userSubmission.company.logo_url) {
+            setLogoPreview(userSubmission.company.logo_url);
+          }
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // For authenticated users, load from Supabase
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile) {
+          setProfileData({
+            fullName: profile.full_name || '',
+            email: profile.email || '',
+            phone: profile.phone || '',
+            jobTitle: profile.job_title || '',
+            avatarUrl: profile.avatar_url || '',
+          });
+          setCompanyData({
+            companyName: '',
+            website: profile.company_website || '',
+            linkedin: profile.company_linkedin || '',
+            instagram: profile.company_instagram || '',
+            address: profile.company_address || '',
+            logoUrl: profile.company_logo_url || '',
+            regions: profile.regions_covered || [],
+          });
+          if (profile.company_logo_url) {
+            setLogoPreview(profile.company_logo_url);
+          }
+
+          // Load company name if company_id exists
+          if (profile.company_id) {
+            const { data: company } = await supabase
+              .from('companies')
+              .select('name, website, address, logo_url')
+              .eq('id', profile.company_id)
+              .single();
+            
+            if (company) {
+              setCompanyData(prev => ({
+                ...prev,
+                companyName: company.name || '',
+                website: company.website || prev.website,
+                address: company.address || prev.address,
+                logoUrl: company.logo_url || prev.logoUrl,
+              }));
+              if (company.logo_url) {
+                setLogoPreview(company.logo_url);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+      setIsLoading(false);
+    };
+
+    loadData();
+  }, [user?.id, effectiveUserId]);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setLogoPreview(result);
+        setCompanyData(prev => ({ ...prev, logoUrl: result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const toggleRegion = (region: string) => {
+    setCompanyData(prev => ({
+      ...prev,
+      regions: prev.regions.includes(region)
+        ? prev.regions.filter(r => r !== region)
+        : [...prev.regions, region]
+    }));
+  };
+
+  const handleProfileSave = async () => {
+    // For demo/guest users, update localStorage
+    if (!user?.id || !isUuid(effectiveUserId)) {
+      const STORAGE_KEY = "demo_onboarding_submissions_v1";
+      const submissions = getDemoOnboardingSubmissions();
+      const updatedSubmissions = submissions.map(s => {
+        if (s.user.id === effectiveUserId) {
+          return {
+            ...s,
+            user: {
+              ...s.user,
+              full_name: profileData.fullName,
+              email: profileData.email,
+              phone: profileData.phone,
+              job_title: profileData.jobTitle,
+            }
+          };
+        }
+        return s;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSubmissions));
+      toast.success('Profile updated');
+      return;
+    }
+
+    // For authenticated users, update Supabase
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.fullName,
+          phone: profileData.phone,
+          job_title: profileData.jobTitle,
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      toast.success('Profile updated');
+    } catch (error: any) {
+      toast.error('Failed to save profile', { description: error.message });
+    }
+  };
+
+  const handleCompanySave = async () => {
+    // For demo/guest users, update localStorage
+    if (!user?.id || !isUuid(effectiveUserId)) {
+      const STORAGE_KEY = "demo_onboarding_submissions_v1";
+      const submissions = getDemoOnboardingSubmissions();
+      const updatedSubmissions = submissions.map(s => {
+        if (s.user.id === effectiveUserId) {
+          return {
+            ...s,
+            company: {
+              ...s.company,
+              name: companyData.companyName,
+              website: companyData.website,
+              address: companyData.address,
+              logo_url: companyData.logoUrl,
+            },
+            user: {
+              ...s.user,
+              regions_covered: companyData.regions,
+            }
+          };
+        }
+        return s;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSubmissions));
+      toast.success('Company information updated');
+      return;
+    }
+
+    // For authenticated users, update Supabase
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          company_website: companyData.website,
+          company_linkedin: companyData.linkedin,
+          company_instagram: companyData.instagram,
+          company_address: companyData.address,
+          company_logo_url: companyData.logoUrl,
+          regions_covered: companyData.regions,
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      toast.success('Company information updated');
+    } catch (error: any) {
+      toast.error('Failed to save company info', { description: error.message });
+    }
+  };
 
   const handleSave = () => {
     toast.success('Settings saved', {
       description: 'Your preferences have been updated.',
-    });
-  };
-
-  const handleProfileSave = () => {
-    toast.success('Profile updated', {
-      description: 'Your profile has been saved.',
     });
   };
 
@@ -114,9 +352,9 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src="" />
+                    <AvatarImage src={profileData.avatarUrl} />
                     <AvatarFallback className="text-xl bg-primary/10 text-primary">
-                      {profileData.fullName.charAt(0).toUpperCase()}
+                      {profileData.fullName?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <Button 
@@ -128,7 +366,7 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                   </Button>
                 </div>
                 <div>
-                  <p className="font-medium">{profileData.fullName}</p>
+                  <p className="font-medium">{profileData.fullName || 'User'}</p>
                   <p className="text-sm text-muted-foreground capitalize">{userType}</p>
                   <Badge variant="outline" className="mt-1">
                     {tierConfig.name} Plan
@@ -146,6 +384,7 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                     id="fullName" 
                     value={profileData.fullName}
                     onChange={(e) => setProfileData(prev => ({ ...prev, fullName: e.target.value }))}
+                    placeholder="John Smith"
                   />
                 </div>
                 <div className="space-y-2">
@@ -155,6 +394,9 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                     type="email" 
                     value={profileData.email}
                     onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="john@company.com"
+                    disabled={!!user?.email}
+                    className={user?.email ? "bg-muted" : ""}
                   />
                 </div>
                 <div className="space-y-2">
@@ -164,6 +406,7 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                     type="tel" 
                     value={profileData.phone}
                     onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+44 7700 900000"
                   />
                 </div>
                 <div className="space-y-2">
@@ -172,11 +415,12 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                     id="jobTitle" 
                     value={profileData.jobTitle}
                     onChange={(e) => setProfileData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                    placeholder="e.g. Sales Director"
                   />
                 </div>
               </div>
 
-              <Button onClick={handleProfileSave}>Save Profile</Button>
+              <Button onClick={handleProfileSave} disabled={isLoading}>Save Profile</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -355,7 +599,7 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                         {tier.firstRefusalBuyers && (
                           <li className="flex items-center gap-2 text-xs">
                             <Zap className="h-3 w-3 text-amber-500" />
-                            First Refusal (80+ buyers)
+                            Priority (80+ buyers)
                           </li>
                         )}
                       </ul>
@@ -388,27 +632,107 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                 <Building className="h-5 w-5" />
                 Company Profile
               </CardTitle>
+              <CardDescription>Manage your company information</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Logo Upload */}
+              <div className="space-y-2">
+                <Label>Company Logo</Label>
+                <div className="flex items-center gap-4">
+                  {logoPreview ? (
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                      <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                      <button 
+                        onClick={() => { setLogoPreview(null); setCompanyData(prev => ({ ...prev, logoUrl: '' })); }}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3 text-destructive-foreground" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 flex items-center justify-center cursor-pointer transition-colors">
+                      <Upload className="w-5 h-5 text-muted-foreground" />
+                      <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                    </label>
+                  )}
+                  <p className="text-sm text-muted-foreground">Upload your company logo</p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Company Name</Label>
-                  <Input id="companyName" defaultValue="Acme Properties Ltd" />
+                  <Input 
+                    id="companyName" 
+                    value={companyData.companyName}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, companyName: e.target.value }))}
+                    placeholder="Acme Properties Ltd"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Contact Email</Label>
-                  <Input id="email" type="email" defaultValue="contact@acmeproperties.com" />
+                  <Label htmlFor="companyWebsite">Website</Label>
+                  <Input 
+                    id="companyWebsite" 
+                    value={companyData.website}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, website: e.target.value }))}
+                    placeholder="https://example.com"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" defaultValue="+44 20 7946 0958" />
+                  <Label htmlFor="companyLinkedin">LinkedIn</Label>
+                  <Input 
+                    id="companyLinkedin" 
+                    value={companyData.linkedin}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, linkedin: e.target.value }))}
+                    placeholder="linkedin.com/company/..."
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
-                  <Input id="website" defaultValue="https://acmeproperties.com" />
+                  <Label htmlFor="companyInstagram">Instagram</Label>
+                  <Input 
+                    id="companyInstagram" 
+                    value={companyData.instagram}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, instagram: e.target.value }))}
+                    placeholder="@yourcompany"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="companyAddress">Business Address</Label>
+                  <Input 
+                    id="companyAddress" 
+                    value={companyData.address}
+                    onChange={(e) => setCompanyData(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="London, UK"
+                  />
                 </div>
               </div>
-              <Button onClick={handleSave}>Save Changes</Button>
+
+              {/* Regions */}
+              <div className="space-y-3">
+                <Label>Regions Covered</Label>
+                <div className="flex flex-wrap gap-2">
+                  {REGIONS.map((region) => {
+                    const isSelected = companyData.regions.includes(region);
+                    return (
+                      <button
+                        key={region}
+                        type="button"
+                        onClick={() => toggleRegion(region)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-sm transition-all",
+                          isSelected 
+                            ? "bg-primary text-primary-foreground" 
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        {region}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Button onClick={handleCompanySave} disabled={isLoading}>Save Changes</Button>
             </CardContent>
           </Card>
         </TabsContent>
