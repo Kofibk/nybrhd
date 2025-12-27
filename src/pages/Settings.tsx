@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { LeadSourceManager } from "@/components/LeadSourceManager";
 import { PricingDisplay, UpgradeModal } from "@/components/PricingDisplay";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Building2, 
   Users, 
@@ -21,9 +22,12 @@ import {
   Crown,
   CreditCard,
   CheckCircle,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface SettingsProps {
   userType: "developer" | "agent" | "broker" | "admin";
@@ -31,7 +35,9 @@ interface SettingsProps {
 
 const Settings = ({ userType }: SettingsProps) => {
   const [logo, setLogo] = useState<string | null>(null);
-  const { currentTier, tierConfig, contactsUsed, contactsRemaining } = useSubscription();
+  const [isManageLoading, setIsManageLoading] = useState(false);
+  const { currentTier, tierConfig, contactsUsed, contactsRemaining, openCustomerPortal } = useSubscription();
+  const { isAuthenticated } = useAuth();
 
   const teamMembers = [
     { name: "John Smith", email: "john@example.com", role: "Admin", status: "active" },
@@ -168,8 +174,40 @@ const Settings = ({ userType }: SettingsProps) => {
                   <p className="font-medium">•••• •••• •••• 4242</p>
                 </div>
               </div>
-              <div className="flex gap-3 mt-4">
-                <Button variant="outline" size="sm">Update Payment Method</Button>
+              <div className="flex flex-wrap gap-3 mt-4">
+                {isAuthenticated ? (
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={async () => {
+                      setIsManageLoading(true);
+                      try {
+                        await openCustomerPortal();
+                      } catch (error) {
+                        toast.error('Failed to open billing portal');
+                      } finally {
+                        setIsManageLoading(false);
+                      }
+                    }}
+                    disabled={isManageLoading}
+                  >
+                    {isManageLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Opening...
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Manage Subscription
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Sign in to manage subscription
+                  </Button>
+                )}
                 <Button variant="outline" size="sm">Download Invoices</Button>
               </div>
             </Card>

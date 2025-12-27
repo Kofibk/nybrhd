@@ -50,15 +50,11 @@ import AdminCompaniesPage from "./pages/admin/AdminCompaniesPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminBillingPage from "./pages/admin/AdminBillingPage";
 import AdminRoute from "./components/admin/AdminRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import AirtableTest from "./pages/AirtableTest";
 import AITestPage from "./pages/AITestPage";
 
 const queryClient = new QueryClient();
-
-// Demo mode - no authentication required
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  return <>{children}</>;
-};
 
 const AppRoutes = () => {
   return (
