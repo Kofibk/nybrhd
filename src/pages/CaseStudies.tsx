@@ -18,7 +18,6 @@ const CaseStudies = () => {
     { label: "Case Studies", href: "/case-studies" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
-    { label: "Admin", href: "/admin" },
   ];
 
   const caseStudies = [
@@ -217,7 +216,7 @@ const CaseStudies = () => {
               size="lg" 
               variant="outline" 
               className="font-body text-base h-14 px-8 border-border hover:bg-muted"
-              onClick={() => navigate('/landing')}
+              onClick={() => navigate('/developer')}
             >
               Tour Platform
             </Button>

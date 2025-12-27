@@ -28,7 +28,6 @@ const Resources = () => {
     { label: "Case Studies", href: "/case-studies" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
-    { label: "Admin", href: "/admin" },
   ];
 
   const faqs = [
@@ -55,12 +54,6 @@ const Resources = () => {
       icon: BookOpen,
       title: "The Blog",
       description: "Insights on buyer trends, international markets, and property marketing strategies that deliver.",
-      link: "#"
-    },
-    {
-      icon: Calculator,
-      title: "ROI Calculator",
-      description: "Forecast campaign ROI using your development data — see expected cost per buyer, conversions, and budget return.",
       link: "#"
     }
   ];
@@ -249,7 +242,7 @@ const Resources = () => {
               size="lg" 
               variant="outline" 
               className="font-body text-base h-14 px-8 border-border hover:bg-muted"
-              onClick={() => navigate('/landing')}
+              onClick={() => navigate('/developer')}
             >
               Tour Platform
             </Button>

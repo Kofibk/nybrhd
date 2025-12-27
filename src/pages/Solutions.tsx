@@ -23,7 +23,6 @@ const Solutions = () => {
     { label: "Case Studies", href: "/case-studies" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
-    { label: "Admin", href: "/admin" },
   ];
 
   const solutions = [
@@ -32,7 +31,7 @@ const Solutions = () => {
       title: "Developers",
       description: "Launch faster and scale efficiently with intelligent buyer acquisition.",
       benefits: [
-        "Launch faster and scale efficiently",
+        "Pre-qualified leads delivered directly to your CRM",
         "Reach international buyers, not just local browsers",
         "Track every conversion in real time"
       ]
@@ -226,7 +225,7 @@ const Solutions = () => {
               size="lg" 
               variant="outline" 
               className="font-body text-base h-14 px-8 border-border hover:bg-muted"
-              onClick={() => navigate('/landing')}
+              onClick={() => navigate('/developer')}
             >
               Tour Platform
             </Button>

@@ -38,7 +38,6 @@ const Landing = () => {
     { label: "Case Studies", href: "/case-studies" },
     { label: "About", href: "/about" },
     { label: "Resources", href: "/resources" },
-    { label: "Admin", onClick: () => navigate('/admin') },
   ];
 
   const pillars = [
@@ -181,23 +180,13 @@ const Landing = () => {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
-                link.href ? (
-                  <a 
-                    key={link.label} 
-                    href={link.href} 
-                    className="text-sm font-body font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <button 
-                    key={link.label} 
-                    onClick={link.onClick} 
-                    className="text-sm font-body font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </button>
-                )
+                <a 
+                  key={link.label} 
+                  href={link.href} 
+                  className="text-sm font-body font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </a>
               ))}
             </div>
             
@@ -229,24 +218,14 @@ const Landing = () => {
                   <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                   <nav className="flex flex-col gap-4 mt-8">
                     {navLinks.map((link) => (
-                      link.href ? (
-                        <a 
-                          key={link.label} 
-                          href={link.href} 
-                          className="text-base font-body font-medium text-foreground hover:text-muted-foreground transition-colors py-2"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          {link.label}
-                        </a>
-                      ) : (
-                        <button 
-                          key={link.label} 
-                          onClick={() => { link.onClick?.(); setMobileMenuOpen(false); }} 
-                          className="text-base font-body font-medium text-foreground hover:text-muted-foreground transition-colors text-left py-2"
-                        >
-                          {link.label}
-                        </button>
-                      )
+                      <a 
+                        key={link.label} 
+                        href={link.href} 
+                        className="text-base font-body font-medium text-foreground hover:text-muted-foreground transition-colors py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.label}
+                      </a>
                     ))}
                     <hr className="my-2 border-border" />
                     <Button 
@@ -314,6 +293,7 @@ const Landing = () => {
                 size="lg" 
                 variant="outline" 
                 className="font-body text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-8 border-border hover:bg-muted group"
+                onClick={() => navigate('/developer')}
               >
                 <Play className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                 Tour Platform
@@ -606,7 +586,7 @@ const Landing = () => {
                 />
               </Link>
               <span className="text-xs font-body text-muted-foreground">
-                © 2024 Naybourhood.ai
+                © {new Date().getFullYear()} Naybourhood.ai
               </span>
             </div>
             <div className="flex items-center gap-6">
