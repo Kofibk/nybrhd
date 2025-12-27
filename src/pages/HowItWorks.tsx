@@ -197,7 +197,7 @@ const HowItWorks = () => {
             Ready to Transform Your Sales Pipeline?
           </h2>
           <p className="text-base lg:text-lg font-body text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Generate sales-ready buyers intelligently today.
+            Start your first campaign today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
