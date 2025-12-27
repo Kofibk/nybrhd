@@ -38,7 +38,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProductTour } from "./ProductTour";
 import { cn } from "@/lib/utils";
-import { getBuyersByTier, getFirstRefusalBuyers, demoConversations, demoCampaigns, accountManager } from "@/lib/buyerData";
+import { getBuyersByTier, demoConversations, demoCampaigns, accountManager } from "@/lib/buyerData";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -67,7 +67,6 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
 
   // Calculate badge counts
   const buyerCount = getBuyersByTier(currentTier).length;
-  const firstRefusalCount = getFirstRefusalBuyers().length;
   const conversationCount = demoConversations.filter(c => c.unread).length;
   const activeCampaignCount = demoCampaigns.filter(c => c.status === 'active').length;
 
@@ -88,16 +87,6 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
         badge: buyerCount
       },
     ];
-
-    // First Refusal - Tier 3 only
-    if (currentTier === 'enterprise') {
-      baseNav.push({
-        name: "First Refusal",
-        icon: Zap,
-        href: `${basePath}/first-refusal`,
-        badge: firstRefusalCount
-      });
-    }
 
     // Conversations - all tiers
     baseNav.push({
@@ -219,18 +208,12 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
                         : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     )}
                   >
-                    <item.icon className={cn(
-                      "h-5 w-5 mr-3",
-                      item.name === "First Refusal" && "text-amber-500"
-                    )} />
+                    <item.icon className="h-5 w-5 mr-3" />
                     {item.name}
                     {item.badge !== undefined && (
                       <Badge 
                         variant="secondary" 
-                        className={cn(
-                          "ml-auto text-[10px] h-5 px-1.5",
-                          item.name === "First Refusal" && "bg-amber-500/20 text-amber-500"
-                        )}
+                        className="ml-auto text-[10px] h-5 px-1.5"
                       >
                         {item.badge}
                       </Badge>
