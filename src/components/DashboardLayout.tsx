@@ -147,6 +147,9 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   const getAdminNavigation = (): NavItem[] => {
     if (userType !== 'admin') return [];
     return [
+      { name: "Dashboard", icon: LayoutDashboard, href: basePath, tourId: "dashboard" },
+      { name: "Campaigns", icon: Megaphone, href: `${basePath}/campaigns`, tourId: "campaigns" },
+      { name: "Leads", icon: Users, href: `${basePath}/leads`, tourId: "leads" },
       { name: "Companies", icon: Building2, href: `${basePath}/companies`, tourId: "companies" },
       { name: "Users", icon: UserCog, href: `${basePath}/users`, tourId: "users" },
       { name: "Billing", icon: CreditCard, href: `${basePath}/billing`, tourId: "billing" },
