@@ -45,7 +45,7 @@ const RequestIntroductionModal: React.FC<RequestIntroductionModalProps> = ({
   buyer,
   onSuccess,
 }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { currentTier } = useSubscription();
   const [channel, setChannel] = useState<'email' | 'whatsapp'>('email');
   const [message, setMessage] = useState('');
