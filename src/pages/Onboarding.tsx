@@ -144,6 +144,18 @@ const Onboarding = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
+  // Generate a guest ID for unauthenticated users
+  const [guestId] = useState(() => {
+    const existing = localStorage.getItem('guest_onboarding_id');
+    if (existing) return existing;
+    const newId = `guest_${crypto.randomUUID()}`;
+    localStorage.setItem('guest_onboarding_id', newId);
+    return newId;
+  });
+  
+  // Use real user ID if authenticated, otherwise use guest ID
+  const effectiveUserId = user?.id || guestId;
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -178,19 +190,18 @@ const Onboarding = () => {
   // Check if user has already completed onboarding
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      if (!user?.id) return;
-
-      // Demo auth users are not UUIDs; use local storage progress so onboarding works.
-      if (!isUuid(user.id)) {
-        if (isDemoOnboardingComplete(user.id)) {
+      // For guest/demo users, check localStorage
+      if (!user?.id || !isUuid(effectiveUserId)) {
+        if (isDemoOnboardingComplete(effectiveUserId)) {
           navigate('/developer');
           return;
         }
-        const step = getDemoOnboardingStep(user.id);
+        const step = getDemoOnboardingStep(effectiveUserId);
         if (step > 1) setCurrentStep(step);
         return;
       }
 
+      // For authenticated users, check Supabase
       const { data: profile } = await supabase
         .from('profiles')
         .select('onboarding_completed, onboarding_step')
@@ -198,7 +209,6 @@ const Onboarding = () => {
         .single();
 
       if (profile?.onboarding_completed) {
-        // Redirect to appropriate dashboard
         navigate('/developer');
       } else if (profile?.onboarding_step && profile.onboarding_step > 0) {
         setCurrentStep(profile.onboarding_step);
@@ -206,7 +216,7 @@ const Onboarding = () => {
     };
 
     checkOnboardingStatus();
-  }, [user, navigate]);
+  }, [user, effectiveUserId, navigate]);
 
   const updateFormData = (field: keyof OnboardingData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -260,13 +270,13 @@ const Onboarding = () => {
   };
 
   const saveProgress = async (step: number) => {
-    if (!user?.id) return;
-
-    if (!isUuid(user.id)) {
-      setDemoOnboardingStep(user.id, step);
+    // For guest/demo users, save to localStorage
+    if (!user?.id || !isUuid(effectiveUserId)) {
+      setDemoOnboardingStep(effectiveUserId, step);
       return;
     }
 
+    // For authenticated users, save to Supabase
     try {
       await supabase
         .from('profiles')
@@ -304,10 +314,8 @@ const Onboarding = () => {
     updateFormData('upsellInterest', withUpsell);
 
     try {
-      if (!user?.id) throw new Error("User not authenticated");
-
-      // Demo auth path: persist locally so users can progress and admins can review in the demo admin tables.
-      if (!isUuid(user.id)) {
+      // For guest/demo users, persist locally
+      if (!user?.id || !isUuid(effectiveUserId)) {
         const companyId = crypto.randomUUID();
 
         addDemoOnboardingSubmission({
@@ -321,8 +329,8 @@ const Onboarding = () => {
             logo_url: formData.companyLogo,
           },
           user: {
-            id: user.id,
-            email: formData.email || user.email || "",
+            id: effectiveUserId,
+            email: formData.email || user?.email || "",
             full_name: `${formData.firstName} ${formData.lastName}`.trim() || null,
             phone: formData.phone || null,
             job_title: formData.jobTitle || null,
@@ -334,10 +342,12 @@ const Onboarding = () => {
           invited_team_emails: formData.teamEmails.filter((e) => e.trim()),
         });
 
-        markDemoOnboardingComplete(user.id);
+        markDemoOnboardingComplete(effectiveUserId);
         setIsComplete(true);
         return;
       }
+
+      // For authenticated users, save to Supabase
 
       // Create or update company
       const { data: company, error: companyError } = await supabase
@@ -519,13 +529,15 @@ const Onboarding = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email *</Label>
           <Input
             id="email"
             type="email"
             value={formData.email}
-            disabled
-            className="bg-muted"
+            onChange={(e) => updateFormData('email', e.target.value)}
+            placeholder="john@company.com"
+            disabled={!!user?.email}
+            className={user?.email ? "bg-muted" : ""}
           />
         </div>
         
