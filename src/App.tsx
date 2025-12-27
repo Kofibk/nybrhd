@@ -133,6 +133,7 @@ const AppRoutes = () => {
           </DashboardLayout>
         </ProtectedRoute>
       } />
+      <Route path="/broker/insights" element={<ProtectedRoute><AIInsightsPage userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/settings" element={<ProtectedRoute><Settings userType="broker" /></ProtectedRoute>} />
 
       {/* Admin Routes */}
@@ -209,20 +210,22 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <DataProvider>
-          <InventoryProvider>
-            <TooltipProvider>
-              {showSplash && !hasShownSplash && (
-                <SplashScreen onComplete={handleSplashComplete} />
-              )}
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </TooltipProvider>
-          </InventoryProvider>
-        </DataProvider>
+        <SubscriptionProvider initialTier="growth">
+          <DataProvider>
+            <InventoryProvider>
+              <TooltipProvider>
+                {showSplash && !hasShownSplash && (
+                  <SplashScreen onComplete={handleSplashComplete} />
+                )}
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </TooltipProvider>
+            </InventoryProvider>
+          </DataProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
