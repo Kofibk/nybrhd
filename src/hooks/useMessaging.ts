@@ -1,3 +1,7 @@
+// DEPRECATED: This hook is being replaced by useContactedBuyers.
+// The new system uses a simpler "Request Introduction" flow instead of full messaging.
+// Will be removed once the new system is fully tested.
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubscription } from '@/contexts/SubscriptionContext';

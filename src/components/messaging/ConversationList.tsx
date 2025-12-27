@@ -1,3 +1,7 @@
+// DEPRECATED: This component is being replaced by the new "Request Introduction" flow.
+// The new system uses useContactedBuyers hook to track introductions instead of conversations.
+// Will be removed once the new system is fully tested.
+
 import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
