@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/subscriptionTiers';
 import { cn } from '@/lib/utils';
 import {
@@ -13,11 +14,11 @@ import {
   Zap,
   Users,
   Brain,
-  MessageSquare,
   Shield,
   Star,
   ArrowRight,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,13 +27,15 @@ interface PricingCardProps {
   isCurrentPlan?: boolean;
   onSelect?: (tier: SubscriptionTier) => void;
   compact?: boolean;
+  isLoading?: boolean;
 }
 
 const PricingCard: React.FC<PricingCardProps> = ({ 
   tier, 
   isCurrentPlan = false, 
   onSelect,
-  compact = false 
+  compact = false,
+  isLoading = false 
 }) => {
   const config = SUBSCRIPTION_TIERS[tier];
   
@@ -137,9 +140,19 @@ const PricingCard: React.FC<PricingCardProps> = ({
               config.isPopular && "bg-amber-500 hover:bg-amber-600 text-black"
             )}
             onClick={() => onSelect(tier)}
+            disabled={isLoading}
           >
-            {isCurrentPlan ? 'Current Plan' : `Upgrade to ${config.name}`}
-            {!isCurrentPlan && <ArrowRight className="h-4 w-4 ml-2" />}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                {`Upgrade to ${config.name}`}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </>
+            )}
           </Button>
         )}
         
@@ -164,14 +177,33 @@ export const PricingDisplay: React.FC<PricingDisplayProps> = ({
   showUpgrade = true,
   onUpgrade,
 }) => {
-  const { currentTier, setTier } = useSubscription();
+  const { currentTier, setTier, initiateCheckout, isLoading: subscriptionLoading } = useSubscription();
+  const { isAuthenticated } = useAuth();
+  const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
 
-  const handleSelect = (tier: SubscriptionTier) => {
+  const handleSelect = async (tier: SubscriptionTier) => {
     if (onUpgrade) {
       onUpgrade(tier);
-    } else {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      // If not logged in, just switch tier for demo
       setTier(tier);
       toast.success(`Switched to ${SUBSCRIPTION_TIERS[tier].name} plan (demo mode)`);
+      return;
+    }
+
+    // Initiate real Stripe checkout
+    setLoadingTier(tier);
+    try {
+      await initiateCheckout(tier);
+      toast.success('Redirecting to checkout...');
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setLoadingTier(null);
     }
   };
 
@@ -215,6 +247,7 @@ export const PricingDisplay: React.FC<PricingDisplayProps> = ({
           isCurrentPlan={currentTier === tier}
           onSelect={showUpgrade ? handleSelect : undefined}
           compact={variant === 'table'}
+          isLoading={loadingTier === tier}
         />
       ))}
     </div>
@@ -228,12 +261,21 @@ interface UpgradeModalProps {
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ trigger, defaultOpen }) => {
   const [open, setOpen] = useState(defaultOpen || false);
-  const { currentTier, setTier } = useSubscription();
+  const { initiateCheckout } = useSubscription();
+  const { isAuthenticated } = useAuth();
 
-  const handleUpgrade = (tier: SubscriptionTier) => {
-    setTier(tier);
-    toast.success(`Upgraded to ${SUBSCRIPTION_TIERS[tier].name} plan (demo mode)`);
-    setOpen(false);
+  const handleUpgrade = async (tier: SubscriptionTier) => {
+    if (isAuthenticated) {
+      try {
+        await initiateCheckout(tier);
+        setOpen(false);
+      } catch (error) {
+        toast.error('Failed to start checkout');
+      }
+    } else {
+      toast.info('Please log in to upgrade your plan');
+      setOpen(false);
+    }
   };
 
   return (
