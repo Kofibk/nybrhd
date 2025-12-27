@@ -1,6 +1,7 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
 import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
+import { TierSwitcher } from '@/components/TierSwitcher';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +20,9 @@ const AgentDashboard = () => {
       userName={userName}
     >
       <div className="space-y-6">
+        {/* Demo Tier Switcher */}
+        <TierSwitcher className="w-fit" />
+
         {/* Tier Status Banner */}
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="py-4">
