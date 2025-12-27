@@ -83,6 +83,78 @@ export type Database = {
         }
         Relationships: []
       }
+      buyers: {
+        Row: {
+          bedrooms: number | null
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          intent_score: number | null
+          last_name: string | null
+          location_preferences: string[] | null
+          payment_method: string | null
+          phone: string | null
+          priority: string | null
+          property_types: string[] | null
+          purpose: string | null
+          quality_score: number | null
+          source: string | null
+          source_campaign_id: string | null
+          timeline: string | null
+          updated_at: string
+          verified: boolean | null
+        }
+        Insert: {
+          bedrooms?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          intent_score?: number | null
+          last_name?: string | null
+          location_preferences?: string[] | null
+          payment_method?: string | null
+          phone?: string | null
+          priority?: string | null
+          property_types?: string[] | null
+          purpose?: string | null
+          quality_score?: number | null
+          source?: string | null
+          source_campaign_id?: string | null
+          timeline?: string | null
+          updated_at?: string
+          verified?: boolean | null
+        }
+        Update: {
+          bedrooms?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          intent_score?: number | null
+          last_name?: string | null
+          location_preferences?: string[] | null
+          payment_method?: string | null
+          phone?: string | null
+          priority?: string | null
+          property_types?: string[] | null
+          purpose?: string | null
+          quality_score?: number | null
+          source?: string | null
+          source_campaign_id?: string | null
+          timeline?: string | null
+          updated_at?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       client_invitations: {
         Row: {
           accepted_at: string | null
