@@ -38,7 +38,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProductTour } from "./ProductTour";
 import { cn } from "@/lib/utils";
-import { getBuyersByTier, demoConversations, demoCampaigns, accountManager } from "@/lib/buyerData";
+import { getBuyersByTier, demoCampaigns, accountManager } from "@/lib/buyerData";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -65,9 +66,11 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   
   const basePath = `/${userType}`;
 
+  // Real-time unread message count
+  const { unreadCount: conversationCount } = useUnreadMessages();
+
   // Calculate badge counts
   const buyerCount = getBuyersByTier(currentTier).length;
-  const conversationCount = demoConversations.filter(c => c.unread).length;
   const activeCampaignCount = demoCampaigns.filter(c => c.status === 'active').length;
 
   // Tier-specific navigation

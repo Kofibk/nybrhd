@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/subscriptionTiers';
 import { accountManager } from '@/lib/buyerData';
 import { 
@@ -22,7 +24,11 @@ import {
   CreditCard,
   Users,
   Sparkles,
-  Zap
+  Zap,
+  User,
+  Camera,
+  Download,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -33,10 +39,23 @@ interface TieredSettingsPageProps {
 
 const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => {
   const { currentTier, tierConfig, setTier, contactsUsed } = useSubscription();
+  const { user } = useAuth();
+  const [profileData, setProfileData] = useState({
+    fullName: user?.email?.split('@')[0] || 'User',
+    email: user?.email || '',
+    phone: '+44 20 7946 0958',
+    jobTitle: userType === 'developer' ? 'Property Developer' : userType === 'agent' ? 'Estate Agent' : 'Mortgage Broker',
+  });
 
   const handleSave = () => {
     toast.success('Settings saved', {
       description: 'Your preferences have been updated.',
+    });
+  };
+
+  const handleProfileSave = () => {
+    toast.success('Profile updated', {
+      description: 'Your profile has been saved.',
     });
   };
 
@@ -47,18 +66,193 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
     });
   };
 
+  // Demo billing data
+  const billingHistory = [
+    { id: '1', date: 'Dec 1, 2024', amount: tierConfig.price, status: 'paid', invoice: 'INV-2024-012' },
+    { id: '2', date: 'Nov 1, 2024', amount: tierConfig.price, status: 'paid', invoice: 'INV-2024-011' },
+    { id: '3', date: 'Oct 1, 2024', amount: tierConfig.price, status: 'paid', invoice: 'INV-2024-010' },
+  ];
+
   return (
     <DashboardLayout title="Settings" userType={userType}>
-      <Tabs defaultValue="subscription" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          <TabsTrigger value="company">Company Profile</TabsTrigger>
-          <TabsTrigger value="preferences">Matching Preferences</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          {currentTier === 'enterprise' && (
-            <TabsTrigger value="account-manager">Account Manager</TabsTrigger>
-          )}
-        </TabsList>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-6 md:max-w-4xl">
+            <TabsTrigger value="profile" className="gap-1.5">
+              <User className="h-3.5 w-3.5" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="gap-1.5">
+              <Crown className="h-3.5 w-3.5" />
+              Subscription
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="gap-1.5">
+              <CreditCard className="h-3.5 w-3.5" />
+              Billing
+            </TabsTrigger>
+            <TabsTrigger value="company">Company</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="h-3.5 w-3.5 md:hidden" />
+              <span className="hidden md:inline">Notifications</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Your Profile
+              </CardTitle>
+              <CardDescription>Manage your personal information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Avatar */}
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                      {profileData.fullName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button 
+                    size="icon" 
+                    variant="outline" 
+                    className="absolute bottom-0 right-0 h-7 w-7 rounded-full"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div>
+                  <p className="font-medium">{profileData.fullName}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{userType}</p>
+                  <Badge variant="outline" className="mt-1">
+                    {tierConfig.name} Plan
+                  </Badge>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Profile Form */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input 
+                    id="fullName" 
+                    value={profileData.fullName}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, fullName: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profileEmail">Email</Label>
+                  <Input 
+                    id="profileEmail" 
+                    type="email" 
+                    value={profileData.email}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profilePhone">Phone</Label>
+                  <Input 
+                    id="profilePhone" 
+                    type="tel" 
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="jobTitle">Job Title</Label>
+                  <Input 
+                    id="jobTitle" 
+                    value={profileData.jobTitle}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, jobTitle: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <Button onClick={handleProfileSave}>Save Profile</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Billing Tab */}
+        <TabsContent value="billing" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Payment Method
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-14 bg-gradient-to-r from-blue-600 to-blue-800 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">VISA</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">•••• •••• •••• 4242</p>
+                    <p className="text-sm text-muted-foreground">Expires 12/26</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">Update</Button>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Next billing date</p>
+                  <p className="font-medium">January 1, 2025</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Amount</p>
+                  <p className="font-medium">{tierConfig.priceDisplay}/month</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Billing History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {billingHistory.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{item.invoice}</p>
+                        <p className="text-sm text-muted-foreground">{item.date}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="font-medium">£{item.amount}</p>
+                        <Badge variant="outline" className="text-green-600 border-green-500/30 text-xs">
+                          {item.status}
+                        </Badge>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Subscription Tab */}
         <TabsContent value="subscription" className="space-y-6">
