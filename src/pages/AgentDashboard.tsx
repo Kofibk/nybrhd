@@ -12,9 +12,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 
 const AgentDashboard = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const { currentTier } = useSubscription();
-  const userName = user?.name || 'User';
+  const userName = profile?.full_name || 'User';
 
   return (
     <DashboardLayout 

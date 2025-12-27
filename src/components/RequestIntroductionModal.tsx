@@ -65,9 +65,9 @@ const RequestIntroductionModal: React.FC<RequestIntroductionModalProps> = ({
     }
   };
 
-  // Mock profile data - in production this would come from the user's profile
-  const profile = {
-    contact_name: user?.name || 'Your Name',
+  // Profile data from auth context
+  const contactProfile = {
+    contact_name: profile?.full_name || 'Your Name',
     company_name: 'Your Company',
     email: user?.email || 'your.email@example.com',
     phone: '+44 20 7946 0958',

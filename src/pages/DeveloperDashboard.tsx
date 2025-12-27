@@ -13,9 +13,9 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { developerCompany } from '@/lib/developerDemoData';
 
 const DeveloperDashboard = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
   const { currentTier } = useSubscription();
-  const userName = user?.name || developerCompany.name;
+  const userName = profile?.full_name || developerCompany.name;
 
   return (
     <DashboardLayout 

@@ -192,7 +192,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   }, [airtableCampaignData, uploadedCampaignData]);
 
   const roleConfig = getRoleConfig(userType);
-  const userName = user?.name?.split(' ')[0] || 'there';
+  const userName = profile?.full_name?.split(' ')[0] || 'there';
   const currentDate = new Date();
   const greeting = currentDate.getHours() < 12 ? 'Good morning' : currentDate.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const dateString = currentDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
