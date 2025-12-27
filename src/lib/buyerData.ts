@@ -17,6 +17,12 @@ export interface Buyer {
   lastActive: Date;
   avatar?: string;
   isFirstRefusal?: boolean;
+  // Contact information
+  email?: string;
+  phone?: string;
+  whatsapp_number?: string;
+  preferred_contact_method?: 'email' | 'whatsapp' | 'both';
+  contactsCount?: number; // how many users have contacted this buyer, max 4
 }
 
 export interface Conversation {
@@ -91,6 +97,23 @@ const generateBuyers = (): Buyer[] => {
     else if (score >= 50) priority = 'P2-Qualified';
     else priority = 'P3-Nurture';
 
+    // Generate contact info
+    const firstName = name.split(' ')[0].toLowerCase();
+    const lastName = name.split(' ')[1]?.[0]?.toLowerCase() || 'x';
+    const hasEmail = Math.random() > 0.1; // 90% have email
+    const hasPhone = Math.random() > 0.3; // 70% have phone
+    const hasWhatsApp = hasPhone && Math.random() > 0.4; // 60% of those with phone have WhatsApp
+    
+    // Determine preferred contact method based on available channels
+    let preferred_contact_method: Buyer['preferred_contact_method'];
+    if (hasEmail && hasWhatsApp) {
+      preferred_contact_method = Math.random() > 0.5 ? 'both' : (Math.random() > 0.5 ? 'email' : 'whatsapp');
+    } else if (hasEmail) {
+      preferred_contact_method = 'email';
+    } else if (hasWhatsApp) {
+      preferred_contact_method = 'whatsapp';
+    }
+
     return {
       id: `buyer_${index + 1}`,
       name,
@@ -107,6 +130,12 @@ const generateBuyers = (): Buyer[] => {
       contactsRemaining: Math.floor(Math.random() * 4) + 1,
       lastActive: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)),
       isFirstRefusal: score >= 80,
+      // Contact information
+      email: hasEmail ? `${firstName}.${lastName}@example.com` : undefined,
+      phone: hasPhone ? `+447700900${(100 + index).toString().padStart(3, '0')}` : undefined,
+      whatsapp_number: hasWhatsApp ? `+447700900${(100 + index).toString().padStart(3, '0')}` : undefined,
+      preferred_contact_method,
+      contactsCount: Math.floor(Math.random() * 4), // 0-3 contacts already made
     };
   }).sort((a, b) => b.score - a.score);
 };

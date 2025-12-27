@@ -1,3 +1,7 @@
+// DEPRECATED: This component is being replaced by RequestIntroductionModal.
+// The new system uses a simpler "Request Introduction" flow instead of full chat.
+// Will be removed once the new system is fully tested.
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useContactedBuyers } from '@/hooks/useContactedBuyers';
 import { getBuyersByTier, getScoreBreakdown, Buyer } from '@/lib/buyerData';
 import { 
   Search, 
@@ -17,12 +18,15 @@ import {
   Users,
   ChevronUp,
   Info,
-  Zap
+  Zap,
+  CheckCircle,
+  Mail,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import ContactBuyerModal from '@/components/messaging/ContactBuyerModal';
+import RequestIntroductionModal from '@/components/RequestIntroductionModal';
 
 interface BuyersPageProps {
   userType: 'developer' | 'agent' | 'broker';
@@ -30,6 +34,7 @@ interface BuyersPageProps {
 
 const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   const { currentTier } = useSubscription();
+  const { isContacted, getContactInfo } = useContactedBuyers();
   const [searchQuery, setSearchQuery] = useState('');
   const [budgetFilter, setBudgetFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
@@ -37,7 +42,7 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   const [timelineFilter, setTimelineFilter] = useState('all');
   const [scoreFilter, setScoreFilter] = useState('all');
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
-  const [contactBuyer, setContactBuyer] = useState<Buyer | null>(null);
+  const [introductionBuyer, setIntroductionBuyer] = useState<Buyer | null>(null);
 
   const allBuyers = getBuyersByTier(currentTier);
 
@@ -70,8 +75,8 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
     return 'border-muted-foreground/30 text-muted-foreground';
   };
 
-  const handleContact = (buyer: Buyer) => {
-    setContactBuyer(buyer);
+  const handleRequestIntroduction = (buyer: Buyer) => {
+    setIntroductionBuyer(buyer);
   };
 
   const scoreSubtext = currentTier === 'access' 
@@ -258,19 +263,38 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
 
                 {/* Footer */}
                 <div className="flex items-center justify-between pt-2 border-t">
-                  {buyer.score >= 80 && currentTier === 'enterprise' ? (
-                    <span className="text-xs text-amber-600 font-medium">
-                      Only you can contact first
-                    </span>
+                  {isContacted(buyer.id) ? (
+                    <>
+                      <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Introduced via {getContactInfo(buyer.id)?.channel === 'whatsapp' ? 'WhatsApp' : 'Email'}
+                      </Badge>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-xs"
+                        onClick={() => setIntroductionBuyer(buyer)}
+                      >
+                        View Details
+                      </Button>
+                    </>
                   ) : (
-                    <span className="text-xs text-muted-foreground">
-                      <Users className="h-3 w-3 inline mr-1" />
-                      {buyer.contactsRemaining} of 4 contacts left
-                    </span>
+                    <>
+                      {buyer.score >= 80 && currentTier === 'enterprise' ? (
+                        <span className="text-xs text-amber-600 font-medium">
+                          Only you can contact first
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          <Users className="h-3 w-3 inline mr-1" />
+                          {4 - (buyer.contactsCount || 0)} of 4 contacts left
+                        </span>
+                      )}
+                      <Button size="sm" className="h-7 text-xs" onClick={() => handleRequestIntroduction(buyer)}>
+                        Request Introduction
+                      </Button>
+                    </>
                   )}
-                  <Button size="sm" className="h-7 text-xs" onClick={() => handleContact(buyer)}>
-                    Contact
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -364,10 +388,10 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
 
               <div className="pt-4 border-t">
                 <Button className="w-full" onClick={() => {
-                  handleContact(selectedBuyer);
+                  handleRequestIntroduction(selectedBuyer);
                   setSelectedBuyer(null);
                 }}>
-                  Contact {selectedBuyer.name}
+                  Request Introduction
                 </Button>
               </div>
             </div>
@@ -375,12 +399,12 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Contact Buyer Modal */}
-      <ContactBuyerModal
-        isOpen={!!contactBuyer}
-        onClose={() => setContactBuyer(null)}
-        buyer={contactBuyer}
-        userType={userType}
+      {/* Request Introduction Modal */}
+      <RequestIntroductionModal
+        isOpen={!!introductionBuyer}
+        onClose={() => setIntroductionBuyer(null)}
+        buyer={introductionBuyer}
+        onSuccess={() => {}}
       />
     </DashboardLayout>
   );
