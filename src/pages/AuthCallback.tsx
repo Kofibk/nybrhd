@@ -20,33 +20,71 @@ const AuthCallback = () => {
       const errorParam = url.searchParams.get("error");
       const errorDescription = url.searchParams.get("error_description");
 
-      // Handle OAuth/magic-link errors from the URL
-      if (errorParam) {
-        setError(errorDescription || errorParam);
-        setProcessing(false);
-        return;
-      }
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const hashError = hashParams.get("error");
+      const hashErrorDescription = hashParams.get("error_description");
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
 
-      if (!code) {
-        // No code present - might already be authenticated via session
+      const normalizedError = (errorDescription || errorParam || hashErrorDescription || hashError || "").toLowerCase();
+
+      const friendlyInvalidLink =
+        normalizedError.includes("signature is invalid") ||
+        normalizedError.includes("one-time token not found") ||
+        normalizedError.includes("email link is invalid") ||
+        normalizedError.includes("expired");
+
+      // Handle OAuth/magic-link errors from the URL (query or hash)
+      if (errorParam || hashError) {
+        setError(
+          friendlyInvalidLink
+            ? "This sign-in link is invalid, expired, or has already been used. Please request a new link."
+            : (errorDescription || errorParam || hashErrorDescription || hashError)
+        );
         setProcessing(false);
         return;
       }
 
       try {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        // Implicit flow: tokens are returned in the URL hash
+        if (accessToken && refreshToken) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-        if (exchangeError) {
-          setError("This sign-in link is invalid or has expired. Please request a new one.");
+          if (setSessionError) {
+            setError("This sign-in link is invalid or expired. Please request a new one.");
+            setProcessing(false);
+            return;
+          }
+
+          // Clear tokens from URL
+          window.history.replaceState({}, "", url.pathname + url.search);
           setProcessing(false);
           return;
         }
 
-        // Clean up URL to avoid re-processing the code on refresh
-        url.searchParams.delete("code");
-        window.history.replaceState({}, "", url.pathname);
+        // PKCE flow: code is returned in query params
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            setError("This sign-in link is invalid or expired. Please request a new one.");
+            setProcessing(false);
+            return;
+          }
+
+          // Clean up URL to avoid re-processing the code on refresh
+          url.searchParams.delete("code");
+          window.history.replaceState({}, "", url.pathname);
+          setProcessing(false);
+          return;
+        }
+
+        // No callback params - might already be authenticated via session
         setProcessing(false);
-      } catch (err) {
+      } catch {
         setError("An unexpected error occurred. Please try again.");
         setProcessing(false);
       }
