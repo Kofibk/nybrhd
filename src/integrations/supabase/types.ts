@@ -62,26 +62,108 @@ export type Database = {
         }
         Relationships: []
       }
-      buyer_contacts: {
+      buyer_assignments: {
         Row: {
-          buyer_id: string
-          contacted_at: string
+          airtable_lead_id: number | null
+          airtable_record_id: string
+          assigned_at: string | null
+          assigned_by: string | null
+          company_id: string | null
+          created_at: string | null
+          expires_at: string | null
           id: string
+          notes: string | null
+          status: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          buyer_id: string
-          contacted_at?: string
+          airtable_lead_id?: number | null
+          airtable_record_id: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
           id?: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          buyer_id?: string
-          contacted_at?: string
+          airtable_lead_id?: number | null
+          airtable_record_id?: string
+          assigned_at?: string | null
+          assigned_by?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
           id?: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "buyer_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyer_contacts: {
+        Row: {
+          airtable_record_id: string
+          assignment_id: string
+          contact_method: string
+          contacted_at: string | null
+          created_at: string | null
+          id: string
+          message_content: string | null
+          outcome: string | null
+          response_at: string | null
+          response_received: boolean | null
+          user_id: string
+        }
+        Insert: {
+          airtable_record_id: string
+          assignment_id: string
+          contact_method: string
+          contacted_at?: string | null
+          created_at?: string | null
+          id?: string
+          message_content?: string | null
+          outcome?: string | null
+          response_at?: string | null
+          response_received?: boolean | null
+          user_id: string
+        }
+        Update: {
+          airtable_record_id?: string
+          assignment_id?: string
+          contact_method?: string
+          contacted_at?: string | null
+          created_at?: string | null
+          id?: string
+          message_content?: string | null
+          outcome?: string | null
+          response_at?: string | null
+          response_received?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_contacts_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "buyer_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       buyers: {
         Row: {
