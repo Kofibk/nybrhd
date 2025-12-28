@@ -53,6 +53,7 @@ import AdminRoute from "./components/admin/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AirtableTest from "./pages/AirtableTest";
 import AITestPage from "./pages/AITestPage";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const AppRoutes = () => {
       <Route path="/resources" element={<Resources />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/dashboard" element={<Dashboard />} />
       
