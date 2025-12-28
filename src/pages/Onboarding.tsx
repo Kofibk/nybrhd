@@ -455,6 +455,31 @@ const Onboarding = () => {
         await supabase.from('team_invitations').insert(invitations);
       }
 
+      // Redirect to Stripe checkout for selected plan
+      try {
+        const { data, error: checkoutError } = await supabase.functions.invoke('create-checkout-session', {
+          body: {
+            planType: formData.selectedTier,
+            companyId: companyId,
+          },
+        });
+
+        if (checkoutError) throw checkoutError;
+
+        if (data?.url) {
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
+          return;
+        }
+      } catch (stripeError: any) {
+        console.error('Stripe checkout error:', stripeError);
+        // Still mark onboarding complete, user can subscribe from settings
+        toast({
+          title: "Onboarding complete",
+          description: "You can complete your subscription from Settings.",
+        });
+      }
+
       setIsComplete(true);
     } catch (error: any) {
       console.error('Onboarding error:', error);

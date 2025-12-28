@@ -60,23 +60,17 @@ const RequestIntroductionModal: React.FC<RequestIntroductionModalProps> = ({
   onSuccess,
 }) => {
   const { user, profile } = useAuth();
-  const { currentTier } = useSubscription();
+  const { currentTier, tierConfig, contactsUsed, contactsRemaining, setContactsUsed } = useSubscription();
   const [channel, setChannel] = useState<'email' | 'whatsapp'>('email');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Get contact limits based on tier
-  const getContactLimit = () => {
-    switch (currentTier) {
-      case 'enterprise':
-        return 100;
-      case 'growth':
-        return 30;
-      default:
-        return 10;
-    }
+  // Check if user has reached their contact limit
+  const hasReachedLimit = () => {
+    if (tierConfig.monthlyContacts === 'unlimited') return false;
+    return contactsUsed >= tierConfig.monthlyContacts;
   };
 
   // Profile data from auth context
@@ -116,12 +110,40 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
   }, [isOpen, buyer]);
 
   const handleSend = async () => {
-    if (!buyer) return;
+    if (!buyer || !user) return;
+
+    // Check contact limit before sending
+    if (hasReachedLimit()) {
+      setStatus('error');
+      setErrorMessage('Monthly contact limit reached. Upgrade your plan to contact more buyers.');
+      return;
+    }
 
     setIsSending(true);
     setErrorMessage('');
 
     try {
+      // First, record the contact in buyer_contacts table
+      const { error: contactError } = await supabase
+        .from('buyer_contacts')
+        .insert({
+          user_id: user.id,
+          airtable_record_id: buyer.id,
+          assignment_id: crypto.randomUUID(), // Generate a placeholder assignment ID
+          contact_method: channel,
+          contacted_at: new Date().toISOString(),
+          message_content: message,
+        });
+
+      if (contactError) {
+        console.error('Error recording contact:', contactError);
+        // Continue anyway - don't block the user
+      } else {
+        // Update local contact count
+        setContactsUsed(contactsUsed + 1);
+      }
+
+      // Then send the introduction
       const { data, error } = await supabase.functions.invoke('send-introduction', {
         body: {
           buyerId: buyer.id,
@@ -163,7 +185,9 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
 
   const canSendEmail = buyer?.email;
   const canSendWhatsApp = buyer?.whatsapp_number || buyer?.phone;
-  const contactsRemaining = getContactLimit();
+  const displayContactsRemaining = typeof contactsRemaining === 'number' 
+    ? contactsRemaining 
+    : 'unlimited';
 
   if (!buyer) return null;
 
@@ -306,13 +330,22 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
               </div>
             </div>
 
-            {/* Warning */}
-            <Alert variant="default" className="bg-amber-50 border-amber-200">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800 text-sm">
-                This will use 1 of your {contactsRemaining} remaining contacts this month
-              </AlertDescription>
-            </Alert>
+            {/* Warning or Limit Reached */}
+            {hasReachedLimit() ? (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  You've reached your monthly contact limit. Upgrade your plan to contact more buyers.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Alert variant="default" className="bg-amber-50 border-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800 text-sm">
+                  This will use 1 of your {displayContactsRemaining} remaining contacts this month
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Error State */}
             {status === 'error' && errorMessage && (
@@ -331,13 +364,15 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
             </Button>
             <Button
               onClick={handleSend}
-              disabled={isSending || (!canSendEmail && !canSendWhatsApp)}
+              disabled={isSending || (!canSendEmail && !canSendWhatsApp) || hasReachedLimit()}
             >
               {isSending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Sending...
                 </>
+              ) : hasReachedLimit() ? (
+                'Limit Reached'
               ) : (
                 'Send Introduction'
               )}
