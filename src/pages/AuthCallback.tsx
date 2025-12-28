@@ -14,6 +14,8 @@ const AuthCallback = () => {
   const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
+    let timeoutId: number | undefined;
+
     const handleCallback = async () => {
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
@@ -26,7 +28,13 @@ const AuthCallback = () => {
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
 
-      const normalizedError = (errorDescription || errorParam || hashErrorDescription || hashError || "").toLowerCase();
+      const normalizedError = (
+        errorDescription ||
+        errorParam ||
+        hashErrorDescription ||
+        hashError ||
+        ""
+      ).toLowerCase();
 
       const friendlyInvalidLink =
         normalizedError.includes("signature is invalid") ||
@@ -34,12 +42,20 @@ const AuthCallback = () => {
         normalizedError.includes("email link is invalid") ||
         normalizedError.includes("expired");
 
+      // Stop indefinite spinner: if we can't establish a session quickly, show recovery.
+      timeoutId = window.setTimeout(() => {
+        setError(
+          "Still signing you in — this usually means the link was opened in a different browser, expired, or was already used. Please request a new link."
+        );
+        setProcessing(false);
+      }, 15000);
+
       // Handle OAuth/magic-link errors from the URL (query or hash)
       if (errorParam || hashError) {
         setError(
           friendlyInvalidLink
             ? "This sign-in link is invalid, expired, or has already been used. Please request a new link."
-            : (errorDescription || errorParam || hashErrorDescription || hashError)
+            : errorDescription || errorParam || hashErrorDescription || hashError
         );
         setProcessing(false);
         return;
@@ -91,6 +107,10 @@ const AuthCallback = () => {
     };
 
     handleCallback();
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, []);
 
   // Redirect authenticated users to appropriate dashboard
