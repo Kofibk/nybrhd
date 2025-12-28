@@ -39,6 +39,7 @@ import LeadsManagement from "./components/LeadsManagement";
 import DeveloperLeadsPage from "./pages/DeveloperLeadsPage";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import Settings from "./pages/Settings";
+import SubscriptionPage from "./pages/SubscriptionPage";
 import AIInsightsPage from "./pages/AIInsightsPage";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
@@ -101,6 +102,7 @@ const AppRoutes = () => {
       } />
       <Route path="/developer/insights" element={<ProtectedRoute><AIInsightsPage userType="developer" /></ProtectedRoute>} />
       <Route path="/developer/settings" element={<ProtectedRoute><TieredSettingsPage userType="developer" /></ProtectedRoute>} />
+      <Route path="/developer/subscription" element={<ProtectedRoute><SubscriptionPage userType="developer" /></ProtectedRoute>} />
 
       {/* Agent Routes */}
       <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
@@ -129,6 +131,7 @@ const AppRoutes = () => {
       } />
       <Route path="/agent/insights" element={<ProtectedRoute><AIInsightsPage userType="agent" /></ProtectedRoute>} />
       <Route path="/agent/settings" element={<ProtectedRoute><TieredSettingsPage userType="agent" /></ProtectedRoute>} />
+      <Route path="/agent/subscription" element={<ProtectedRoute><SubscriptionPage userType="agent" /></ProtectedRoute>} />
 
       {/* Broker Routes */}
       <Route path="/broker" element={<ProtectedRoute><BrokerDashboard /></ProtectedRoute>} />
@@ -157,6 +160,7 @@ const AppRoutes = () => {
       } />
       <Route path="/broker/insights" element={<ProtectedRoute><AIInsightsPage userType="broker" /></ProtectedRoute>} />
       <Route path="/broker/settings" element={<ProtectedRoute><TieredSettingsPage userType="broker" /></ProtectedRoute>} />
+      <Route path="/broker/subscription" element={<ProtectedRoute><SubscriptionPage userType="broker" /></ProtectedRoute>} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
