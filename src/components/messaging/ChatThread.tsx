@@ -11,11 +11,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   ArrowLeft, Send, Mail, MessageCircle, Check, CheckCheck, 
-  Calendar, Zap, Loader2, Info
+  Calendar, Loader2
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Message, useMessaging } from '@/hooks/useMessaging';
-import { demoBuyers, getScoreBreakdown } from '@/lib/buyerData';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
@@ -41,8 +40,24 @@ const ChatThread = ({ userType }: ChatThreadProps) => {
   const { fetchMessages, sendMessage, markConversationRead, closeConversation } = useMessaging();
   const { currentTier } = useSubscription();
 
-  const buyer = conversation ? demoBuyers.find(b => b.id === conversation.buyer_id) : null;
-  const scoreBreakdown = buyer ? getScoreBreakdown(buyer) : null;
+  // Get buyer display info from conversation
+  const getBuyerDisplayInfo = (buyerId: string | undefined) => {
+    if (!buyerId) return null;
+    return {
+      name: `Buyer ${buyerId.slice(-4)}`,
+      initials: buyerId.slice(0, 2).toUpperCase(),
+      location: 'Unknown',
+      budget: 'Not specified',
+      bedrooms: 'Not specified',
+      timeline: 'Not specified',
+      paymentMethod: 'Not specified',
+      purpose: 'Not specified',
+      preferredAreas: [] as string[],
+      score: 0,
+    };
+  };
+
+  const buyer = conversation ? getBuyerDisplayInfo(conversation.buyer_id) : null;
 
   const loadMessages = useCallback(async () => {
     if (!conversationId) return;
@@ -199,20 +214,14 @@ const ChatThread = ({ userType }: ChatThreadProps) => {
             {buyer && (
               <>
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-semibold text-primary">
-                  {buyer.name.split(' ').map(n => n[0]).join('')}
+                  {buyer?.initials}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{buyer.name}</span>
-                    {currentTier === 'enterprise' && buyer.score >= 80 && (
-                      <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">
-                        <Zap className="h-3 w-3 mr-1" />
-                        First Refusal
-                      </Badge>
-                    )}
-                    <Badge variant="outline">{buyer.score}</Badge>
+                    <span className="font-semibold">{buyer?.name}</span>
+                    <Badge variant="outline">{buyer?.score}</Badge>
                   </div>
-                  <div className="text-sm text-muted-foreground">{buyer.location}</div>
+                  <div className="text-sm text-muted-foreground">{buyer?.location}</div>
                 </div>
               </>
             )}
@@ -350,53 +359,8 @@ const ChatThread = ({ userType }: ChatThreadProps) => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="font-semibold">Score</span>
-              <Badge className="text-lg px-3 py-1">{buyer.score}</Badge>
+              <Badge className="text-lg px-3 py-1">{buyer?.score}</Badge>
             </div>
-            
-            {currentTier !== 'access' && scoreBreakdown && (
-              <div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowScoreBreakdown(!showScoreBreakdown)}
-                  className="w-full justify-between"
-                >
-                  <span className="flex items-center gap-1">
-                    <Info className="h-3 w-3" />
-                    Why this score?
-                  </span>
-                </Button>
-                
-                {showScoreBreakdown && (
-                  <div className="mt-2 p-3 bg-muted/50 rounded-lg space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Timeline</span>
-                      <span className="font-medium">+{scoreBreakdown.timeline}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Payment</span>
-                      <span className="font-medium">+{scoreBreakdown.paymentMethod}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Purpose</span>
-                      <span className="font-medium">+{scoreBreakdown.purpose}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Budget Match</span>
-                      <span className="font-medium">+{scoreBreakdown.budgetMatch}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Engagement</span>
-                      <span className="font-medium">+{scoreBreakdown.engagement}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-semibold">
-                      <span>Total</span>
-                      <span>{buyer.score}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Actions */}

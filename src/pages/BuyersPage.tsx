@@ -465,16 +465,8 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
               score: introductionBuyer.score,
               budget: introductionBuyer.budgetRange,
               location: introductionBuyer.location || introductionBuyer.country,
-              locationIcon: '📍',
               bedrooms: introductionBuyer.bedrooms || 'Any',
               timeline: introductionBuyer.timeline,
-              priority: introductionBuyer.score >= 80 ? 'P1-Urgent' : introductionBuyer.score >= 70 ? 'P1-High Intent' : 'P2-Qualified',
-              purpose: (introductionBuyer.purpose as 'Investment' | 'Primary Home' | 'For Child' | 'Holiday Home') || 'Investment',
-              paymentMethod: introductionBuyer.paymentMethod?.toLowerCase().includes('cash') ? 'cash' : 'mortgage',
-              preferredAreas: introductionBuyer.location ? [introductionBuyer.location] : [],
-              preferred_contact_method: introductionBuyer.preferredComm?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 'email',
-              contactsRemaining: 4,
-              lastActive: new Date(),
             }}
           />
         )}

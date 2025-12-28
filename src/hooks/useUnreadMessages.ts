@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { demoConversations } from '@/lib/buyerData';
 
 export const useUnreadMessages = () => {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -8,16 +7,13 @@ export const useUnreadMessages = () => {
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      // First try to get from Supabase
       const { data, error } = await supabase
         .from('conversations')
         .select('unread_count');
 
       if (error) {
         console.error('Error fetching unread count:', error);
-        // Fallback to demo data
-        const demoUnread = demoConversations.filter(c => c.unread).length;
-        setUnreadCount(demoUnread);
+        setUnreadCount(0);
         return;
       }
 
@@ -25,14 +21,11 @@ export const useUnreadMessages = () => {
         const total = data.reduce((sum, c) => sum + (c.unread_count || 0), 0);
         setUnreadCount(total);
       } else {
-        // Use demo data if no Supabase data
-        const demoUnread = demoConversations.filter(c => c.unread).length;
-        setUnreadCount(demoUnread);
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error('Error in fetchUnreadCount:', error);
-      const demoUnread = demoConversations.filter(c => c.unread).length;
-      setUnreadCount(demoUnread);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }

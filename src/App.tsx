@@ -40,6 +40,7 @@ import DeveloperLeadsPage from "./pages/DeveloperLeadsPage";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import Settings from "./pages/Settings";
 import SubscriptionPage from "./pages/SubscriptionPage";
+import SubscribePage from "./pages/SubscribePage";
 import AIInsightsPage from "./pages/AIInsightsPage";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
@@ -73,6 +74,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/subscribe" element={<SubscribePage />} />
       <Route path="/dashboard" element={<Dashboard />} />
       
       {/* Developer Routes */}

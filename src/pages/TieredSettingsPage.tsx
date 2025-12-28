@@ -13,8 +13,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/subscriptionTiers';
-import { accountManager } from '@/lib/buyerData';
-import { 
+import {
   getDemoOnboardingSubmissions, 
   isUuid,
   type DemoOnboardingSubmission 
@@ -836,12 +835,12 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-xl font-bold text-primary">{accountManager.avatar}</span>
+                    <span className="text-xl font-bold text-primary">NS</span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">{accountManager.name}</h3>
-                    <p className="text-sm text-muted-foreground">{accountManager.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{accountManager.availability}</p>
+                    <h3 className="text-lg font-semibold">Naybourhood Support</h3>
+                    <p className="text-sm text-muted-foreground">Customer Success</p>
+                    <p className="text-xs text-muted-foreground mt-1">Mon-Fri, 9am-6pm</p>
                   </div>
                 </div>
 
@@ -849,7 +848,7 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                   <Button 
                     variant="outline" 
                     className="flex-1"
-                    onClick={() => window.location.href = `tel:${accountManager.phone}`}
+                    onClick={() => window.location.href = `tel:+442079460958`}
                   >
                     <Phone className="h-4 w-4 mr-2" />
                     Call
@@ -857,14 +856,14 @@ const TieredSettingsPage: React.FC<TieredSettingsPageProps> = ({ userType }) => 
                   <Button 
                     variant="outline" 
                     className="flex-1"
-                    onClick={() => window.location.href = `mailto:${accountManager.email}`}
+                    onClick={() => window.location.href = `mailto:support@naybourhood.com`}
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Email
                   </Button>
                   <Button 
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => window.open(`https://wa.me/${accountManager.whatsapp.replace(/\D/g, '')}`, '_blank')}
+                    onClick={() => window.open(`https://wa.me/442079460958`, '_blank')}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     WhatsApp

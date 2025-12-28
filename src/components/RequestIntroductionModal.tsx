@@ -29,8 +29,22 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Buyer } from '@/lib/buyerData';
 import { cn } from '@/lib/utils';
+
+// Define local Buyer type
+interface Buyer {
+  id: string;
+  name: string;
+  location: string;
+  budget: string;
+  bedrooms: string;
+  timeline: string;
+  score: number;
+  email?: string;
+  phone?: string;
+  whatsapp_number?: string;
+  preferred_contact_method?: string;
+}
 
 interface RequestIntroductionModalProps {
   isOpen: boolean;

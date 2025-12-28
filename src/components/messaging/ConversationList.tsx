@@ -9,10 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageCircle, Mail, Zap, Users } from 'lucide-react';
+import { MessageCircle, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Conversation, useMessaging } from '@/hooks/useMessaging';
-import { demoBuyers } from '@/lib/buyerData';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -26,8 +25,15 @@ const ConversationList = ({ userType }: ConversationListProps) => {
   const { currentTier } = useSubscription();
   const navigate = useNavigate();
 
-  const getBuyer = (buyerId: string) => {
-    return demoBuyers.find(b => b.id === buyerId);
+  // Get buyer placeholder info from buyer_id
+  const getBuyerDisplayInfo = (buyerId: string) => {
+    return {
+      name: `Buyer ${buyerId.slice(-4)}`,
+      initials: buyerId.slice(0, 2).toUpperCase(),
+      location: 'Unknown',
+      budget: 'Not specified',
+      score: 0,
+    };
   };
 
   const filteredConversations = useMemo(() => {
@@ -112,8 +118,7 @@ const ConversationList = ({ userType }: ConversationListProps) => {
         <ScrollArea className="h-[calc(100vh-280px)]">
           <div className="space-y-3 pr-4">
             {filteredConversations.map(conversation => {
-              const buyer = getBuyer(conversation.buyer_id);
-              if (!buyer) return null;
+              const buyerInfo = getBuyerDisplayInfo(conversation.buyer_id);
 
               return (
                 <Card
@@ -127,7 +132,7 @@ const ConversationList = ({ userType }: ConversationListProps) => {
                     {/* Avatar */}
                     <div className="relative">
                       <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-lg font-semibold text-primary">
-                        {buyer.name.split(' ').map(n => n[0]).join('')}
+                        {buyerInfo.initials}
                       </div>
                       {conversation.unread_count > 0 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
@@ -140,7 +145,7 @@ const ConversationList = ({ userType }: ConversationListProps) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <span className={`font-medium truncate ${conversation.unread_count > 0 ? 'font-semibold' : ''}`}>
-                          {buyer.name}
+                          {buyerInfo.name}
                         </span>
                         <span className="text-xs text-muted-foreground shrink-0">
                           {formatDistanceToNow(new Date(conversation.last_message_at), { addSuffix: true })}
@@ -152,26 +157,9 @@ const ConversationList = ({ userType }: ConversationListProps) => {
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{buyer.location}</span>
-                          <span>•</span>
-                          <span>{buyer.budget}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          {currentTier === 'enterprise' && buyer.score >= 80 && (
-                            <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">
-                              <Zap className="h-3 w-3 mr-1" />
-                              First Refusal
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className={`text-xs ${getStatusColor(conversation.status)}`}>
-                            {getStatusLabel(conversation.status)}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {buyer.score}
-                          </Badge>
-                        </div>
+                        <Badge variant="outline" className={`text-xs ${getStatusColor(conversation.status)}`}>
+                          {getStatusLabel(conversation.status)}
+                        </Badge>
                       </div>
                     </div>
                   </div>
