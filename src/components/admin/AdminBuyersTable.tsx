@@ -96,7 +96,7 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, user_id, full_name, email, company_id')
         .order('full_name');
       if (error) throw error;
       return data || [];
@@ -256,6 +256,10 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
     if (!buyerToAssign || !selectedCaller) return;
     
     try {
+      // Find the caller's user_id and company_id from profiles
+      const callerProfile = profiles?.find(p => p.full_name === selectedCaller || p.email === selectedCaller);
+      
+      // Update Airtable
       await updateBuyer.mutateAsync({
         recordId: buyerToAssign.id,
         data: {
@@ -263,6 +267,27 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
           'Status': 'Contacted - In Progress',
         },
       });
+      
+      // Create assignment record in Supabase
+      if (callerProfile?.user_id) {
+        const { data: session } = await supabase.auth.getSession();
+        const { error: assignError } = await supabase
+          .from('buyer_assignments')
+          .upsert({
+            airtable_record_id: buyerToAssign.id,
+            airtable_lead_id: buyerToAssign.leadId,
+            user_id: callerProfile.user_id,
+            company_id: callerProfile.company_id,
+            assigned_by: session?.session?.user?.id,
+            status: 'assigned',
+          }, {
+            onConflict: 'airtable_record_id,user_id',
+          });
+        
+        if (assignError) {
+          console.error('Error creating assignment record:', assignError);
+        }
+      }
       
       // Send email notification
       await sendAssignmentNotification(buyerToAssign, selectedCaller);
@@ -289,8 +314,11 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
     
     try {
       const buyersToUpdate = filteredBuyers.filter(b => selectedBuyers.has(b.id));
+      const callerProfile = profiles?.find(p => p.full_name === selectedCaller || p.email === selectedCaller);
+      const { data: session } = await supabase.auth.getSession();
       
       for (const buyer of buyersToUpdate) {
+        // Update Airtable
         await updateBuyer.mutateAsync({
           recordId: buyer.id,
           data: {
@@ -298,6 +326,22 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
             'Status': 'Contacted - In Progress',
           },
         });
+        
+        // Create assignment record in Supabase
+        if (callerProfile?.user_id) {
+          await supabase
+            .from('buyer_assignments')
+            .upsert({
+              airtable_record_id: buyer.id,
+              airtable_lead_id: buyer.leadId,
+              user_id: callerProfile.user_id,
+              company_id: callerProfile.company_id,
+              assigned_by: session?.session?.user?.id,
+              status: 'assigned',
+            }, {
+              onConflict: 'airtable_record_id,user_id',
+            });
+        }
         
         // Send email notification for each buyer
         await sendAssignmentNotification(buyer, selectedCaller);

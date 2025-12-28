@@ -82,13 +82,13 @@ export const SubscriptionProvider = ({
         setSubscriptionEnd(subscription.billing_cycle_end);
       }
 
-      // Fetch contacts used this billing cycle
+      // Fetch contacts used this billing cycle from buyer_contacts table
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
       const { count } = await supabase
-        .from('user_contacts')
+        .from('buyer_contacts')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user?.id)
         .gte('contacted_at', startOfMonth.toISOString());

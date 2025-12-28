@@ -116,10 +116,12 @@ export const useMessaging = () => {
 
   const getBuyerContactCount = useCallback(async (buyerId: string): Promise<number> => {
     try {
+      // Count via buyer_assignments table (new schema)
       const { count, error } = await supabase
-        .from('buyer_contacts')
+        .from('buyer_assignments')
         .select('*', { count: 'exact', head: true })
-        .eq('buyer_id', buyerId);
+        .eq('airtable_record_id', buyerId)
+        .in('status', ['assigned', 'contacted', 'in_progress']);
 
       if (error) throw error;
       return count || 0;
@@ -207,10 +209,9 @@ export const useMessaging = () => {
         if (convError) throw convError;
         conversationId = newConv.id;
 
-        // Track the contact if new
+        // Track the contact if new (only use user_contacts now, buyer_contacts has new schema)
         if (!alreadyContacted) {
           await supabase.from('user_contacts').insert({ user_id: userId, buyer_id: buyerId });
-          await supabase.from('buyer_contacts').insert({ buyer_id: buyerId, user_id: userId });
         }
       }
 
