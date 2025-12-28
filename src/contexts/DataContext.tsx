@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { developerCampaigns, developerLeads } from '@/lib/developerDemoData';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
 interface DataInsights {
   recommendations: string[];
@@ -19,7 +18,6 @@ interface UserData {
 }
 
 interface UploadedDataContextType {
-  // Per-user type data accessors
   getCampaignData: (userType: UserType) => any[];
   setCampaignData: (userType: UserType, data: any[]) => void;
   getCampaignFileName: (userType: UserType) => string;
@@ -96,19 +94,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const initial: Record<string, UserData> = {};
     
     userTypes.forEach(userType => {
-      // Check if developer has stored data, otherwise use demo data
+      // Load from storage - no demo data fallback
       const storedCampaignData = loadFromStorage(getStorageKey(userType, 'campaign_data'), []);
       const storedLeadData = loadFromStorage(getStorageKey(userType, 'lead_data'), []);
       
-      // Use demo data for developer if no data is stored
-      const useDemoData = userType === 'developer' && storedCampaignData.length === 0 && storedLeadData.length === 0;
-      
       initial[userType] = {
-        campaignData: useDemoData ? developerCampaigns : storedCampaignData,
-        campaignFileName: useDemoData ? 'Horizon Homes Demo Data' : loadFromStorage(getStorageKey(userType, 'campaign_filename'), ''),
+        campaignData: storedCampaignData,
+        campaignFileName: loadFromStorage(getStorageKey(userType, 'campaign_filename'), ''),
         campaignInsights: loadFromStorage(getStorageKey(userType, 'campaign_insights'), null),
-        leadData: useDemoData ? developerLeads : storedLeadData,
-        leadFileName: useDemoData ? 'Horizon Homes Demo Leads' : loadFromStorage(getStorageKey(userType, 'lead_filename'), ''),
+        leadData: storedLeadData,
+        leadFileName: loadFromStorage(getStorageKey(userType, 'lead_filename'), ''),
         leadInsights: loadFromStorage(getStorageKey(userType, 'lead_insights'), null),
       };
     });
@@ -218,7 +213,6 @@ export function useUploadedData(userType: UserType = 'admin') {
     throw new Error('useUploadedData must be used within a DataProvider');
   }
   
-  // Return a simplified interface for the specific user type
   return {
     campaignData: context.getCampaignData(userType),
     setCampaignData: (data: any[]) => context.setCampaignData(userType, data),

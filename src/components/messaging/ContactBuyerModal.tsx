@@ -11,9 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MapPin, Mail, MessageCircle, Loader2, AlertCircle } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { Buyer } from '@/lib/buyerData';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+
+// Define local Buyer type for this component
+interface Buyer {
+  id: string;
+  name: string;
+  location: string;
+  budget: string;
+  score: number;
+}
 
 interface ContactBuyerModalProps {
   isOpen: boolean;

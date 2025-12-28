@@ -50,7 +50,7 @@ import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { developerLeads } from "@/lib/developerDemoData";
+import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
 
 interface DeveloperLeadsTableProps {
   searchQuery: string;
@@ -90,25 +90,28 @@ const DeveloperLeadsTable = ({ searchQuery }: DeveloperLeadsTableProps) => {
   const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch real data from Airtable
+  const { buyers: airtableBuyers, isLoading: airtableLoading } = useAirtableBuyersForTable({ enabled: true });
   
-  // Convert developer demo data to table format
+  // Convert Airtable data to lead format
   const leads: DeveloperLead[] = useMemo(() => {
-    return developerLeads.map((lead, index) => ({
-      id: `dev-lead-${index}`,
-      dateAdded: lead["Created Date"] || new Date().toISOString(),
-      name: lead.Name || "Unknown",
-      phone: lead.Phone || "",
-      email: lead.Email || "",
-      budgetRange: lead.Budget || "",
-      preferredBedrooms: lead.Bedrooms || "",
-      developmentName: lead.Campaign || "",
-      status: lead.Status || "New",
-      source: lead["Source Platform"] || "Facebook",
-      timeline: lead.Timeline || "",
-      leadScore: lead["Lead Score"] || 50,
-      notes: lead.Notes || "",
+    return airtableBuyers.map((buyer, index) => ({
+      id: buyer.id || `lead-${index}`,
+      dateAdded: buyer.createdTime || new Date().toISOString(),
+      name: buyer.name || "Unknown",
+      phone: buyer.phone || "",
+      email: buyer.email || "",
+      budgetRange: buyer.budgetRange || "",
+      preferredBedrooms: buyer.bedrooms || "",
+      developmentName: buyer.location || "",
+      status: buyer.status || "New",
+      source: "Airtable",
+      timeline: buyer.timeline || "",
+      leadScore: buyer.score || 50,
+      notes: "",
     }));
-  }, []);
+  }, [airtableBuyers]);
 
   // Get unique statuses and developments
   const uniqueStatuses = useMemo(() => {

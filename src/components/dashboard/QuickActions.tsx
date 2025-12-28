@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { calculateStats } from '@/lib/buyerData';
+import { useAirtableBuyersForTable } from '@/hooks/useAirtableBuyers';
+import { useAirtableCampaigns } from '@/hooks/useAirtable';
 import { Zap, Megaphone, Brain, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -44,8 +45,14 @@ interface QuickActionsProps {
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ className, userType }) => {
   const navigate = useNavigate();
-  const stats = calculateStats('enterprise');
   const basePath = `/${userType}`;
+  
+  // Fetch real data
+  const { buyers } = useAirtableBuyersForTable({ enabled: true });
+  const { data: campaignsData } = useAirtableCampaigns({ filterByFormula: "{status} = 'active'" });
+  
+  const firstRefusalCount = buyers.filter(b => b.score >= 80).length;
+  const activeCampaigns = campaignsData?.records?.length || 0;
 
   const handleExport = () => {
     toast.success('Generating report...', {
@@ -56,14 +63,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ className, userType 
   const actions: QuickActionProps[] = [
     {
       title: 'First Refusal',
-      subtitle: `${stats.firstRefusalCount} premium buyers`,
+      subtitle: `${firstRefusalCount} premium buyers`,
       icon: Zap,
       iconBg: 'bg-amber-500',
-      onClick: () => navigate(`${basePath}/first-refusal`),
+      onClick: () => navigate(`${basePath}/matches`),
     },
     {
       title: 'Campaigns',
-      subtitle: `${stats.activeCampaigns} active`,
+      subtitle: `${activeCampaigns} active`,
       icon: Megaphone,
       iconBg: 'bg-pink-500',
       onClick: () => navigate(`${basePath}/campaigns`),
