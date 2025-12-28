@@ -38,18 +38,20 @@ import {
   Upload,
   Check,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
 import whiteLogo from "@/assets/naybourhood-logo-white.svg";
 
 
-// Step definitions
+// Step definitions - added Subscription step before Launch
 const STEPS = [
   { id: 1, label: "Type", icon: User },
   { id: 2, label: "You", icon: User },
   { id: 3, label: "Company", icon: Building },
   { id: 4, label: "Team", icon: Users },
   { id: 5, label: "Goals", icon: Target },
-  { id: 6, label: "Launch", icon: Rocket },
+  { id: 6, label: "Plan", icon: CreditCard },
+  { id: 7, label: "Launch", icon: Rocket },
 ];
 
 // User type options
@@ -114,6 +116,53 @@ const GOALS = [
   },
 ];
 
+// Subscription tiers
+const SUBSCRIPTION_TIERS = [
+  {
+    id: 'access',
+    name: 'Access',
+    price: '£999',
+    period: '/month',
+    description: 'Perfect for getting started',
+    features: [
+      'Access to buyers (Score 50-69)',
+      'Basic lead information',
+      'Email support',
+      '10 buyer contacts/month',
+    ],
+  },
+  {
+    id: 'growth',
+    name: 'Growth',
+    price: '£2,249',
+    period: '/month',
+    description: 'For scaling your business',
+    features: [
+      'Access to all buyers (Score 50+)',
+      'Full lead profiles & scoring',
+      'Campaign analytics',
+      '25 buyer contacts/month',
+      'Priority support',
+    ],
+    recommended: true,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: '£3,999',
+    period: '/month',
+    description: 'For high-volume teams',
+    features: [
+      'Full database access',
+      'First refusal on high-intent buyers',
+      'Dedicated account manager',
+      'Unlimited buyer contacts',
+      'Custom campaigns',
+      'API access',
+    ],
+  },
+];
+
 // UK Regions
 const REGIONS = [
   "London", "South East", "South West", "East of England", 
@@ -138,6 +187,7 @@ interface OnboardingData {
   teamEmails: string[];
   goals: string[];
   upsellInterest: boolean;
+  selectedTier: 'access' | 'growth' | 'enterprise';
 }
 
 const Onboarding = () => {
@@ -179,6 +229,7 @@ const Onboarding = () => {
     teamEmails: [""],
     goals: [],
     upsellInterest: false,
+    selectedTier: 'growth', // Default to growth
   });
 
   // Update email when user loads
@@ -297,7 +348,7 @@ const Onboarding = () => {
       return;
     }
     
-    if (currentStep < 6) {
+    if (currentStep < 7) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       await saveProgress(nextStep);
@@ -384,7 +435,7 @@ const Onboarding = () => {
           goals: formData.goals,
           user_type: formData.userType,
           onboarding_completed: true,
-          onboarding_step: 6,
+          onboarding_step: 7,
           upsell_interest: withUpsell,
         })
         .eq('user_id', user.id);
@@ -759,8 +810,72 @@ const Onboarding = () => {
     </div>
   );
 
-  // Step 6: Upsell
+  // Step 6: Subscription Selection
   const renderStep6 = () => (
+    <div className="space-y-8 animate-fade-in">
+      <div className="text-center">
+        <h1 className="text-3xl md:text-4xl font-display mb-3">Choose Your Plan</h1>
+        <p className="text-muted-foreground text-lg">Select the plan that best fits your needs</p>
+      </div>
+      
+      <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        {SUBSCRIPTION_TIERS.map((tier) => {
+          const isSelected = formData.selectedTier === tier.id;
+          
+          return (
+            <Card
+              key={tier.id}
+              onClick={() => updateFormData('selectedTier', tier.id)}
+              className={`
+                p-6 cursor-pointer transition-all duration-200 hover:scale-[1.02] relative
+                ${isSelected 
+                  ? 'border-2 border-gold bg-gold/5' 
+                  : 'border-border hover:border-muted-foreground/50'
+                }
+              `}
+            >
+              {tier.recommended && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-gold-foreground">
+                  RECOMMENDED
+                </Badge>
+              )}
+              <div className="text-center space-y-4">
+                <h3 className="text-xl font-bold">{tier.name}</h3>
+                <div>
+                  <span className="text-3xl font-bold">{tier.price}</span>
+                  <span className="text-muted-foreground">{tier.period}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{tier.description}</p>
+                <ul className="space-y-2 text-left">
+                  {tier.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                {isSelected && (
+                  <div className="pt-2">
+                    <Badge variant="outline" className="border-gold text-gold">
+                      <Check className="w-3 h-3 mr-1" />
+                      Selected
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+      
+      <p className="text-center text-sm text-muted-foreground">
+        You can change your plan at any time. Payment will be set up after onboarding.
+      </p>
+    </div>
+  );
+
+  // Step 7: Upsell
+  const renderStep7 = () => (
     <div className="space-y-8 animate-fade-in">
       <div className="text-center">
         <Badge className="bg-gold text-gold-foreground mb-4">RECOMMENDED</Badge>
@@ -831,6 +946,7 @@ const Onboarding = () => {
       case 4: return renderStep4();
       case 5: return renderStep5();
       case 6: return renderStep6();
+      case 7: return renderStep7();
       default: return renderStep1();
     }
   };
@@ -856,7 +972,7 @@ const Onboarding = () => {
           {renderCurrentStep()}
           
           {/* Navigation buttons */}
-          {!isComplete && currentStep < 6 && (
+          {!isComplete && currentStep < 7 && (
             <div className="flex justify-between max-w-2xl mx-auto mt-12">
               <Button 
                 variant="ghost" 

@@ -1,5 +1,4 @@
 import DashboardLayout from '@/components/DashboardLayout';
-import { TierSwitcher } from '@/components/TierSwitcher';
 import { SubscriptionBanner } from '@/components/dashboard/SubscriptionBanner';
 import { StatsGrid } from '@/components/dashboard/StatsGrid';
 import { AccountManagerCard } from '@/components/dashboard/AccountManagerCard';
@@ -14,18 +13,15 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 const AgentDashboard = () => {
   const { profile } = useAuth();
   const { currentTier } = useSubscription();
-  const userName = profile?.full_name || 'User';
+  const firstName = profile?.full_name?.split(' ')[0] || 'there';
 
   return (
     <DashboardLayout 
-      title={`Welcome back, ${userName}`}
+      title={`Welcome back, ${firstName}`}
       userType="agent"
-      userName={userName}
+      userName={firstName}
     >
       <div className="space-y-6">
-        {/* Demo Tier Switcher */}
-        <TierSwitcher className="w-fit" />
-
         {/* Subscription Status Banner */}
         <SubscriptionBanner userType="agent" />
 

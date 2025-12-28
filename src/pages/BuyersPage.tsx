@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useContactedBuyers } from '@/hooks/useContactedBuyers';
-import { useAirtableBuyers } from '@/hooks/useAirtable';
-import { getBuyersByTier, getScoreBreakdown, Buyer } from '@/lib/buyerData';
+import { useAirtableBuyersForTable, TransformedBuyer } from '@/hooks/useAirtableBuyers';
 import { 
   Search, 
   MapPin, 
@@ -17,7 +16,6 @@ import {
   Clock, 
   CreditCard,
   Users,
-  ChevronUp,
   Info,
   Zap,
   CheckCircle,
@@ -34,52 +32,35 @@ interface BuyersPageProps {
   userType: 'developer' | 'agent' | 'broker';
 }
 
-// Helper to map Airtable buyer to our Buyer interface
-const mapAirtableBuyerToLocal = (record: { id: string; fields: Record<string, any> }): Buyer => {
-  const fields = record.fields;
-  const score = fields['Score'] || 0;
+// Score breakdown for display
+const getScoreBreakdown = (buyer: TransformedBuyer) => {
+  const breakdown = [];
   
-  // Determine priority based on score/intent
-  let priority: Buyer['priority'] = 'P3-Nurture';
-  const intent = fields['Intent']?.toLowerCase();
-  if (intent === 'hot' || score >= 80) priority = 'P1-Urgent';
-  else if (intent === 'warm' || score >= 70) priority = 'P1-High Intent';
-  else if (score >= 50) priority = 'P2-Qualified';
-
-  // Map purpose
-  let purpose: Buyer['purpose'] = 'Investment';
-  const purchasePurpose = fields['Purpose for Purchase']?.toLowerCase() || '';
-  if (purchasePurpose.includes('primary') || purchasePurpose.includes('residence')) purpose = 'Primary Home';
-  else if (purchasePurpose.includes('child')) purpose = 'For Child';
-  else if (purchasePurpose.includes('holiday')) purpose = 'Holiday Home';
-  else if (purchasePurpose.includes('investment')) purpose = 'Investment';
-
-  // Map payment method
-  const cashMortgage = fields['Cash/Mortgage']?.toLowerCase() || 'mortgage';
-  const paymentMethod: 'cash' | 'mortgage' = cashMortgage.includes('cash') ? 'cash' : 'mortgage';
-
-  return {
-    id: record.id,
-    name: fields['Lead Name'] || `${fields['first_name'] || ''} ${fields['last_name'] || ''}`.trim() || 'Unknown',
-    location: fields['Preferred Location'] || fields['Country'] || 'Not specified',
-    locationIcon: '📍',
-    score,
-    budget: fields['Budget Range'] || 'Not specified',
-    bedrooms: fields['Preferred Bedrooms'] || 'Any',
-    timeline: fields['Timeline to Purchase'] || 'Not specified',
-    paymentMethod,
-    priority,
-    purpose,
-    preferredAreas: fields['Preferred Location'] ? [fields['Preferred Location']] : [],
-    contactsRemaining: 4,
-    lastActive: new Date(),
-    isFirstRefusal: score >= 80,
-    email: fields['Email'],
-    phone: fields['Phone Number'],
-    whatsapp_number: fields['Preferred Communication']?.toLowerCase().includes('whatsapp') ? fields['Phone Number'] : undefined,
-    preferred_contact_method: fields['Preferred Communication']?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 'email',
-    contactsCount: 0,
-  };
+  // Timeline scoring
+  const timeline = buyer.timeline?.toLowerCase() || '';
+  if (timeline.includes('28 days') || timeline.includes('immediately')) {
+    breakdown.push({ label: 'Timeline', value: '+25', description: 'Within 28 days' });
+  } else if (timeline.includes('3 month')) {
+    breakdown.push({ label: 'Timeline', value: '+20', description: '0-3 months' });
+  } else {
+    breakdown.push({ label: 'Timeline', value: '+10', description: '3+ months' });
+  }
+  
+  // Payment method scoring
+  if (buyer.paymentMethod?.toLowerCase().includes('cash')) {
+    breakdown.push({ label: 'Payment', value: '+25', description: 'Cash buyer' });
+  } else {
+    breakdown.push({ label: 'Payment', value: '+15', description: 'Mortgage' });
+  }
+  
+  // Purpose scoring
+  if (buyer.purpose?.toLowerCase().includes('investment')) {
+    breakdown.push({ label: 'Purpose', value: '+20', description: 'Investment' });
+  } else {
+    breakdown.push({ label: 'Purpose', value: '+15', description: buyer.purpose || 'Primary home' });
+  }
+  
+  return breakdown;
 };
 
 const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
@@ -91,51 +72,40 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   const [bedroomsFilter, setBedroomsFilter] = useState('all');
   const [timelineFilter, setTimelineFilter] = useState('all');
   const [scoreFilter, setScoreFilter] = useState('all');
-  const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
-  const [introductionBuyer, setIntroductionBuyer] = useState<Buyer | null>(null);
+  const [selectedBuyer, setSelectedBuyer] = useState<TransformedBuyer | null>(null);
+  const [introductionBuyer, setIntroductionBuyer] = useState<TransformedBuyer | null>(null);
 
-  // Build Airtable filter based on subscription tier
-  const getScoreFilterFormula = () => {
-    // Only show "Contact Pending" status buyers
-    const baseFilter = "{Status} = 'Contact Pending'";
-    switch (currentTier) {
-      case 'access':
-        return `AND({Score} >= 50, {Score} < 70, ${baseFilter})`;
-      case 'growth':
-        return `AND({Score} >= 50, ${baseFilter})`;
-      case 'enterprise':
-        return baseFilter; // All buyers
-      default:
-        return `AND({Score} >= 50, {Score} < 70, ${baseFilter})`;
-    }
-  };
-
-  // Fetch from Airtable
+  // Fetch buyers from Airtable using the new hook
   const { 
-    data: buyersData, 
+    buyers: airtableBuyers, 
     isLoading, 
     error, 
     refetch 
-  } = useAirtableBuyers({
-    filterByFormula: getScoreFilterFormula(),
-    sort: [{ field: 'Score', direction: 'desc' }],
-  });
+  } = useAirtableBuyersForTable({ enabled: true });
 
-  // Map Airtable records to local Buyer format
-  const airtableBuyers = useMemo(() => {
-    if (!buyersData?.records) return [];
-    return buyersData.records.map(mapAirtableBuyerToLocal);
-  }, [buyersData]);
+  // Filter buyers based on subscription tier
+  const tierFilteredBuyers = useMemo(() => {
+    return airtableBuyers.filter(buyer => {
+      // Only show "Contact Pending" status buyers
+      if (buyer.status && buyer.status !== 'Contact Pending') return false;
+      
+      switch (currentTier) {
+        case 'access':
+          return buyer.score >= 50 && buyer.score < 70;
+        case 'growth':
+          return buyer.score >= 50;
+        case 'enterprise':
+          return true;
+        default:
+          return buyer.score >= 50 && buyer.score < 70;
+      }
+    });
+  }, [airtableBuyers, currentTier]);
 
-  // Fallback to demo data if Airtable fails or returns empty
-  const useDemoData = error || (!isLoading && airtableBuyers.length === 0);
-  const demoBuyers = getBuyersByTier(currentTier);
-  const allBuyers = useDemoData ? demoBuyers : airtableBuyers;
-
-  // Apply filters
-  const filteredBuyers = allBuyers.filter(buyer => {
+  // Apply user filters
+  const filteredBuyers = tierFilteredBuyers.filter(buyer => {
     if (searchQuery && !buyer.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (budgetFilter !== 'all' && !buyer.budget.toLowerCase().includes(budgetFilter.toLowerCase())) return false;
+    if (budgetFilter !== 'all' && !buyer.budgetRange.toLowerCase().includes(budgetFilter.toLowerCase())) return false;
     if (locationFilter !== 'all' && !buyer.location.toLowerCase().includes(locationFilter.toLowerCase())) return false;
     if (bedroomsFilter !== 'all' && !buyer.bedrooms.includes(bedroomsFilter)) return false;
     if (timelineFilter !== 'all' && !buyer.timeline.toLowerCase().includes(timelineFilter.toLowerCase())) return false;
@@ -154,6 +124,13 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
     return 'bg-muted text-muted-foreground';
   };
 
+  const getPriorityFromScore = (score: number) => {
+    if (score >= 80) return 'P1-Urgent';
+    if (score >= 70) return 'P1-High Intent';
+    if (score >= 50) return 'P2-Qualified';
+    return 'P3-Nurture';
+  };
+
   const getPriorityColor = (priority: string) => {
     if (priority.includes('Urgent')) return 'border-red-500/30 text-red-600 bg-red-500/5';
     if (priority.includes('High Intent')) return 'border-amber-500/30 text-amber-600 bg-amber-500/5';
@@ -161,7 +138,7 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
     return 'border-muted-foreground/30 text-muted-foreground';
   };
 
-  const handleRequestIntroduction = (buyer: Buyer) => {
+  const handleRequestIntroduction = (buyer: TransformedBuyer) => {
     setIntroductionBuyer(buyer);
   };
 
@@ -170,8 +147,6 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
     : currentTier === 'growth' 
       ? 'All Score 50+' 
       : 'Full database access';
-
-  const lockedBuyerCount = currentTier === 'access' ? getBuyersByTier('growth').length - demoBuyers.length : 0;
 
   // Loading state
   if (isLoading) {
@@ -194,33 +169,28 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground">
-              {scoreSubtext} • {allBuyers.length} buyers available
-              {useDemoData && error && (
-                <span className="ml-2 text-amber-500">(Demo data - Airtable unavailable)</span>
-              )}
+              {scoreSubtext} • {tierFilteredBuyers.length} buyers available
             </p>
           </div>
-          {!useDemoData && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => refetch()}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
         </div>
 
-        {/* Error banner if using demo data due to error */}
+        {/* Error banner */}
         {error && (
           <Card className="border-amber-500/30 bg-amber-500/5">
             <CardContent className="py-3 flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-amber-500" />
               <div className="flex-1">
                 <p className="text-sm font-medium">Could not load live data</p>
-                <p className="text-xs text-muted-foreground">Showing demo buyers. Click refresh to try again.</p>
+                <p className="text-xs text-muted-foreground">Click refresh to try again.</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
                 Retry
@@ -308,236 +278,207 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
           )}
         </div>
 
-        {/* Buyer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredBuyers.map((buyer) => (
-            <Card 
-              key={buyer.id} 
-              className={cn(
-                "hover:shadow-md transition-shadow",
-                buyer.score >= 80 && "border-amber-500/30 bg-amber-500/5"
-              )}
-            >
-              <CardContent className="p-4">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{buyer.name}</h3>
-                      {buyer.score >= 80 && currentTier === 'enterprise' && (
-                        <Badge className="bg-amber-500 text-white text-[9px]">
-                          <Zap className="h-2 w-2 mr-0.5" />
-                          First Refusal
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                      <MapPin className="h-3 w-3" />
-                      {buyer.location}
-                    </div>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge 
-                        className={cn(
-                          "text-sm font-bold cursor-pointer",
-                          getScoreColor(buyer.score)
-                        )}
-                        onClick={() => currentTier !== 'access' && setSelectedBuyer(buyer)}
-                      >
-                        {buyer.score}
-                        {currentTier !== 'access' && <Info className="h-3 w-3 ml-1" />}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {currentTier === 'access' 
-                        ? 'Upgrade to see score breakdown' 
-                        : 'Click to see score breakdown'
-                      }
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-
-                {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <Wallet className="h-3 w-3 text-muted-foreground" />
-                    <span>{buyer.budget}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <BedDouble className="h-3 w-3 text-muted-foreground" />
-                    <span>{buyer.bedrooms}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span>{buyer.timeline}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CreditCard className="h-3 w-3 text-muted-foreground" />
-                    <span className="capitalize">{buyer.paymentMethod}</span>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  <Badge variant="outline" className={cn("text-[10px]", getPriorityColor(buyer.priority))}>
-                    {buyer.priority}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px]">
-                    {buyer.purpose}
-                  </Badge>
-                  {buyer.preferredAreas.slice(0, 1).map((area, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px]">
-                      {area}
-                    </Badge>
-                  ))}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-2 border-t">
-                  {isContacted(buyer.id) ? (
-                    <>
-                      <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Introduced via {getContactInfo(buyer.id)?.channel === 'whatsapp' ? 'WhatsApp' : 'Email'}
-                      </Badge>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="h-7 text-xs"
-                        onClick={() => setIntroductionBuyer(buyer)}
-                      >
-                        View Details
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {buyer.score >= 80 && currentTier === 'enterprise' ? (
-                        <span className="text-xs text-amber-600 font-medium">
-                          Only you can contact first
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          <Users className="h-3 w-3 inline mr-1" />
-                          {4 - (buyer.contactsCount || 0)} of 4 contacts left
-                        </span>
-                      )}
-                      <Button size="sm" className="h-7 text-xs" onClick={() => handleRequestIntroduction(buyer)}>
-                        Request Introduction
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredBuyers.length === 0 && (
-          <Card className="p-8 text-center">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
-            <h3 className="mt-4 font-semibold">No buyers match your filters</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Try adjusting your filters to see more results
-            </p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={() => {
-                setSearchQuery('');
-                setBudgetFilter('all');
-                setLocationFilter('all');
-                setBedroomsFilter('all');
-                setTimelineFilter('all');
-                setScoreFilter('all');
-              }}
-            >
-              Reset Filters
-            </Button>
-          </Card>
-        )}
-
-        {/* Locked Buyers Banner (Tier 1) */}
-        {currentTier === 'access' && lockedBuyerCount > 0 && (
-          <Card className="bg-gradient-to-r from-amber-500/5 to-amber-600/10 border-amber-500/20">
-            <CardContent className="py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <ChevronUp className="h-5 w-5 text-amber-500" />
-                <div>
-                  <p className="text-sm font-medium">
-                    {lockedBuyerCount} more high-intent buyers available in Growth
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Access buyers with scores 70+ and campaign features
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600">
-                Upgrade to Growth
-              </Button>
+        {/* Empty state */}
+        {filteredBuyers.length === 0 && !isLoading && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">No buyers found</h3>
+              <p className="text-muted-foreground mt-1">
+                {airtableBuyers.length === 0 
+                  ? 'No buyers available at the moment. Check back later.' 
+                  : 'Try adjusting your filters to see more buyers.'}
+              </p>
             </CardContent>
           </Card>
         )}
-      </div>
 
-      {/* Score Breakdown Modal (Tier 2+) */}
-      <Dialog open={!!selectedBuyer} onOpenChange={() => setSelectedBuyer(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Score Breakdown: {selectedBuyer?.name}</DialogTitle>
-          </DialogHeader>
-          {selectedBuyer && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <Badge className={cn("text-2xl px-4 py-2", getScoreColor(selectedBuyer.score))}>
-                  {selectedBuyer.score}
-                </Badge>
-                <p className="text-sm text-muted-foreground mt-2">Overall Intent Score</p>
-              </div>
-              
-              {(() => {
-                const breakdown = getScoreBreakdown(selectedBuyer);
-                return (
-                  <div className="space-y-3">
-                    {Object.entries(breakdown).map(([key, value]) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-primary rounded-full"
-                              style={{ width: `${(value / 30) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium w-8 text-right">+{value}</span>
-                        </div>
+        {/* Buyer Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredBuyers.map((buyer) => {
+            const priority = getPriorityFromScore(buyer.score);
+            
+            return (
+              <Card 
+                key={buyer.id} 
+                className={cn(
+                  "hover:shadow-md transition-shadow",
+                  buyer.score >= 80 && "border-amber-500/30 bg-amber-500/5"
+                )}
+              >
+                <CardContent className="p-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{buyer.name}</h3>
+                        {buyer.score >= 80 && currentTier === 'enterprise' && (
+                          <Badge className="bg-amber-500 text-white text-[9px]">
+                            <Zap className="h-2 w-2 mr-0.5" />
+                            First Refusal
+                          </Badge>
+                        )}
                       </div>
-                    ))}
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                        <MapPin className="h-3 w-3" />
+                        {buyer.location || buyer.country || 'Not specified'}
+                      </div>
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge 
+                          className={cn(
+                            "text-sm font-bold cursor-pointer",
+                            getScoreColor(buyer.score)
+                          )}
+                          onClick={() => currentTier !== 'access' && setSelectedBuyer(buyer)}
+                        >
+                          {buyer.score}
+                          {currentTier !== 'access' && <Info className="h-3 w-3 ml-1" />}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {currentTier === 'access' 
+                          ? 'Upgrade to see score breakdown' 
+                          : 'Click to see score breakdown'
+                        }
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                );
-              })()}
 
-              <div className="pt-4 border-t">
-                <Button className="w-full" onClick={() => {
-                  handleRequestIntroduction(selectedBuyer);
-                  setSelectedBuyer(null);
-                }}>
-                  Request Introduction
-                </Button>
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <Wallet className="h-3 w-3 text-muted-foreground" />
+                      <span>{buyer.budgetRange || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <BedDouble className="h-3 w-3 text-muted-foreground" />
+                      <span>{buyer.bedrooms || 'Any'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <span>{buyer.timeline || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CreditCard className="h-3 w-3 text-muted-foreground" />
+                      <span className="capitalize">{buyer.paymentMethod || 'Not specified'}</span>
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <Badge variant="outline" className={cn("text-[10px]", getPriorityColor(priority))}>
+                      {priority}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px]">
+                      {buyer.purpose || 'Not specified'}
+                    </Badge>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    {isContacted(buyer.id) ? (
+                      <>
+                        <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Introduced via {getContactInfo(buyer.id)?.channel === 'whatsapp' ? 'WhatsApp' : 'Email'}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-7 text-xs"
+                          onClick={() => handleRequestIntroduction(buyer)}
+                        >
+                          View Details
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        {buyer.score >= 80 && currentTier === 'enterprise' ? (
+                          <span className="text-xs text-amber-600 font-medium">
+                            Only you can contact first
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Ready to contact
+                          </span>
+                        )}
+                        <Button 
+                          size="sm" 
+                          className="h-7 text-xs"
+                          onClick={() => handleRequestIntroduction(buyer)}
+                        >
+                          Request Introduction
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Score Breakdown Dialog */}
+        <Dialog open={!!selectedBuyer} onOpenChange={() => setSelectedBuyer(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Score Breakdown for {selectedBuyer?.name}</DialogTitle>
+            </DialogHeader>
+            {selectedBuyer && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center">
+                  <div className={cn(
+                    "text-4xl font-bold rounded-full w-20 h-20 flex items-center justify-center",
+                    getScoreColor(selectedBuyer.score)
+                  )}>
+                    {selectedBuyer.score}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {getScoreBreakdown(selectedBuyer).map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                      <div>
+                        <span className="font-medium">{item.label}</span>
+                        <span className="text-xs text-muted-foreground ml-2">{item.description}</span>
+                      </div>
+                      <span className="text-green-600 font-medium">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            )}
+          </DialogContent>
+        </Dialog>
 
-      {/* Request Introduction Modal */}
-      <RequestIntroductionModal
-        isOpen={!!introductionBuyer}
-        onClose={() => setIntroductionBuyer(null)}
-        buyer={introductionBuyer}
-        onSuccess={() => {}}
-      />
+        {/* Request Introduction Modal */}
+        {introductionBuyer && (
+          <RequestIntroductionModal
+            isOpen={!!introductionBuyer}
+            onClose={() => setIntroductionBuyer(null)}
+            buyer={{
+              id: introductionBuyer.id,
+              name: introductionBuyer.name,
+              email: introductionBuyer.email,
+              phone: introductionBuyer.phone,
+              score: introductionBuyer.score,
+              budget: introductionBuyer.budgetRange,
+              location: introductionBuyer.location || introductionBuyer.country,
+              locationIcon: '📍',
+              bedrooms: introductionBuyer.bedrooms || 'Any',
+              timeline: introductionBuyer.timeline,
+              priority: introductionBuyer.score >= 80 ? 'P1-Urgent' : introductionBuyer.score >= 70 ? 'P1-High Intent' : 'P2-Qualified',
+              purpose: (introductionBuyer.purpose as 'Investment' | 'Primary Home' | 'For Child' | 'Holiday Home') || 'Investment',
+              paymentMethod: introductionBuyer.paymentMethod?.toLowerCase().includes('cash') ? 'cash' : 'mortgage',
+              preferredAreas: introductionBuyer.location ? [introductionBuyer.location] : [],
+              preferred_contact_method: introductionBuyer.preferredComm?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 'email',
+              contactsRemaining: 4,
+              lastActive: new Date(),
+            }}
+          />
+        )}
+      </div>
     </DashboardLayout>
   );
 };
