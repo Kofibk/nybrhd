@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AdminLeadsTable from "@/components/admin/AdminLeadsTable";
 import AdminBuyersTable from "@/components/admin/AdminBuyersTable";
+import { CallerPerformanceWidget } from "@/components/admin/CallerPerformanceWidget";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +9,7 @@ import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useAirtableLeadsForTable } from "@/hooks/useAirtableLeads";
 import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
-import { RefreshCw, Users, UserCheck } from "lucide-react";
+import { RefreshCw, Users, UserCheck, BarChart3 } from "lucide-react";
 
 const AdminLeadsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,7 +68,7 @@ const AdminLeadsPage = () => {
         </div>
       </div>
 
-      {/* Tabs for switching between Buyers and Leads */}
+      {/* Tabs for switching between Buyers, Performance, and Leads */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="w-fit mb-4">
           <TabsTrigger value="buyers" className="gap-2">
@@ -78,6 +79,10 @@ const AdminLeadsPage = () => {
                 {airtableBuyers.length}
               </span>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Performance
           </TabsTrigger>
           <TabsTrigger value="leads" className="gap-2">
             <UserCheck className="h-4 w-4" />
@@ -96,6 +101,15 @@ const AdminLeadsPage = () => {
             buyers={airtableBuyers}
             isLoading={buyersLoading || buyersFetching}
           />
+        </TabsContent>
+
+        <TabsContent value="performance" className="flex-1 min-h-0 mt-0">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CallerPerformanceWidget 
+              buyers={airtableBuyers}
+              isLoading={buyersLoading}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="leads" className="flex-1 min-h-0 mt-0">
