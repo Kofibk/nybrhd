@@ -3,8 +3,9 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { demoCampaigns, Campaign } from '@/lib/buyerData';
+import { useAirtableCampaigns } from '@/hooks/useAirtable';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { 
   Megaphone, 
@@ -26,8 +27,13 @@ interface TieredCampaignsPageProps {
 
 const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) => {
   const navigate = useNavigate();
-  const { currentTier, setTier } = useSubscription();
+  const { currentTier, initiateCheckout } = useSubscription();
   const basePath = `/${userType}`;
+
+  // Fetch campaigns from Airtable
+  const { data: campaignsData, isLoading } = useAirtableCampaigns();
+
+  const campaigns = campaignsData?.records || [];
 
   // Tier 1 users see locked state
   if (currentTier === 'access') {
@@ -68,7 +74,7 @@ const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) =
           
           <Button 
             className="bg-amber-500 hover:bg-amber-600"
-            onClick={() => setTier('growth')}
+            onClick={() => initiateCheckout('growth')}
           >
             <Crown className="h-4 w-4 mr-2" />
             Upgrade to Growth — £2,249/mo
@@ -79,29 +85,51 @@ const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) =
   }
 
   const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'Meta Ads': return '📘';
-      case 'Google Ads': return '🔵';
-      case 'LinkedIn': return '💼';
+    switch (platform?.toLowerCase()) {
+      case 'meta ads':
+      case 'facebook': return '📘';
+      case 'google ads':
+      case 'google': return '🔵';
+      case 'linkedin': return '💼';
       default: return '📢';
     }
   };
 
-  const getStatusIcon = (status: Campaign['status']) => {
-    switch (status) {
+  const getStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
       case 'active': return <Play className="h-3 w-3" />;
       case 'paused': return <Pause className="h-3 w-3" />;
       case 'completed': return <CheckCircle className="h-3 w-3" />;
+      default: return null;
     }
   };
 
-  const getStatusColor = (status: Campaign['status']) => {
-    switch (status) {
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
       case 'active': return 'bg-green-500/10 text-green-600 border-green-500/30';
       case 'paused': return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
       case 'completed': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="My Campaigns" userType={userType}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-9 w-32" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="My Campaigns" userType={userType}>
@@ -118,59 +146,68 @@ const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) =
         </div>
 
         {/* Campaign Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {demoCampaigns.map((campaign) => (
-            <Card 
-              key={campaign.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`${basePath}/campaigns/${campaign.id}`)}
-            >
-              <CardContent className="p-4">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{getPlatformIcon(campaign.platform)}</span>
+        {campaigns.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {campaigns.map((campaign) => (
+              <Card 
+                key={campaign.id}
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate(`${basePath}/campaigns/${campaign.id}`)}
+              >
+                <CardContent className="p-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{getPlatformIcon(String(campaign.fields['platform'] || ''))}</span>
+                      <div>
+                        <h3 className="font-semibold text-sm">{campaign.fields.name || 'Unnamed Campaign'}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {campaign.fields.target_regions || campaign.fields.target_cities || 'No location'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className={cn("text-[10px]", getStatusColor(campaign.fields.status || ''))}>
+                      {getStatusIcon(campaign.fields.status || '')}
+                      <span className="ml-1 capitalize">{campaign.fields.status || 'Unknown'}</span>
+                    </Badge>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-2 text-center py-3 border-y">
                     <div>
-                      <h3 className="font-semibold text-sm">{campaign.name}</h3>
-                      <p className="text-xs text-muted-foreground">{campaign.targetLocation}</p>
+                      <p className="text-lg font-semibold">{campaign.fields['leads_count'] || 0}</p>
+                      <p className="text-[10px] text-muted-foreground">Leads</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold">
+                        £{(campaign.fields.total_budget || 0).toLocaleString()}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">Budget</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold">-</p>
+                      <p className="text-[10px] text-muted-foreground">CPL</p>
                     </div>
                   </div>
-                  <Badge variant="outline" className={cn("text-[10px]", getStatusColor(campaign.status))}>
-                    {getStatusIcon(campaign.status)}
-                    <span className="ml-1 capitalize">{campaign.status}</span>
-                  </Badge>
-                </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 text-center py-3 border-y">
-                  <div>
-                    <p className="text-lg font-semibold">{campaign.leads}</p>
-                    <p className="text-[10px] text-muted-foreground">Leads</p>
+                  {/* Footer */}
+                  <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
+                    <span>
+                      {campaign.fields.start_date 
+                        ? `Started ${format(new Date(campaign.fields.start_date), 'MMM d, yyyy')}`
+                        : 'Not started'
+                      }
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      View Details
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-lg font-semibold">£{campaign.spend.toLocaleString()}</p>
-                    <p className="text-[10px] text-muted-foreground">Spend</p>
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold">£{campaign.costPerLead.toFixed(0)}</p>
-                    <p className="text-[10px] text-muted-foreground">CPL</p>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-                  <span>Started {format(campaign.startDate, 'MMM d, yyyy')}</span>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs">
-                    View Details
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {demoCampaigns.length === 0 && (
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
           <Card className="p-8 text-center">
             <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50" />
             <h3 className="mt-4 font-semibold">No campaigns yet</h3>
@@ -188,7 +225,7 @@ const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) =
         )}
 
         {/* AI Recommendations (Tier 3) */}
-        {currentTier === 'enterprise' && (
+        {currentTier === 'enterprise' && campaigns.length > 0 && (
           <Card className="bg-gradient-to-r from-purple-500/5 to-purple-600/10 border-purple-500/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -202,7 +239,7 @@ const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) =
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-green-500" />
                     <span className="text-sm">
-                      Increase budget on "London HNWI Investors" by £200 for 8 more leads
+                      Optimize targeting based on high-performing buyer segments
                     </span>
                   </div>
                   <Button size="sm" variant="outline" className="h-7 text-xs">
@@ -213,7 +250,7 @@ const TieredCampaignsPage: React.FC<TieredCampaignsPageProps> = ({ userType }) =
                   <div className="flex items-center gap-2">
                     <Pause className="h-4 w-4 text-amber-500" />
                     <span className="text-sm">
-                      Pause underperforming ad set to save £1,200/month
+                      Review underperforming ad sets to optimize spend
                     </span>
                   </div>
                   <Button size="sm" variant="outline" className="h-7 text-xs">

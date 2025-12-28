@@ -38,8 +38,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProductTour } from "./ProductTour";
 import { cn } from "@/lib/utils";
-import { getBuyersByTier, demoCampaigns, accountManager } from "@/lib/buyerData";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
+import { useAirtableCampaigns } from "@/hooks/useAirtable";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -69,9 +70,20 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   // Real-time unread message count
   const { unreadCount: conversationCount } = useUnreadMessages();
 
-  // Calculate badge counts
-  const buyerCount = getBuyersByTier(currentTier).length;
-  const activeCampaignCount = demoCampaigns.filter(c => c.status === 'active').length;
+  // Fetch real data for badge counts
+  const { buyers } = useAirtableBuyersForTable({ enabled: true });
+  const { data: campaignsData } = useAirtableCampaigns({ filterByFormula: "{status} = 'active'" });
+  
+  const buyerCount = buyers.length;
+  const activeCampaignCount = campaignsData?.records?.length || 0;
+  
+  // Account manager info (hardcoded for now)
+  const accountManager = {
+    name: 'Your Account Manager',
+    email: 'support@naybourhood.com',
+    phone: '+44 XXX XXX XXXX',
+    availability: 'Mon-Fri, 9am-6pm',
+  };
 
   // Tier-specific navigation
   const getTieredNavigation = (): NavItem[] => {

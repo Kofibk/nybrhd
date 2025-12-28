@@ -4,28 +4,28 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { demoConversations, getFirstRefusalBuyers, Buyer } from '@/lib/buyerData';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useMyAssignments } from '@/hooks/useBuyerAssignments';
+import { useAirtableBuyersForTable } from '@/hooks/useAirtableBuyers';
 import { 
   Heart, 
   MessageSquare, 
   Users, 
-  Eye, 
   Crown, 
   Zap,
   Search,
   MapPin,
   Wallet,
   BedDouble,
-  Clock,
-  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { toast } from 'sonner';
 
 interface MyMatchesPageProps {
   userType: 'developer' | 'agent' | 'broker';
@@ -33,59 +33,82 @@ interface MyMatchesPageProps {
 
 const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { currentTier } = useSubscription();
-  const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [budgetFilter, setBudgetFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
   const basePath = `/${userType}`;
 
-  // Get first refusal buyers (only for Tier 3)
-  const firstRefusalBuyers = currentTier === 'enterprise' ? getFirstRefusalBuyers() : [];
+  // Fetch user's assignments (contacted buyers)
+  const { data: assignments, isLoading: loadingAssignments } = useMyAssignments();
+  
+  // Fetch conversations to see which buyers have been contacted
+  const { data: conversations, isLoading: loadingConversations } = useQuery({
+    queryKey: ['conversations', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('last_message_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 
-  // Use conversations as matches (buyers the user has contacted)
-  const regularMatches = demoConversations
-    .filter(conv => {
-      if (currentTier === 'access') return conv.buyer.score >= 50 && conv.buyer.score < 70;
-      if (currentTier === 'growth') return conv.buyer.score >= 50;
-      return true;
-    })
-    .filter(conv => {
-      if (statusFilter === 'all') return true;
-      if (statusFilter === 'contacted') return true;
-      if (statusFilter === 'responded') return conv.status === 'buyer_responded';
-      if (statusFilter === 'viewing') return false;
-      return true;
-    })
-    .filter(conv => {
-      if (!searchQuery) return true;
-      return conv.buyer.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
+  // Fetch Airtable buyers to get buyer details
+  const { buyers, isLoading: loadingBuyers } = useAirtableBuyersForTable({ enabled: true });
 
-  // Filter first refusal buyers
+  const isLoading = loadingAssignments || loadingConversations || loadingBuyers;
+
+  // Get first refusal buyers (score >= 80) for enterprise tier
+  const firstRefusalBuyers = currentTier === 'enterprise' 
+    ? buyers.filter(b => b.score >= 80)
+    : [];
+
+  // Filter based on search
   const filteredFirstRefusal = firstRefusalBuyers.filter(buyer => {
     if (searchQuery && !buyer.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (budgetFilter !== 'all' && !buyer.budget.includes(budgetFilter)) return false;
     return true;
   });
 
-  const getStatusBadge = (conversation: typeof demoConversations[0]) => {
-    if (conversation.status === 'buyer_responded') {
-      return <Badge className="bg-green-500/10 text-green-600 border-green-500/30">Responded</Badge>;
-    }
-    if (conversation.status === 'awaiting_response') {
-      return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30">Awaiting Response</Badge>;
-    }
-    return <Badge variant="secondary">Contacted</Badge>;
+  // Map assignments to buyer details
+  const matchedBuyers = (assignments || []).map(assignment => {
+    const buyer = buyers.find(b => b.id === assignment.airtable_record_id);
+    return {
+      assignment,
+      buyer,
+      conversation: conversations?.find(c => c.buyer_id === assignment.airtable_record_id),
+    };
+  }).filter(m => m.buyer);
+
+  const filteredMatches = matchedBuyers.filter(m => {
+    if (searchQuery && m.buyer && !m.buyer.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  const handleContactBuyer = (buyerId: string) => {
+    navigate(`${basePath}/buyers`);
   };
 
-  const handleContactFirstRefusal = (buyer: Buyer) => {
-    toast.success(`Contacting ${buyer.name}`, {
-      description: 'Opening exclusive conversation...',
-    });
-  };
+  if (isLoading) {
+    return (
+      <DashboardLayout title="My Matches" userType={userType}>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-64" />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-  const totalCount = regularMatches.length + (activeTab === 'all' || activeTab === 'first-refusal' ? filteredFirstRefusal.length : 0);
+  const totalCount = filteredMatches.length + (activeTab === 'all' || activeTab === 'first-refusal' ? filteredFirstRefusal.length : 0);
 
   return (
     <DashboardLayout title="My Matches" userType={userType}>
@@ -97,13 +120,13 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
               <TabsTrigger value="all">
                 All Matches
                 <Badge variant="secondary" className="ml-2 text-xs">
-                  {regularMatches.length + filteredFirstRefusal.length}
+                  {filteredMatches.length + filteredFirstRefusal.length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="contacted">
                 Contacted
                 <Badge variant="secondary" className="ml-2 text-xs">
-                  {regularMatches.length}
+                  {filteredMatches.length}
                 </Badge>
               </TabsTrigger>
               {currentTier === 'enterprise' && (
@@ -118,7 +141,7 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
             </TabsList>
           </div>
 
-          {/* Filters */}
+          {/* Search */}
           <div className="flex flex-wrap items-center gap-3 mt-4">
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -129,34 +152,6 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
                 className="pl-9"
               />
             </div>
-            
-            {activeTab !== 'first-refusal' && (
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="responded">Responded</SelectItem>
-                  <SelectItem value="viewing">Viewing Booked</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
-            {(activeTab === 'all' || activeTab === 'first-refusal') && currentTier === 'enterprise' && (
-              <Select value={budgetFilter} onValueChange={setBudgetFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Budget" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Budgets</SelectItem>
-                  <SelectItem value="600K-800K">£600K-800K</SelectItem>
-                  <SelectItem value="800K-1M">£800K-1M</SelectItem>
-                  <SelectItem value="1M">£1M+</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
           </div>
 
           {/* All Matches Tab */}
@@ -175,36 +170,28 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
                       <FirstRefusalCard 
                         key={buyer.id} 
                         buyer={buyer} 
-                        onContact={handleContactFirstRefusal}
+                        onContact={handleContactBuyer}
                       />
                     ))}
                   </div>
-                  {filteredFirstRefusal.length > 3 && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/5"
-                      onClick={() => setActiveTab('first-refusal')}
-                    >
-                      View all {filteredFirstRefusal.length} Priority buyers
-                    </Button>
-                  )}
                 </div>
               )}
 
               {/* Regular Matches Section */}
-              {regularMatches.length > 0 && (
+              {filteredMatches.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-primary" />
                     <h3 className="font-semibold">Contacted Buyers</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {regularMatches.map((match) => (
+                    {filteredMatches.map((match) => (
                       <MatchCard 
-                        key={match.id}
-                        match={match}
+                        key={match.assignment.id}
+                        buyer={match.buyer!}
+                        assignment={match.assignment}
+                        conversation={match.conversation}
                         basePath={basePath}
-                        getStatusBadge={getStatusBadge}
                         navigate={navigate}
                       />
                     ))}
@@ -216,17 +203,35 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
 
           {/* Contacted Tab */}
           <TabsContent value="contacted" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {regularMatches.map((match) => (
-                <MatchCard 
-                  key={match.id}
-                  match={match}
-                  basePath={basePath}
-                  getStatusBadge={getStatusBadge}
-                  navigate={navigate}
-                />
-              ))}
-            </div>
+            {filteredMatches.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredMatches.map((match) => (
+                  <MatchCard 
+                    key={match.assignment.id}
+                    buyer={match.buyer!}
+                    assignment={match.assignment}
+                    conversation={match.conversation}
+                    basePath={basePath}
+                    navigate={navigate}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card className="p-8 text-center">
+                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                <h3 className="mt-4 font-semibold">No contacted buyers yet</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Contact buyers from the Buyers page to see them here
+                </p>
+                <Button 
+                  className="mt-4"
+                  onClick={() => navigate(`${basePath}/buyers`)}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Browse Buyers
+                </Button>
+              </Card>
+            )}
           </TabsContent>
 
           {/* First Refusal Tab (Tier 3 only) */}
@@ -251,21 +256,31 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
                 </CardContent>
               </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredFirstRefusal.map((buyer) => (
-                  <FirstRefusalCard 
-                    key={buyer.id} 
-                    buyer={buyer} 
-                    onContact={handleContactFirstRefusal}
-                  />
-                ))}
-              </div>
+              {filteredFirstRefusal.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredFirstRefusal.map((buyer) => (
+                    <FirstRefusalCard 
+                      key={buyer.id} 
+                      buyer={buyer} 
+                      onContact={handleContactBuyer}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="p-8 text-center">
+                  <Crown className="h-12 w-12 mx-auto text-amber-500/50" />
+                  <h3 className="mt-4 font-semibold">No priority buyers available</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    New high-score buyers will appear here when they're added
+                  </p>
+                </Card>
+              )}
             </TabsContent>
           )}
         </Tabs>
 
         {/* Empty State */}
-        {totalCount === 0 && (
+        {totalCount === 0 && activeTab === 'all' && (
           <Card className="p-8 text-center">
             <Heart className="h-12 w-12 mx-auto text-muted-foreground/50" />
             <h3 className="mt-4 font-semibold">No matches yet</h3>
@@ -288,66 +303,114 @@ const MyMatchesPage: React.FC<MyMatchesPageProps> = ({ userType }) => {
 
 // Match Card Component
 interface MatchCardProps {
-  match: typeof demoConversations[0];
+  buyer: {
+    id: string;
+    name: string;
+    location: string;
+    budgetRange: string;
+    bedrooms: string;
+    score: number;
+  };
+  assignment: {
+    id: string;
+    status: string;
+    assigned_at: string | null;
+  };
+  conversation?: {
+    id: string;
+    status: string;
+    last_message_at: string | null;
+  };
   basePath: string;
-  getStatusBadge: (conv: typeof demoConversations[0]) => React.ReactNode;
   navigate: (path: string) => void;
 }
 
-const MatchCard: React.FC<MatchCardProps> = ({ match, basePath, getStatusBadge, navigate }) => (
+const MatchCard: React.FC<MatchCardProps> = ({ buyer, assignment, conversation, basePath, navigate }) => (
   <Card className="hover:shadow-md transition-shadow">
     <CardContent className="p-4">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold">{match.buyer.name}</h3>
-          <p className="text-xs text-muted-foreground">{match.buyer.location}</p>
+          <h3 className="font-semibold">{buyer.name}</h3>
+          <p className="text-xs text-muted-foreground">{buyer.location || 'Location not specified'}</p>
         </div>
         <Badge 
           className={cn(
             "text-sm font-bold",
-            match.buyer.score >= 80 ? "bg-amber-500 text-white" :
-            match.buyer.score >= 70 ? "bg-green-500 text-white" :
+            buyer.score >= 80 ? "bg-amber-500 text-white" :
+            buyer.score >= 70 ? "bg-green-500 text-white" :
             "bg-blue-500 text-white"
           )}
         >
-          {match.buyer.score}
+          {buyer.score}
         </Badge>
       </div>
 
       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-        <span>{match.buyer.budget}</span>
+        <span>{buyer.budgetRange || 'Budget N/A'}</span>
         <span>•</span>
-        <span>{match.buyer.bedrooms}</span>
+        <span>{buyer.bedrooms || 'Beds N/A'}</span>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-3">
-        {getStatusBadge(match)}
-        <Badge variant="outline" className="text-[10px]">
-          <MessageSquare className="h-2.5 w-2.5 mr-1" />
-          {match.messages.length} messages
+        <Badge variant="outline" className={cn(
+          "text-[10px]",
+          assignment.status === 'contacted' ? "border-green-500/30 text-green-600" :
+          "border-blue-500/30 text-blue-600"
+        )}>
+          {assignment.status}
         </Badge>
+        {conversation && (
+          <Badge variant="outline" className="text-[10px]">
+            <MessageSquare className="h-2.5 w-2.5 mr-1" />
+            In conversation
+          </Badge>
+        )}
       </div>
 
       <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-        <span>Last active {formatDistanceToNow(match.lastMessageTime, { addSuffix: true })}</span>
+        <span>
+          {assignment.assigned_at 
+            ? `Assigned ${formatDistanceToNow(new Date(assignment.assigned_at), { addSuffix: true })}`
+            : 'Recently assigned'
+          }
+        </span>
       </div>
 
-      <Button 
-        variant="outline" 
-        className="w-full"
-        onClick={() => navigate(`${basePath}/chat/${match.id}`)}
-      >
-        <Eye className="h-4 w-4 mr-2" />
-        View Chat
-      </Button>
+      {conversation ? (
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => navigate(`${basePath}/conversations/${conversation.id}`)}
+        >
+          <MessageSquare className="h-4 w-4 mr-2" />
+          View Chat
+        </Button>
+      ) : (
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => navigate(`${basePath}/buyers`)}
+        >
+          Contact Buyer
+        </Button>
+      )}
     </CardContent>
   </Card>
 );
 
 // First Refusal Card Component
 interface FirstRefusalCardProps {
-  buyer: Buyer;
-  onContact: (buyer: Buyer) => void;
+  buyer: {
+    id: string;
+    name: string;
+    location: string;
+    budgetRange: string;
+    bedrooms: string;
+    timeline: string;
+    paymentMethod: string;
+    score: number;
+  };
+  onContact: (buyerId: string) => void;
 }
 
 const FirstRefusalCard: React.FC<FirstRefusalCardProps> = ({ buyer, onContact }) => (
@@ -363,7 +426,7 @@ const FirstRefusalCard: React.FC<FirstRefusalCardProps> = ({ buyer, onContact })
           <h3 className="font-semibold text-lg">{buyer.name}</h3>
           <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
             <MapPin className="h-3.5 w-3.5" />
-            {buyer.location}
+            {buyer.location || 'Location not specified'}
           </div>
         </div>
         <Badge className="bg-amber-500 text-white text-lg font-bold px-3">
@@ -374,37 +437,12 @@ const FirstRefusalCard: React.FC<FirstRefusalCardProps> = ({ buyer, onContact })
       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
         <div className="flex items-center gap-2">
           <Wallet className="h-4 w-4 text-amber-500" />
-          <span>{buyer.budget}</span>
+          <span>{buyer.budgetRange || 'N/A'}</span>
         </div>
         <div className="flex items-center gap-2">
           <BedDouble className="h-4 w-4 text-amber-500" />
-          <span>{buyer.bedrooms}</span>
+          <span>{buyer.bedrooms || 'N/A'}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-amber-500" />
-          <span>{buyer.timeline}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4 text-amber-500" />
-          <span className="capitalize">{buyer.paymentMethod}</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        <Badge 
-          variant="outline" 
-          className={cn(
-            "text-[10px]",
-            buyer.timeline === 'Within 28 days' 
-              ? "border-red-500/30 text-red-600 bg-red-500/5" 
-              : "border-amber-500/30 text-amber-600 bg-amber-500/5"
-          )}
-        >
-          {buyer.timeline === 'Within 28 days' ? 'P1-Urgent' : 'P1-High Intent'}
-        </Badge>
-        <Badge variant="outline" className="text-[10px]">
-          {buyer.purpose}
-        </Badge>
       </div>
 
       <div className="flex items-center justify-between pt-3 border-t border-amber-500/20">
@@ -414,7 +452,7 @@ const FirstRefusalCard: React.FC<FirstRefusalCardProps> = ({ buyer, onContact })
         <Button 
           size="sm" 
           className="bg-amber-500 hover:bg-amber-600"
-          onClick={() => onContact(buyer)}
+          onClick={() => onContact(buyer.id)}
         >
           Contact Now
         </Button>
