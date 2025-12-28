@@ -517,8 +517,11 @@ const Landing = () => {
                   className="h-16 sm:h-20 lg:h-24 w-auto max-w-[180px] sm:max-w-[220px] lg:max-w-[280px] object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-lg font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
+                    // Use textContent instead of innerHTML for XSS prevention
+                    const span = document.createElement('span');
+                    span.className = 'text-lg font-body font-medium text-muted-foreground whitespace-nowrap';
+                    span.textContent = brand.name; // Safe - auto-escapes any HTML
+                    target.parentElement!.replaceChild(span, target);
                   }}
                 />
               </div>
@@ -535,8 +538,11 @@ const Landing = () => {
                   className="h-16 sm:h-20 lg:h-24 w-auto max-w-[180px] sm:max-w-[220px] lg:max-w-[280px] object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-lg font-body font-medium text-muted-foreground whitespace-nowrap">${brand.name}</span>`;
+                    // Use textContent instead of innerHTML for XSS prevention
+                    const span = document.createElement('span');
+                    span.className = 'text-lg font-body font-medium text-muted-foreground whitespace-nowrap';
+                    span.textContent = brand.name; // Safe - auto-escapes any HTML
+                    target.parentElement!.replaceChild(span, target);
                   }}
                 />
               </div>
