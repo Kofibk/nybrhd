@@ -60,7 +60,7 @@ import {
   User,
   MessageSquare
 } from "lucide-react";
-import { demoLeads, demoCampaigns } from "@/lib/demoData";
+// Demo data imports removed - using Airtable data
 import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
@@ -160,8 +160,8 @@ const AdminLeadsTable = ({ searchQuery, airtableLeads = [], airtableLoading = fa
     qualityScore: al.qualityScore,
   });
   
-  // Use Airtable leads if available, otherwise fall back to demo leads
-  const [localLeads] = useState<Lead[]>(demoLeads);
+  // Use Airtable leads - demo data removed
+  const [localLeads] = useState<Lead[]>([]);
   const useAirtable = airtableLeads.length > 0;
   
   // New lead form state

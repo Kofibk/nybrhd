@@ -4,17 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import { useUploadedData } from "@/contexts/DataContext";
+import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
 import { RefreshCw } from "lucide-react";
-import { developerLeads } from "@/lib/developerDemoData";
 
 const DeveloperLeadsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { leadData, campaignData } = useUploadedData('developer');
+  const { buyers, isLoading, refetch } = useAirtableBuyersForTable({ enabled: true });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    await refetch();
+    setIsRefreshing(false);
   };
 
   return (
@@ -26,7 +28,7 @@ const DeveloperLeadsPage = () => {
             variant="outline"
             size="sm"
             onClick={handleRefresh}
-            disabled={isRefreshing}
+            disabled={isRefreshing || isLoading}
             className="gap-1.5 sm:gap-2 text-xs sm:text-sm h-8 sm:h-9"
           >
             <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -34,7 +36,7 @@ const DeveloperLeadsPage = () => {
             <span className="xs:hidden">{isRefreshing ? '...' : 'Refresh'}</span>
           </Button>
           <span className="text-xs sm:text-sm text-muted-foreground">
-            <span className="font-medium">{developerLeads.length}</span> leads
+            <span className="font-medium">{buyers.length}</span> leads
           </span>
         </div>
         <div className="w-full sm:w-auto sm:max-w-sm">

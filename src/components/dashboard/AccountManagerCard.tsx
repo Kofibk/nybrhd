@@ -3,13 +3,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { accountManager } from '@/lib/buyerData';
 import { Phone, Mail, MessageCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AccountManagerCardProps {
   className?: string;
 }
+
+// Hardcoded account manager info (will be fetched from backend later)
+const accountManager = {
+  name: 'Sarah Mitchell',
+  title: 'Senior Account Manager',
+  avatar: 'SM',
+  phone: '+44 20 7123 4567',
+  email: 'sarah@naybourhood.com',
+  whatsapp: '+44 20 7123 4567',
+  availability: 'Mon-Fri, 9am-6pm GMT',
+};
 
 export const AccountManagerCard: React.FC<AccountManagerCardProps> = ({ className }) => {
   const handleCall = () => {
