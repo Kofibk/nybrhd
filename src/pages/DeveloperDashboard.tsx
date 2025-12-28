@@ -1,6 +1,6 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { TierSwitcher } from '@/components/TierSwitcher';
-import { UsageTracker } from '@/components/dashboard/UsageTracker';
+import { SubscriptionBanner } from '@/components/dashboard/SubscriptionBanner';
 import { StatsGrid } from '@/components/dashboard/StatsGrid';
 import { AccountManagerCard } from '@/components/dashboard/AccountManagerCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
@@ -27,13 +27,13 @@ const DeveloperDashboard = () => {
         {/* Demo Tier Switcher */}
         <TierSwitcher className="w-fit" />
 
+        {/* Subscription Status Banner */}
+        <SubscriptionBanner userType="developer" />
+
         {/* Account Manager Card - Tier 3 Only */}
         {currentTier === 'enterprise' && (
           <AccountManagerCard />
         )}
-
-        {/* Usage Tracker */}
-        <UsageTracker />
 
         {/* Stats Grid */}
         <StatsGrid />
