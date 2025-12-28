@@ -20,6 +20,7 @@ export const AirtableTables = {
   INVOICES: 'Invoices',
   SETTINGS: 'Settings',
   AUDIT_LOGS: 'Audit_Logs',
+  BUYERS: 'Buyers',
 } as const;
 
 export type AirtableTable = typeof AirtableTables[keyof typeof AirtableTables];
@@ -489,6 +490,43 @@ export const auditLogsAPI = {
     callAirtableAPI<{ records: AirtableRecord<AirtableAuditLog>[] }>('create', AirtableTables.AUDIT_LOGS, { data }),
 };
 
+// ============ BUYERS ============
+export interface AirtableBuyer {
+  'Lead ID'?: number;
+  'Lead Name'?: string;
+  'first_name'?: string;
+  'last_name'?: string;
+  'Email'?: string;
+  'Phone Number'?: string;
+  'Budget Range'?: string;
+  'Preferred Bedrooms'?: string;
+  'Preferred Location'?: string;
+  'Country'?: string;
+  'Timeline to Purchase'?: string;
+  'Cash/Mortgage'?: string;
+  'Purpose for Purchase'?: string;
+  'Score'?: number;
+  'Intent'?: string;
+  'Status'?: string;
+  'Assigned Caller'?: string;
+  'Preferred Communication'?: string;
+  'Buyer Summary'?: string;
+  'Development Name'?: string;
+}
+
+export const buyersAPI = {
+  list: (options?: AirtableOptions) => 
+    callAirtableAPI<AirtableListResponse<AirtableBuyer>>('list', AirtableTables.BUYERS, options),
+  get: (recordId: string) => 
+    callAirtableAPI<AirtableRecord<AirtableBuyer>>('get', AirtableTables.BUYERS, { recordId }),
+  create: (data: Partial<AirtableBuyer>) => 
+    callAirtableAPI<{ records: AirtableRecord<AirtableBuyer>[] }>('create', AirtableTables.BUYERS, { data }),
+  update: (recordId: string, data: Partial<AirtableBuyer>) => 
+    callAirtableAPI<AirtableRecord<AirtableBuyer>>('update', AirtableTables.BUYERS, { recordId, data }),
+  delete: (recordId: string | string[]) => 
+    callAirtableAPI('delete', AirtableTables.BUYERS, { recordId }),
+};
+
 // Generic list function for testing any table
 export async function listTable(tableName: string, options?: AirtableOptions) {
   return callAirtableAPI<AirtableListResponse>('list', tableName as AirtableTable, options);
@@ -510,5 +548,6 @@ export const airtable = {
   invoices: invoicesAPI,
   settings: settingsAPI,
   auditLogs: auditLogsAPI,
+  buyers: buyersAPI,
   listTable,
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useContactedBuyers } from '@/hooks/useContactedBuyers';
+import { useAirtableBuyers } from '@/hooks/useAirtable';
 import { getBuyersByTier, getScoreBreakdown, Buyer } from '@/lib/buyerData';
 import { 
   Search, 
@@ -20,8 +21,9 @@ import {
   Info,
   Zap,
   CheckCircle,
-  Mail,
-  MessageSquare,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -31,6 +33,54 @@ import RequestIntroductionModal from '@/components/RequestIntroductionModal';
 interface BuyersPageProps {
   userType: 'developer' | 'agent' | 'broker';
 }
+
+// Helper to map Airtable buyer to our Buyer interface
+const mapAirtableBuyerToLocal = (record: { id: string; fields: Record<string, any> }): Buyer => {
+  const fields = record.fields;
+  const score = fields['Score'] || 0;
+  
+  // Determine priority based on score/intent
+  let priority: Buyer['priority'] = 'P3-Nurture';
+  const intent = fields['Intent']?.toLowerCase();
+  if (intent === 'hot' || score >= 80) priority = 'P1-Urgent';
+  else if (intent === 'warm' || score >= 70) priority = 'P1-High Intent';
+  else if (score >= 50) priority = 'P2-Qualified';
+
+  // Map purpose
+  let purpose: Buyer['purpose'] = 'Investment';
+  const purchasePurpose = fields['Purpose for Purchase']?.toLowerCase() || '';
+  if (purchasePurpose.includes('primary') || purchasePurpose.includes('residence')) purpose = 'Primary Home';
+  else if (purchasePurpose.includes('child')) purpose = 'For Child';
+  else if (purchasePurpose.includes('holiday')) purpose = 'Holiday Home';
+  else if (purchasePurpose.includes('investment')) purpose = 'Investment';
+
+  // Map payment method
+  const cashMortgage = fields['Cash/Mortgage']?.toLowerCase() || 'mortgage';
+  const paymentMethod: 'cash' | 'mortgage' = cashMortgage.includes('cash') ? 'cash' : 'mortgage';
+
+  return {
+    id: record.id,
+    name: fields['Lead Name'] || `${fields['first_name'] || ''} ${fields['last_name'] || ''}`.trim() || 'Unknown',
+    location: fields['Preferred Location'] || fields['Country'] || 'Not specified',
+    locationIcon: '📍',
+    score,
+    budget: fields['Budget Range'] || 'Not specified',
+    bedrooms: fields['Preferred Bedrooms'] || 'Any',
+    timeline: fields['Timeline to Purchase'] || 'Not specified',
+    paymentMethod,
+    priority,
+    purpose,
+    preferredAreas: fields['Preferred Location'] ? [fields['Preferred Location']] : [],
+    contactsRemaining: 4,
+    lastActive: new Date(),
+    isFirstRefusal: score >= 80,
+    email: fields['Email'],
+    phone: fields['Phone Number'],
+    whatsapp_number: fields['Preferred Communication']?.toLowerCase().includes('whatsapp') ? fields['Phone Number'] : undefined,
+    preferred_contact_method: fields['Preferred Communication']?.toLowerCase().includes('whatsapp') ? 'whatsapp' : 'email',
+    contactsCount: 0,
+  };
+};
 
 const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   const { currentTier } = useSubscription();
@@ -44,15 +94,51 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [introductionBuyer, setIntroductionBuyer] = useState<Buyer | null>(null);
 
-  const allBuyers = getBuyersByTier(currentTier);
+  // Build Airtable filter based on subscription tier
+  const getScoreFilterFormula = () => {
+    // Only show "Contact Pending" status buyers
+    const baseFilter = "{Status} = 'Contact Pending'";
+    switch (currentTier) {
+      case 'access':
+        return `AND({Score} >= 50, {Score} < 70, ${baseFilter})`;
+      case 'growth':
+        return `AND({Score} >= 50, ${baseFilter})`;
+      case 'enterprise':
+        return baseFilter; // All buyers
+      default:
+        return `AND({Score} >= 50, {Score} < 70, ${baseFilter})`;
+    }
+  };
+
+  // Fetch from Airtable
+  const { 
+    data: buyersData, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useAirtableBuyers({
+    filterByFormula: getScoreFilterFormula(),
+    sort: [{ field: 'Score', direction: 'desc' }],
+  });
+
+  // Map Airtable records to local Buyer format
+  const airtableBuyers = useMemo(() => {
+    if (!buyersData?.records) return [];
+    return buyersData.records.map(mapAirtableBuyerToLocal);
+  }, [buyersData]);
+
+  // Fallback to demo data if Airtable fails or returns empty
+  const useDemoData = error || (!isLoading && airtableBuyers.length === 0);
+  const demoBuyers = getBuyersByTier(currentTier);
+  const allBuyers = useDemoData ? demoBuyers : airtableBuyers;
 
   // Apply filters
   const filteredBuyers = allBuyers.filter(buyer => {
     if (searchQuery && !buyer.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (budgetFilter !== 'all' && !buyer.budget.includes(budgetFilter)) return false;
+    if (budgetFilter !== 'all' && !buyer.budget.toLowerCase().includes(budgetFilter.toLowerCase())) return false;
     if (locationFilter !== 'all' && !buyer.location.toLowerCase().includes(locationFilter.toLowerCase())) return false;
     if (bedroomsFilter !== 'all' && !buyer.bedrooms.includes(bedroomsFilter)) return false;
-    if (timelineFilter !== 'all' && buyer.timeline !== timelineFilter) return false;
+    if (timelineFilter !== 'all' && !buyer.timeline.toLowerCase().includes(timelineFilter.toLowerCase())) return false;
     if (scoreFilter !== 'all') {
       if (scoreFilter === '80+' && buyer.score < 80) return false;
       if (scoreFilter === '70-79' && (buyer.score < 70 || buyer.score >= 80)) return false;
@@ -85,17 +171,63 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
       ? 'All Score 50+' 
       : 'Full database access';
 
-  const lockedBuyerCount = currentTier === 'access' ? getBuyersByTier('growth').length - allBuyers.length : 0;
+  const lockedBuyerCount = currentTier === 'access' ? getBuyersByTier('growth').length - demoBuyers.length : 0;
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Buyers" userType={userType}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <p className="mt-2 text-muted-foreground">Loading buyers...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Buyers" userType={userType}>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {scoreSubtext} • {allBuyers.length} buyers available
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              {scoreSubtext} • {allBuyers.length} buyers available
+              {useDemoData && error && (
+                <span className="ml-2 text-amber-500">(Demo data - Airtable unavailable)</span>
+              )}
+            </p>
+          </div>
+          {!useDemoData && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => refetch()}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          )}
         </div>
+
+        {/* Error banner if using demo data due to error */}
+        {error && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="py-3 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Could not load live data</p>
+                <p className="text-xs text-muted-foreground">Showing demo buyers. Click refresh to try again.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
@@ -115,10 +247,10 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Budgets</SelectItem>
-              <SelectItem value="400K-600K">£400K-600K</SelectItem>
-              <SelectItem value="600K-800K">£600K-800K</SelectItem>
-              <SelectItem value="800K-1M">£800K-1M</SelectItem>
-              <SelectItem value="1M">£1M+</SelectItem>
+              <SelectItem value="400k">£400K-600K</SelectItem>
+              <SelectItem value="600k">£600K-800K</SelectItem>
+              <SelectItem value="750k">£750K-1M</SelectItem>
+              <SelectItem value="1m">£1M+</SelectItem>
             </SelectContent>
           </Select>
 
@@ -131,7 +263,7 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
               <SelectItem value="london">London</SelectItem>
               <SelectItem value="manchester">Manchester</SelectItem>
               <SelectItem value="dubai">Dubai</SelectItem>
-              <SelectItem value="singapore">Singapore</SelectItem>
+              <SelectItem value="uk">UK</SelectItem>
             </SelectContent>
           </Select>
 
@@ -141,10 +273,10 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="1 Bed">1 Bed</SelectItem>
-              <SelectItem value="2 Bed">2 Bed</SelectItem>
-              <SelectItem value="3 Bed">3 Bed</SelectItem>
-              <SelectItem value="4+">4+ Bed</SelectItem>
+              <SelectItem value="1">1 Bed</SelectItem>
+              <SelectItem value="2">2 Bed</SelectItem>
+              <SelectItem value="3">3 Bed</SelectItem>
+              <SelectItem value="4">4+ Bed</SelectItem>
             </SelectContent>
           </Select>
 
@@ -154,10 +286,10 @@ const BuyersPage: React.FC<BuyersPageProps> = ({ userType }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="Within 28 days">Within 28 days</SelectItem>
-              <SelectItem value="0-3 months">0-3 months</SelectItem>
-              <SelectItem value="3-6 months">3-6 months</SelectItem>
-              <SelectItem value="6-12 months">6-12 months</SelectItem>
+              <SelectItem value="28 days">Within 28 days</SelectItem>
+              <SelectItem value="3 month">0-3 months</SelectItem>
+              <SelectItem value="6 month">3-6 months</SelectItem>
+              <SelectItem value="12 month">6-12 months</SelectItem>
             </SelectContent>
           </Select>
 
