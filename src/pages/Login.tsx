@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,21 +8,18 @@ import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, KeyRound } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 
 const Login = () => {
-  const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Get the return URL from state, or default to developer dashboard
   const from = (location.state as { from?: Location })?.from?.pathname || "/developer";
 
-  const handleSendCode = async (e: React.FormEvent) => {
+  const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       toast.error("Please enter your email address");
@@ -35,74 +32,62 @@ const Login = () => {
         email,
         options: {
           shouldCreateUser: true,
+          // Send users back to /login so we can exchange the code for a session.
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      setStep("code");
-      toast.success("Verification code sent to your email");
+      toast.success("Magic link sent. Check your email and open it in this browser.");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to send code";
+      const errorMessage = error instanceof Error ? error.message : "Failed to send magic link";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code.trim()) {
-      toast.error("Please enter the verification code");
-      return;
-    }
+  const { isAuthenticated, profile, isLoading: authLoading } = useAuth();
+
+  // Handle magic-link callbacks (PKCE code exchange)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+
+    if (!code) return;
 
     setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: "email",
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.session) {
-        login(data.session);
-        toast.success("Successfully logged in");
-
-        // Check if user has completed onboarding
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_completed, user_type")
-          .eq("user_id", data.session.user.id)
-          .single();
-
-        if (profile?.onboarding_completed) {
-          // Navigate to the original destination or user's appropriate dashboard
-          if (from && from !== "/login") {
-            navigate(from);
-          } else {
-            const userType = profile.user_type || "developer";
-            const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
-            navigate(dashboardPath);
-          }
-        } else {
-          // Redirect to onboarding
-          navigate("/onboarding");
+    supabase.auth
+      .exchangeCodeForSession(code)
+      .then(({ error }) => {
+        if (error) {
+          toast.error("This sign-in link is invalid or expired. Please request a new one.");
+          return;
         }
+
+        // Clean up URL to avoid re-processing the code on refresh
+        url.searchParams.delete("code");
+        window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+
+    if (profile?.onboarding_completed) {
+      if (from && from !== "/login") {
+        navigate(from, { replace: true });
+      } else {
+        const userType = profile?.user_type || "developer";
+        const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
+        navigate(dashboardPath, { replace: true });
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Invalid code";
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
+    } else {
+      navigate("/onboarding", { replace: true });
     }
-  };
+  }, [authLoading, isAuthenticated, profile, from, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -114,82 +99,40 @@ const Login = () => {
           <p className="text-muted-foreground mt-1">AI-Powered Property Sales Platform</p>
         </div>
 
-        {step === "email" ? (
-          <form onSubmit={handleSendCode} className="space-y-6">
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative mt-2">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  disabled={isLoading}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                We'll send a verification code to this email
-              </p>
+        <form onSubmit={handleSendLink} className="space-y-6">
+          <div>
+            <Label htmlFor="email">Email Address</Label>
+            <div className="relative mt-2">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+                disabled={isLoading}
+              />
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              We'll email you a secure sign-in link.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              If you see “Invalid token”, request a new link and open it once (some email scanners pre-open links).
+            </p>
+          </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                "Send Code"
-              )}
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyCode} className="space-y-6">
-            <div>
-              <Label htmlFor="code">Verification Code</Label>
-              <div className="relative mt-2">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="code"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="pl-10"
-                  maxLength={6}
-                  disabled={isLoading}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Enter the code sent to {email}
-              </p>
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Verify"
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setStep("email")}
-              disabled={isLoading}
-            >
-              Back to email
-            </Button>
-          </form>
-        )}
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              "Send Magic Link"
+            )}
+          </Button>
+        </form>
 
         <div className="mt-6 pt-6 border-t border-border">
           <p className="text-xs text-center text-muted-foreground">
