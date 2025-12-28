@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,12 +8,12 @@ import { LogoWithTransparency } from "@/components/LogoWithTransparency";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, profile, isLoading: authLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
     let timeoutId: number | undefined;
+    let isMounted = true;
 
     const handleCallback = async () => {
       const url = new URL(window.location.href);
@@ -42,27 +41,31 @@ const AuthCallback = () => {
         normalizedError.includes("email link is invalid") ||
         normalizedError.includes("expired");
 
-      // Stop indefinite spinner: if we can't establish a session quickly, show recovery.
+      // Timeout fallback
       timeoutId = window.setTimeout(() => {
-        setError(
-          "Still signing you in — this usually means the link was opened in a different browser, expired, or was already used. Please request a new link."
-        );
-        setProcessing(false);
+        if (isMounted) {
+          setError(
+            "Still signing you in — this usually means the link was opened in a different browser, expired, or was already used. Please request a new link."
+          );
+          setProcessing(false);
+        }
       }, 15000);
 
-      // Handle OAuth/magic-link errors from the URL (query or hash)
+      // Handle errors from URL
       if (errorParam || hashError) {
-        setError(
-          friendlyInvalidLink
-            ? "This sign-in link is invalid, expired, or has already been used. Please request a new link."
-            : errorDescription || errorParam || hashErrorDescription || hashError
-        );
-        setProcessing(false);
+        if (isMounted) {
+          setError(
+            friendlyInvalidLink
+              ? "This sign-in link is invalid, expired, or has already been used. Please request a new link."
+              : errorDescription || errorParam || hashErrorDescription || hashError
+          );
+          setProcessing(false);
+        }
         return;
       }
 
       try {
-        // Implicit flow: tokens are returned in the URL hash
+        // Implicit flow: tokens in hash
         if (accessToken && refreshToken) {
           const { error: setSessionError } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -70,62 +73,87 @@ const AuthCallback = () => {
           });
 
           if (setSessionError) {
-            setError("This sign-in link is invalid or expired. Please request a new one.");
-            setProcessing(false);
+            if (isMounted) {
+              setError("This sign-in link is invalid or expired. Please request a new one.");
+              setProcessing(false);
+            }
             return;
           }
 
           // Clear tokens from URL
-          window.history.replaceState({}, "", url.pathname + url.search);
-          setProcessing(false);
-          return;
+          window.history.replaceState({}, "", url.pathname);
         }
 
-        // PKCE flow: code is returned in query params
+        // PKCE flow: code in query params
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
-            setError("This sign-in link is invalid or expired. Please request a new one.");
-            setProcessing(false);
+            if (isMounted) {
+              setError("This sign-in link is invalid or expired. Please request a new one.");
+              setProcessing(false);
+            }
             return;
           }
 
-          // Clean up URL to avoid re-processing the code on refresh
-          url.searchParams.delete("code");
+          // Clean up URL
           window.history.replaceState({}, "", url.pathname);
-          setProcessing(false);
-          return;
         }
 
-        // No callback params - might already be authenticated via session
-        setProcessing(false);
-      } catch {
-        setError("An unexpected error occurred. Please try again.");
-        setProcessing(false);
+        // Now get the session directly and redirect
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          // No session yet, wait a bit and try again
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const { data: { session: retrySession } } = await supabase.auth.getSession();
+          
+          if (!retrySession?.user) {
+            if (isMounted) {
+              setError("Could not establish session. Please try logging in again.");
+              setProcessing(false);
+            }
+            return;
+          }
+        }
+
+        // Fetch profile directly
+        const { data: { session: finalSession } } = await supabase.auth.getSession();
+        if (finalSession?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("user_type, onboarding_completed")
+            .eq("user_id", finalSession.user.id)
+            .single();
+
+          if (isMounted) {
+            clearTimeout(timeoutId);
+            
+            if (profile?.onboarding_completed) {
+              const userType = profile.user_type || "developer";
+              const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
+              navigate(dashboardPath, { replace: true });
+            } else {
+              navigate("/onboarding", { replace: true });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Auth callback error:", err);
+        if (isMounted) {
+          setError("An unexpected error occurred. Please try again.");
+          setProcessing(false);
+        }
       }
     };
 
     handleCallback();
 
     return () => {
+      isMounted = false;
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, []);
-
-  // Redirect authenticated users to appropriate dashboard
-  useEffect(() => {
-    if (authLoading || processing) return;
-    if (!isAuthenticated) return;
-
-    if (profile?.onboarding_completed) {
-      const userType = profile?.user_type || "developer";
-      const dashboardPath = userType === "broker" ? "/broker" : `/${userType}`;
-      navigate(dashboardPath, { replace: true });
-    } else {
-      navigate("/onboarding", { replace: true });
-    }
-  }, [authLoading, isAuthenticated, profile, processing, navigate]);
+  }, [navigate]);
 
   if (error) {
     return (
