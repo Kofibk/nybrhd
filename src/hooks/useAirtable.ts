@@ -10,6 +10,7 @@ import {
   type AirtableCampaignMetric,
   type AirtableCreativeAsset,
   type AirtableAdCopy,
+  type AirtableBuyer,
 } from '@/lib/airtable';
 
 // ============ USERS HOOKS ============
@@ -330,5 +331,33 @@ export function useAirtableAutomationSequences(options?: { filterByFormula?: str
   return useQuery({
     queryKey: ['airtable', 'automationSequences', options],
     queryFn: () => airtable.automationSequences.list(options),
+  });
+}
+
+// ============ BUYERS HOOKS ============
+export function useAirtableBuyers(options?: { filterByFormula?: string; sort?: Array<{ field: string; direction: 'asc' | 'desc' }> }) {
+  return useQuery({
+    queryKey: ['airtable', 'buyers', options],
+    queryFn: () => airtable.buyers.list(options),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useAirtableBuyer(recordId: string) {
+  return useQuery({
+    queryKey: ['airtable', 'buyers', recordId],
+    queryFn: () => airtable.buyers.get(recordId),
+    enabled: !!recordId,
+  });
+}
+
+export function useUpdateBuyer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ recordId, data }: { recordId: string; data: Partial<AirtableBuyer> }) => 
+      airtable.buyers.update(recordId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['airtable', 'buyers'] });
+    },
   });
 }
