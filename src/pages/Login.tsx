@@ -120,10 +120,44 @@ const Login = () => {
               </div>
             </div>
 
+            <div className="flex gap-3">
+              <a
+                href="https://mail.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-sm font-medium"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 6L12 13L2 6V4L12 11L22 4V6Z" fill="#EA4335"/>
+                  <path d="M22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6L12 13L22 6Z" fill="#FBBC05"/>
+                  <path d="M2 6V18C2 19.1 2.9 20 4 20H12V13L2 6Z" fill="#34A853"/>
+                  <path d="M22 6V18C22 19.1 21.1 20 20 20H12V13L22 6Z" fill="#4285F4"/>
+                </svg>
+                Gmail
+              </a>
+              <a
+                href="https://outlook.live.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-sm font-medium"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <path d="M24 7.387V16.614C24 17.93 22.93 19 21.613 19H9.387C8.069 19 7 17.93 7 16.613V7.387C7 6.069 8.07 5 9.387 5H21.614C22.93 5 24 6.07 24 7.387Z" fill="#0078D4"/>
+                  <path d="M24 7.387L15.5 13L7 7.387V5.5L15.5 11L24 5.5V7.387Z" fill="#28A8EA"/>
+                  <path d="M9 5H2.5C1.12 5 0 6.12 0 7.5V16.5C0 17.88 1.12 19 2.5 19H9V5Z" fill="#0078D4"/>
+                  <path d="M9 8.5V15.5L4.5 12L0 15.5V8.5L4.5 12L9 8.5Z" fill="#50D9FF"/>
+                </svg>
+                Outlook
+              </a>
+            </div>
+
             <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
-              <p>• Open the link in <strong>this browser</strong></p>
-              <p>• Links expire after 1 hour</p>
-              <p>• Check spam folder if you don't see it</p>
+              <p className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+                <span><strong>Important:</strong> Open the link in <strong>this browser</strong> to sign in</span>
+              </p>
+              <p className="pl-6">• Links expire after 1 hour</p>
+              <p className="pl-6">• Check spam folder if you don't see it</p>
             </div>
 
             <Button
