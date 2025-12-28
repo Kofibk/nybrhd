@@ -1,7 +1,6 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { AIAgentDashboard } from '@/components/admin/AIAgentDashboard';
 import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
-import { TierSwitcher } from '@/components/TierSwitcher';
 import { SubscriptionBanner } from '@/components/dashboard/SubscriptionBanner';
 import WhatsAppLeadNurturing from '@/components/WhatsAppLeadNurturing';
 import EmailAutomation from '@/components/EmailAutomation';
@@ -11,18 +10,15 @@ import { LayoutDashboard, MessageCircle, Mail } from 'lucide-react';
 
 const BrokerDashboard = () => {
   const { profile } = useAuth();
-  const userName = profile?.full_name || 'User';
+  const firstName = profile?.full_name?.split(' ')[0] || 'there';
 
   return (
     <DashboardLayout 
-      title={`Welcome back, ${userName}`}
+      title={`Welcome back, ${firstName}`}
       userType="broker"
-      userName={userName}
+      userName={firstName}
     >
       <div className="space-y-6">
-        {/* Demo Tier Switcher */}
-        <TierSwitcher className="w-fit" />
-
         {/* Subscription Status Banner */}
         <SubscriptionBanner userType="broker" />
 

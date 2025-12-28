@@ -1,5 +1,4 @@
 import DashboardLayout from '@/components/DashboardLayout';
-import { TierSwitcher } from '@/components/TierSwitcher';
 import { SubscriptionBanner } from '@/components/dashboard/SubscriptionBanner';
 import { StatsGrid } from '@/components/dashboard/StatsGrid';
 import { AccountManagerCard } from '@/components/dashboard/AccountManagerCard';
@@ -10,23 +9,19 @@ import { UpgradePrompt } from '@/components/dashboard/UpgradePrompt';
 import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { developerCompany } from '@/lib/developerDemoData';
 
 const DeveloperDashboard = () => {
   const { profile } = useAuth();
   const { currentTier } = useSubscription();
-  const userName = profile?.full_name || developerCompany.name;
+  const firstName = profile?.full_name?.split(' ')[0] || 'there';
 
   return (
     <DashboardLayout 
-      title={`Welcome back, ${userName}`}
+      title={`Welcome back, ${firstName}`}
       userType="developer"
-      userName={userName}
+      userName={firstName}
     >
       <div className="space-y-6">
-        {/* Demo Tier Switcher */}
-        <TierSwitcher className="w-fit" />
-
         {/* Subscription Status Banner */}
         <SubscriptionBanner userType="developer" />
 
