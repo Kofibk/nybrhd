@@ -222,6 +222,36 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
     setSelectedBuyers(newSet);
   };
 
+  // Send email notification for assignment
+  const sendAssignmentNotification = async (buyer: TransformedBuyer, callerName: string) => {
+    const callerProfile = profiles?.find(p => p.full_name === callerName || p.email === callerName);
+    if (!callerProfile?.email) {
+      console.log('No email found for caller:', callerName);
+      return;
+    }
+    
+    try {
+      await supabase.functions.invoke('send-assignment-notification', {
+        body: {
+          callerEmail: callerProfile.email,
+          callerName: callerProfile.full_name || callerName,
+          buyerName: buyer.name,
+          buyerEmail: buyer.email,
+          buyerPhone: buyer.phone,
+          buyerBudget: buyer.budgetRange,
+          buyerLocation: buyer.location || buyer.country,
+          buyerIntent: buyer.intent,
+          buyerScore: buyer.score,
+          buyerTimeline: buyer.timeline,
+          buyerDevelopment: buyer.development,
+        },
+      });
+      console.log('Assignment notification sent to:', callerProfile.email);
+    } catch (error) {
+      console.error('Failed to send assignment notification:', error);
+    }
+  };
+
   const handleAssignCaller = async () => {
     if (!buyerToAssign || !selectedCaller) return;
     
@@ -233,6 +263,9 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
           'Status': 'Contacted - In Progress',
         },
       });
+      
+      // Send email notification
+      await sendAssignmentNotification(buyerToAssign, selectedCaller);
       
       toast({
         title: "Buyer assigned",
@@ -265,6 +298,9 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
             'Status': 'Contacted - In Progress',
           },
         });
+        
+        // Send email notification for each buyer
+        await sendAssignmentNotification(buyer, selectedCaller);
       }
       
       toast({
