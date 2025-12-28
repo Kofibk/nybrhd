@@ -350,18 +350,20 @@ const Onboarding = () => {
 
       // For authenticated users, save to Supabase
 
-      // Create or update company
-      const { data: company, error: companyError } = await supabase
+      // Create company (avoid SELECT/RETURNING here because the user won't have
+      // access to read it until their profile is linked to it via company_id).
+      const companyId = crypto.randomUUID();
+
+      const { error: companyError } = await supabase
         .from('companies')
         .insert({
+          id: companyId,
           name: formData.companyName,
           website: formData.website || null,
           logo_url: formData.companyLogo,
           address: formData.address || null,
           industry: formData.userType,
-        })
-        .select()
-        .single();
+        });
 
       if (companyError) throw companyError;
 
@@ -372,7 +374,7 @@ const Onboarding = () => {
           full_name: `${formData.firstName} ${formData.lastName}`,
           phone: formData.phone,
           job_title: formData.jobTitle,
-          company_id: company.id,
+          company_id: companyId,
           company_logo_url: formData.companyLogo,
           company_website: formData.website,
           company_linkedin: formData.linkedin,
@@ -395,7 +397,7 @@ const Onboarding = () => {
         const invitations = validEmails.map((email) => ({
           inviter_id: user.id,
           email: email.trim(),
-          company_id: company.id,
+          company_id: companyId,
           status: 'pending',
         }));
 
