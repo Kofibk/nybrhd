@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { isTestEmail } from "@/lib/testAccounts";
 
 const COOLDOWN_SECONDS = 60;
 
@@ -50,6 +51,43 @@ const Login = () => {
 
     setIsLoading(true);
     try {
+      // Check if this is a test email - use password auth instead of OTP
+      if (isTestEmail(email)) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password: 'testpassword123', // Default test password
+        });
+
+        if (error) {
+          // If user doesn't exist, create them first
+          if (error.message.includes('Invalid login credentials')) {
+            const { error: signUpError } = await supabase.auth.signUp({
+              email: email.trim().toLowerCase(),
+              password: 'testpassword123',
+              options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
+              },
+            });
+            
+            if (signUpError) throw signUpError;
+            
+            // Try to sign in again after signup
+            const { error: retryError } = await supabase.auth.signInWithPassword({
+              email: email.trim().toLowerCase(),
+              password: 'testpassword123',
+            });
+            
+            if (retryError) throw retryError;
+          } else {
+            throw error;
+          }
+        }
+
+        toast.success("Signed in as test user!");
+        return;
+      }
+
+      // Normal magic link flow for non-test emails
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
