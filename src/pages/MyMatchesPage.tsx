@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useMyAssignments } from '@/hooks/useBuyerAssignments';
-import { useAirtableBuyersForTable } from '@/hooks/useAirtableBuyers';
+import { useAirtableBuyersForTable } from '@/hooks/useAirtableData';
 import { 
   Heart, 
   MessageSquare, 

@@ -31,7 +31,7 @@ import {
   SortAsc,
   SortDesc,
 } from "lucide-react";
-import { TransformedBuyer } from "@/hooks/useAirtableBuyers";
+import { TransformedBuyer } from "@/hooks/useAirtableData";
 import { cn } from "@/lib/utils";
 
 // Filter configuration

@@ -45,7 +45,7 @@ import { useNavigate } from 'react-router-dom';
 import { classifyLead } from '@/lib/leadClassification';
 import Papa from 'papaparse';
 import { AnimatedNumber } from '@/hooks/useAnimatedCounter';
-import { useAirtableCampaignsForDashboard } from '@/hooks/useAirtableCampaigns';
+import { useAirtableCampaignsForDashboard } from '@/hooks/useAirtableData';
 import {
   Dialog,
   DialogContent,

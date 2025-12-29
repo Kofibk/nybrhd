@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useAirtableBuyersForTable } from '@/hooks/useAirtableBuyers';
+import { useAirtableBuyersForTable } from '@/hooks/useAirtableData';
 import { useMyContactHistory } from '@/hooks/useBuyerAssignments';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 

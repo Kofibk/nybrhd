@@ -70,7 +70,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TransformedBuyer, useUpdateAirtableBuyer, getUniqueBuyerStatuses, getUniqueCallers } from "@/hooks/useAirtableBuyers";
+import { TransformedBuyer, useUpdateAirtableBuyer, getUniqueBuyerStatuses, getUniqueCallers } from "@/hooks/useAirtableData";
 import { 
   BuyersFilterPanel, 
   FilterCondition, 
