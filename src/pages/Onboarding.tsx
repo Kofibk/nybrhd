@@ -566,6 +566,9 @@ const Onboarding = () => {
     </div>
   );
 
+  // Check if current user is a test account
+  const isTestAccount = user?.email ? isTestEmail(user.email) : false;
+
   // Step 1: Welcome / User Type
   const renderStep1 = () => (
     <div className="space-y-8 animate-fade-in">
@@ -582,13 +585,7 @@ const Onboarding = () => {
           return (
             <Card
               key={type.id}
-              onClick={() => {
-                updateFormData('userType', type.id);
-                // For test accounts, skip to dashboard after selecting user type
-                if (user?.email && isTestEmail(user.email)) {
-                  handleTestAccountQuickOnboard(type.id);
-                }
-              }}
+              onClick={() => updateFormData('userType', type.id)}
               className={`
                 p-6 cursor-pointer transition-all duration-200 hover:scale-[1.02]
                 ${isSelected 
@@ -608,6 +605,26 @@ const Onboarding = () => {
           );
         })}
       </div>
+
+      {/* Test account quick actions */}
+      {isTestAccount && formData.userType && (
+        <div className="flex flex-col items-center gap-3 pt-4">
+          <Button 
+            onClick={() => handleTestAccountQuickOnboard(formData.userType)}
+            className="min-w-[200px]"
+          >
+            <Rocket className="w-4 h-4 mr-2" />
+            Skip to Dashboard
+          </Button>
+          <Button 
+            variant="ghost" 
+            onClick={handleNext}
+            className="text-muted-foreground"
+          >
+            Continue with full setup →
+          </Button>
+        </div>
+      )}
     </div>
   );
 
