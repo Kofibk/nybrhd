@@ -4,26 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Loader2, RefreshCw } from "lucide-react";
 import { airtable } from "@/lib/airtable";
+import { AIRTABLE_TABLES } from "@/lib/airtableConstants";
 
-const TABLES = [
-  "Users",
-  "Companies", 
-  "User_Roles",
-  "Developments",
-  "Campaigns",
-  "Creative_Assets",
-  "Ad_Copies",
-  "Campaign_Metrics",
-  "Leads",
-  "Lead_Interactions",
-  "Lead_Sources",
-  "Automation_Sequences",
-  "Automation_Messages",
-  "Subscriptions",
-  "Invoices",
-  "Settings",
-  "Audit_Logs",
-];
+// Get all table names from centralized constants
+const TABLES = Object.values(AIRTABLE_TABLES);
 
 type TestResult = {
   table: string;
