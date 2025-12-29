@@ -166,6 +166,16 @@ export interface Lead {
   classification?: LeadClassification;
   viewingScheduled?: string;
   purpose?: "investment" | "primary_residence" | "holiday_home";
+  // Extended Airtable fields
+  agentTranscription?: string;
+  linkedinProfile?: string;
+  purchaseIn28Days?: boolean;
+  brokerNeeded?: boolean;
+  preferredCommunication?: string;
+  assignedCaller?: string;
+  buyerSummary?: string;
+  campaignSource?: string;
+  location?: string;
 }
 
 export interface AIRecommendation {

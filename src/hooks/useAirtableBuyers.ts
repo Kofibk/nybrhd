@@ -25,6 +25,14 @@ export interface AirtableBuyerRecord {
     'Preferred Communication'?: string;
     'Buyer Summary'?: string;
     'Development Name'?: string;
+    // Extended fields
+    'Agent Transcription'?: string;
+    'LinkedIn Profile'?: string;
+    'Purchase in 28 Days'?: boolean | string;
+    'Broker Needed'?: boolean | string;
+    'Campaign Name'?: string;
+    'Source'?: string;
+    'Notes'?: string;
     [key: string]: unknown;
   };
   createdTime: string;
@@ -111,6 +119,14 @@ export function transformBuyerForTable(record: AirtableBuyerRecord) {
     summary: fields['Buyer Summary'] || '',
     development: fields['Development Name'] || '',
     createdTime: record.createdTime,
+    // Extended fields
+    agentTranscription: fields['Agent Transcription'] || '',
+    linkedinProfile: fields['LinkedIn Profile'] || '',
+    purchaseIn28Days: fields['Purchase in 28 Days'] === true || fields['Purchase in 28 Days'] === 'Yes' || fields['Purchase in 28 Days'] === 'true',
+    brokerNeeded: fields['Broker Needed'] === true || fields['Broker Needed'] === 'Yes' || fields['Broker Needed'] === 'true',
+    campaignName: fields['Campaign Name'] || '',
+    source: fields['Source'] || '',
+    notes: fields['Notes'] || '',
     rawFields: fields,
   };
 }
