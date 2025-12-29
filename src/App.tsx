@@ -9,6 +9,7 @@ import { DataProvider } from "@/contexts/DataContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { SplashScreen } from "./components/SplashScreen";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import HowItWorks from "./pages/HowItWorks";
@@ -53,8 +54,6 @@ import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminBillingPage from "./pages/admin/AdminBillingPage";
 import AdminRoute from "./components/admin/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AirtableTest from "./pages/AirtableTest";
-import AITestPage from "./pages/AITestPage";
 import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
@@ -206,11 +205,8 @@ const AppRoutes = () => {
         </AdminRoute>
       } />
       <Route path="/admin/settings" element={<AdminRoute><Settings userType="admin" /></AdminRoute>} />
-      <Route path="/admin/clients/:clientId" element={<AdminRoute><ClientDetail /></AdminRoute>} />
 
-      {/* Test Routes */}
-      <Route path="/airtable-test" element={<AirtableTest />} />
-      <Route path="/ai-test" element={<AITestPage />} />
+      <Route path="*" element={<NotFound />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -248,7 +244,9 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <AppRoutes />
+                  <ErrorBoundary>
+                    <AppRoutes />
+                  </ErrorBoundary>
                 </BrowserRouter>
               </TooltipProvider>
             </InventoryProvider>
