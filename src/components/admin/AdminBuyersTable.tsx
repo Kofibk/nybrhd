@@ -90,7 +90,21 @@ interface ColumnSort {
 
 type ViewMode = "table" | "cards";
 
-// Reusable row component for buyer table
+// Format date helper
+const formatDate = (dateString: string) => {
+  if (!dateString) return '—';
+  try {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+// Reusable row component for buyer table with expanded details
 const BuyerTableRow = ({ 
   buyer, 
   isSelected, 
@@ -99,6 +113,7 @@ const BuyerTableRow = ({
   getScoreColor,
   getIntentColor,
   getStatusColor,
+  showExpanded = false,
 }: { 
   buyer: TransformedBuyer;
   isSelected: boolean;
@@ -107,16 +122,21 @@ const BuyerTableRow = ({
   getScoreColor: (score: number) => string;
   getIntentColor: (intent: string) => string;
   getStatusColor: (status: string) => string;
+  showExpanded?: boolean;
 }) => (
   <TableRow className="hover:bg-muted/50">
-    <TableCell>
+    <TableCell className="w-8">
       <Checkbox checked={isSelected} onCheckedChange={(checked) => onSelect(buyer.id, !!checked)} />
+    </TableCell>
+    <TableCell className="min-w-[120px]">
+      <div className="text-xs text-muted-foreground">{formatDate(buyer.createdTime)}</div>
     </TableCell>
     <TableCell>
       <div>
         <div className="font-medium">{buyer.name}</div>
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
+        <div className="text-xs text-muted-foreground flex flex-col gap-0.5">
           {buyer.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{buyer.email}</span>}
+          {buyer.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{buyer.phone}</span>}
         </div>
       </div>
     </TableCell>
@@ -130,7 +150,24 @@ const BuyerTableRow = ({
       <Badge variant="outline" className={getStatusColor(buyer.status)}>{buyer.status}</Badge>
     </TableCell>
     <TableCell className="text-sm">{buyer.budgetRange || '—'}</TableCell>
+    <TableCell className="text-sm">{buyer.bedrooms || '—'}</TableCell>
     <TableCell className="text-sm">{buyer.location || buyer.country || '—'}</TableCell>
+    <TableCell className="text-sm">{buyer.timeline || '—'}</TableCell>
+    <TableCell className="text-sm">{buyer.paymentMethod || '—'}</TableCell>
+    <TableCell className="text-sm">{buyer.purpose || '—'}</TableCell>
+    <TableCell className="text-sm max-w-[120px]">
+      {buyer.development ? (
+        <Badge variant="secondary" className="text-xs truncate">
+          <Building2 className="h-3 w-3 mr-1 flex-shrink-0" />
+          <span className="truncate">{buyer.development}</span>
+        </Badge>
+      ) : '—'}
+    </TableCell>
+    <TableCell className="text-sm max-w-[200px]">
+      {buyer.summary ? (
+        <span className="text-xs text-muted-foreground line-clamp-2">{buyer.summary}</span>
+      ) : '—'}
+    </TableCell>
     <TableCell>
       {buyer.assignedCaller ? (
         <Badge variant="secondary" className="text-xs">
@@ -458,12 +495,18 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
   };
 
   const exportToCSV = () => {
-    const headers = ['Name', 'Email', 'Phone', 'Budget', 'Bedrooms', 'Location', 'Country', 'Timeline', 'Score', 'Intent', 'Status', 'Assigned To'];
+    const headers = [
+      'Date Added', 'Name', 'Email', 'Phone', 'Budget', 'Bedrooms', 'Location', 'Country', 
+      'Timeline', 'Payment Method', 'Purpose', 'Development', 'Score', 'Intent', 'Status', 
+      'Buyer Summary', 'Assigned To', 'Preferred Communication'
+    ];
     const rows = filteredBuyers.map(b => [
-      b.name, b.email, b.phone, b.budgetRange, b.bedrooms, b.location, b.country, b.timeline, b.score, b.intent, b.status, b.assignedCaller
+      b.createdTime, b.name, b.email, b.phone, b.budgetRange, b.bedrooms, 
+      b.location, b.country, b.timeline, b.paymentMethod, b.purpose, b.development,
+      b.score, b.intent, b.status, b.summary, b.assignedCaller, b.preferredComm
     ]);
     
-    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v || ''}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -560,11 +603,14 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
-                <TableHead className="w-10">
+                <TableHead className="w-8">
                   <Checkbox
                     checked={selectedBuyers.size === filteredBuyers.length && filteredBuyers.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
+                </TableHead>
+                <TableHead className="cursor-pointer min-w-[100px]" onClick={() => handleSort('createdTime')}>
+                  <div className="flex items-center text-xs">Date <SortIcon field="createdTime" /></div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
                   <div className="flex items-center">Name <SortIcon field="name" /></div>
@@ -577,7 +623,13 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
                   <div className="flex items-center">Status <SortIcon field="status" /></div>
                 </TableHead>
                 <TableHead>Budget</TableHead>
+                <TableHead>Beds</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Timeline</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Purpose</TableHead>
+                <TableHead>Development</TableHead>
+                <TableHead>Summary</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => handleSort('assignedCaller')}>
                   <div className="flex items-center">Assigned <SortIcon field="assignedCaller" /></div>
                 </TableHead>
@@ -592,7 +644,7 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
                     <>
                       <CollapsibleTrigger asChild>
                         <TableRow className="bg-muted/50 hover:bg-muted cursor-pointer">
-                          <TableCell colSpan={9}>
+                          <TableCell colSpan={16}>
                             <div className="flex items-center gap-2">
                               {expandedGroups.has(groupName) ? (
                                 <ChevronDown className="h-4 w-4" />
