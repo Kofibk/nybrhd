@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -32,9 +31,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { 
   Download,
   ArrowUpDown,
@@ -53,10 +56,21 @@ import {
   BedDouble,
   Target,
   Building2,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TransformedBuyer, useUpdateAirtableBuyer, getUniqueBuyerStatuses, getUniqueCallers } from "@/hooks/useAirtableBuyers";
+import { 
+  BuyersFilterPanel, 
+  FilterCondition, 
+  SortConfig, 
+  GroupConfig,
+  applyFilters,
+  applySorts,
+  groupBuyers,
+} from "./BuyersFilterPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -76,11 +90,90 @@ interface ColumnSort {
 
 type ViewMode = "table" | "cards";
 
+// Reusable row component for buyer table
+const BuyerTableRow = ({ 
+  buyer, 
+  isSelected, 
+  onSelect, 
+  onAssign,
+  getScoreColor,
+  getIntentColor,
+  getStatusColor,
+}: { 
+  buyer: TransformedBuyer;
+  isSelected: boolean;
+  onSelect: (id: string, checked: boolean) => void;
+  onAssign: (buyer: TransformedBuyer) => void;
+  getScoreColor: (score: number) => string;
+  getIntentColor: (intent: string) => string;
+  getStatusColor: (status: string) => string;
+}) => (
+  <TableRow className="hover:bg-muted/50">
+    <TableCell>
+      <Checkbox checked={isSelected} onCheckedChange={(checked) => onSelect(buyer.id, !!checked)} />
+    </TableCell>
+    <TableCell>
+      <div>
+        <div className="font-medium">{buyer.name}</div>
+        <div className="text-xs text-muted-foreground flex items-center gap-2">
+          {buyer.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{buyer.email}</span>}
+        </div>
+      </div>
+    </TableCell>
+    <TableCell>
+      <Badge className={cn("font-bold", getScoreColor(buyer.score))}>{buyer.score}</Badge>
+    </TableCell>
+    <TableCell>
+      {buyer.intent && <Badge className={getIntentColor(buyer.intent)}>{buyer.intent}</Badge>}
+    </TableCell>
+    <TableCell>
+      <Badge variant="outline" className={getStatusColor(buyer.status)}>{buyer.status}</Badge>
+    </TableCell>
+    <TableCell className="text-sm">{buyer.budgetRange || '—'}</TableCell>
+    <TableCell className="text-sm">{buyer.location || buyer.country || '—'}</TableCell>
+    <TableCell>
+      {buyer.assignedCaller ? (
+        <Badge variant="secondary" className="text-xs">
+          <User className="h-3 w-3 mr-1" />{buyer.assignedCaller}
+        </Badge>
+      ) : (
+        <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => onAssign(buyer)}>
+          <UserPlus className="h-3 w-3 mr-1" />Assign
+        </Button>
+      )}
+    </TableCell>
+    <TableCell>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onAssign(buyer)}>
+            <UserPlus className="h-4 w-4 mr-2" />Assign Caller
+          </DropdownMenuItem>
+          {buyer.phone && (
+            <DropdownMenuItem onClick={() => window.open(`tel:${buyer.phone}`)}>
+              <Phone className="h-4 w-4 mr-2" />Call {buyer.phone}
+            </DropdownMenuItem>
+          )}
+          {buyer.email && (
+            <DropdownMenuItem onClick={() => window.open(`mailto:${buyer.email}`)}>
+              <Mail className="h-4 w-4 mr-2" />Email
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </TableCell>
+  </TableRow>
+);
+
 const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTableProps) => {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [callerFilter, setCallerFilter] = useState<string>("all");
-  const [intentFilter, setIntentFilter] = useState<string>("all");
-  const [columnSort, setColumnSort] = useState<ColumnSort>({ field: "score", direction: "desc" });
+  // Advanced filter state
+  const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [sorts, setSorts] = useState<SortConfig[]>([{ field: "score", direction: "desc" }]);
+  const [groupBy, setGroupBy] = useState<GroupConfig>({ field: null });
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  
   const [selectedBuyers, setSelectedBuyers] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -102,10 +195,6 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
       return data || [];
     },
   });
-  
-  // Get unique values for filters
-  const uniqueStatuses = useMemo(() => getUniqueBuyerStatuses(buyers), [buyers]);
-  const uniqueCallers = useMemo(() => getUniqueCallers(buyers), [buyers]);
 
   const getStatusColor = (status: string) => {
     const s = status.toLowerCase();
@@ -132,74 +221,79 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
     return 'bg-muted text-muted-foreground';
   };
 
-  // Filter and sort buyers
+  // Filter, sort and group buyers using the new filter system
   const filteredBuyers = useMemo(() => {
-    let filtered = buyers.filter(buyer => {
-      // Search filter
+    // First apply search filter
+    let result = buyers.filter(buyer => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const searchable = `${buyer.name} ${buyer.email} ${buyer.phone} ${buyer.location} ${buyer.country}`.toLowerCase();
         if (!searchable.includes(query)) return false;
       }
-      
-      // Status filter
-      if (statusFilter !== "all" && buyer.status !== statusFilter) return false;
-      
-      // Caller filter
-      if (callerFilter !== "all") {
-        if (callerFilter === "unassigned" && buyer.assignedCaller) return false;
-        if (callerFilter !== "unassigned" && buyer.assignedCaller !== callerFilter) return false;
-      }
-      
-      // Intent filter
-      if (intentFilter !== "all" && buyer.intent.toLowerCase() !== intentFilter.toLowerCase()) return false;
-      
       return true;
     });
+    
+    // Apply advanced filters
+    result = applyFilters(result, filters);
+    
+    // Apply sorting
+    result = applySorts(result, sorts);
+    
+    return result;
+  }, [buyers, searchQuery, filters, sorts]);
 
-    // Sort
-    if (columnSort.direction) {
-      filtered.sort((a, b) => {
-        const aVal = a[columnSort.field];
-        const bVal = b[columnSort.field];
-        
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return columnSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
-        }
-        
-        const aStr = String(aVal || '').toLowerCase();
-        const bStr = String(bVal || '').toLowerCase();
-        return columnSort.direction === 'asc' 
-          ? aStr.localeCompare(bStr) 
-          : bStr.localeCompare(aStr);
-      });
+  // Group buyers if grouping is enabled
+  const groupedBuyers = useMemo(() => {
+    return groupBuyers(filteredBuyers, groupBy);
+  }, [filteredBuyers, groupBy]);
+
+  // Initialize all groups as expanded
+  useMemo(() => {
+    if (groupBy.field && expandedGroups.size === 0) {
+      setExpandedGroups(new Set(Array.from(groupedBuyers.keys())));
     }
+  }, [groupBy.field, groupedBuyers]);
 
-    return filtered;
-  }, [buyers, searchQuery, statusFilter, callerFilter, intentFilter, columnSort]);
+  const toggleGroup = (groupName: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupName)) {
+      newExpanded.delete(groupName);
+    } else {
+      newExpanded.add(groupName);
+    }
+    setExpandedGroups(newExpanded);
+  };
 
-  // Virtualization for large lists
+  // Virtualization for large lists (only when not grouped)
   const rowVirtualizer = useVirtualizer({
-    count: filteredBuyers.length,
+    count: groupBy.field ? 0 : filteredBuyers.length,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => 56,
     overscan: 10,
   });
 
   const handleSort = (field: keyof TransformedBuyer) => {
-    setColumnSort(prev => ({
-      field,
-      direction: prev.field === field 
-        ? prev.direction === 'asc' ? 'desc' : prev.direction === 'desc' ? null : 'asc'
-        : 'desc'
-    }));
+    // Toggle or add sort
+    const existingIndex = sorts.findIndex(s => s.field === field);
+    if (existingIndex >= 0) {
+      const existing = sorts[existingIndex];
+      if (existing.direction === "desc") {
+        setSorts(sorts.map((s, i) => i === existingIndex ? { ...s, direction: "asc" } : s));
+      } else {
+        // Remove the sort
+        setSorts(sorts.filter((_, i) => i !== existingIndex));
+      }
+    } else {
+      setSorts([{ field, direction: "desc" }, ...sorts]);
+    }
   };
 
   const SortIcon = ({ field }: { field: keyof TransformedBuyer }) => {
-    if (columnSort.field !== field || !columnSort.direction) {
+    const sortConfig = sorts.find(s => s.field === field);
+    if (!sortConfig) {
       return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
     }
-    return columnSort.direction === 'asc' 
+    return sortConfig.direction === 'asc' 
       ? <ArrowUp className="h-3 w-3 ml-1" /> 
       : <ArrowDown className="h-3 w-3 ml-1" />;
   };
@@ -391,47 +485,19 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
 
   return (
     <div className="space-y-4">
-      {/* Filters & Actions Bar */}
+      {/* Advanced Filter Panel */}
+      <BuyersFilterPanel
+        buyers={buyers}
+        filters={filters}
+        onFiltersChange={setFilters}
+        sorts={sorts}
+        onSortsChange={setSorts}
+        groupBy={groupBy}
+        onGroupByChange={setGroupBy}
+      />
+
+      {/* Actions Bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px] h-8 text-xs">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {uniqueStatuses.map(status => (
-              <SelectItem key={status} value={status}>{status}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={callerFilter} onValueChange={setCallerFilter}>
-          <SelectTrigger className="w-[160px] h-8 text-xs">
-            <SelectValue placeholder="All Callers" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Callers</SelectItem>
-            <SelectItem value="unassigned">Unassigned</SelectItem>
-            {uniqueCallers.map(caller => (
-              <SelectItem key={caller} value={caller}>{caller}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={intentFilter} onValueChange={setIntentFilter}>
-          <SelectTrigger className="w-[120px] h-8 text-xs">
-            <SelectValue placeholder="Intent" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Intent</SelectItem>
-            <SelectItem value="hot">Hot</SelectItem>
-            <SelectItem value="warm">Warm</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="flex-1" />
-
         {selectedBuyers.size > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{selectedBuyers.size} selected</span>
@@ -453,6 +519,15 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
             </Button>
           </div>
         )}
+
+        <div className="flex-1" />
+
+        {/* Stats */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span><strong>{filteredBuyers.length}</strong> buyers</span>
+          <span><strong>{filteredBuyers.filter(b => !b.assignedCaller).length}</strong> unassigned</span>
+          <span><strong>{filteredBuyers.filter(b => b.intent.toLowerCase() === 'hot').length}</strong> hot</span>
+        </div>
 
         <div className="flex items-center gap-1 border rounded-md p-0.5">
           <Button
@@ -479,18 +554,9 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
         </Button>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span><strong>{filteredBuyers.length}</strong> buyers shown</span>
-        <span>•</span>
-        <span><strong>{filteredBuyers.filter(b => !b.assignedCaller).length}</strong> unassigned</span>
-        <span>•</span>
-        <span><strong>{filteredBuyers.filter(b => b.intent.toLowerCase() === 'hot').length}</strong> hot leads</span>
-      </div>
-
       {/* Table View */}
       {viewMode === "table" ? (
-        <div ref={tableContainerRef} className="border rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
+        <div ref={tableContainerRef} className="border rounded-lg overflow-auto max-h-[calc(100vh-360px)]">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
@@ -519,99 +585,71 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                const buyer = filteredBuyers[virtualRow.index];
-                return (
-                  <TableRow key={buyer.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedBuyers.has(buyer.id)}
-                        onCheckedChange={(checked) => handleSelectBuyer(buyer.id, !!checked)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{buyer.name}</div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-2">
-                          {buyer.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{buyer.email}</span>}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={cn("font-bold", getScoreColor(buyer.score))}>
-                        {buyer.score}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {buyer.intent && (
-                        <Badge className={getIntentColor(buyer.intent)}>
-                          {buyer.intent}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(buyer.status)}>
-                        {buyer.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{buyer.budgetRange || '—'}</TableCell>
-                    <TableCell className="text-sm">
-                      {buyer.location || buyer.country || '—'}
-                    </TableCell>
-                    <TableCell>
-                      {buyer.assignedCaller ? (
-                        <Badge variant="secondary" className="text-xs">
-                          <User className="h-3 w-3 mr-1" />
-                          {buyer.assignedCaller}
-                        </Badge>
-                      ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-7 text-xs text-muted-foreground"
-                          onClick={() => {
-                            setBuyerToAssign(buyer);
-                            setAssignDialogOpen(true);
-                          }}
-                        >
-                          <UserPlus className="h-3 w-3 mr-1" />
-                          Assign
-                        </Button>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            setBuyerToAssign(buyer);
-                            setAssignDialogOpen(true);
-                          }}>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Assign Caller
-                          </DropdownMenuItem>
-                          {buyer.phone && (
-                            <DropdownMenuItem onClick={() => window.open(`tel:${buyer.phone}`)}>
-                              <Phone className="h-4 w-4 mr-2" />
-                              Call {buyer.phone}
-                            </DropdownMenuItem>
-                          )}
-                          {buyer.email && (
-                            <DropdownMenuItem onClick={() => window.open(`mailto:${buyer.email}`)}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Email
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {groupBy.field ? (
+                // Grouped view
+                Array.from(groupedBuyers.entries()).map(([groupName, groupBuyers]) => (
+                  <Collapsible key={groupName} open={expandedGroups.has(groupName)} onOpenChange={() => toggleGroup(groupName)} asChild>
+                    <>
+                      <CollapsibleTrigger asChild>
+                        <TableRow className="bg-muted/50 hover:bg-muted cursor-pointer">
+                          <TableCell colSpan={9}>
+                            <div className="flex items-center gap-2">
+                              {expandedGroups.has(groupName) ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              <span className="font-medium">{groupName}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {groupBuyers.length}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent asChild>
+                        <>
+                          {groupBuyers.map(buyer => (
+                            <BuyerTableRow
+                              key={buyer.id}
+                              buyer={buyer}
+                              isSelected={selectedBuyers.has(buyer.id)}
+                              onSelect={handleSelectBuyer}
+                              onAssign={(b) => {
+                                setBuyerToAssign(b);
+                                setAssignDialogOpen(true);
+                              }}
+                              getScoreColor={getScoreColor}
+                              getIntentColor={getIntentColor}
+                              getStatusColor={getStatusColor}
+                            />
+                          ))}
+                        </>
+                      </CollapsibleContent>
+                    </>
+                  </Collapsible>
+                ))
+              ) : (
+                // Flat view with virtualization
+                rowVirtualizer.getVirtualItems().map(virtualRow => {
+                  const buyer = filteredBuyers[virtualRow.index];
+                  return (
+                    <BuyerTableRow
+                      key={buyer.id}
+                      buyer={buyer}
+                      isSelected={selectedBuyers.has(buyer.id)}
+                      onSelect={handleSelectBuyer}
+                      onAssign={(b) => {
+                        setBuyerToAssign(b);
+                        setAssignDialogOpen(true);
+                      }}
+                      getScoreColor={getScoreColor}
+                      getIntentColor={getIntentColor}
+                      getStatusColor={getStatusColor}
+                    />
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>
