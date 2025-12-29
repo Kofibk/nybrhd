@@ -712,9 +712,44 @@ const LeadsManagement = ({ userType = 'admin' }: LeadsManagementProps) => {
                 </TabsContent>
 
                 <TabsContent value="activity" className="space-y-3">
-                  <div className="text-center text-muted-foreground text-sm py-8">
-                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Activity timeline coming soon</p>
+                  <div className="space-y-3">
+                    {selectedLead.timeline && selectedLead.timeline.length > 0 ? (
+                      selectedLead.timeline.map((event, index) => (
+                        <div key={index} className="flex gap-3 text-sm">
+                          <div className="w-16 text-muted-foreground shrink-0">{event.date}</div>
+                          <div>
+                            <div className="font-medium">{event.action}</div>
+                            {event.detail && <div className="text-muted-foreground text-xs">{event.detail}</div>}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex gap-3 text-sm">
+                          <div className="w-16 text-muted-foreground shrink-0">{selectedLead.lastActivity || 'Today'}</div>
+                          <div>
+                            <div className="font-medium">Lead created</div>
+                            <div className="text-muted-foreground text-xs">Added to system</div>
+                          </div>
+                        </div>
+                        {selectedLead.status !== 'new' && (
+                          <div className="flex gap-3 text-sm">
+                            <div className="w-16 text-muted-foreground shrink-0">Recent</div>
+                            <div>
+                              <div className="font-medium">Status updated to {selectedLead.status}</div>
+                            </div>
+                          </div>
+                        )}
+                        {selectedLead.assignedAgent && (
+                          <div className="flex gap-3 text-sm">
+                            <div className="w-16 text-muted-foreground shrink-0">Recent</div>
+                            <div>
+                              <div className="font-medium">Assigned to {selectedLead.assignedAgent}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>
