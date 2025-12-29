@@ -60,6 +60,13 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
+  Linkedin,
+  Clock,
+  UserCheck,
+  MessageSquare,
+  FileText,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -167,6 +174,45 @@ const BuyerTableRow = ({
         </Badge>
       ) : '—'}
     </TableCell>
+    {/* Extended Airtable Fields */}
+    <TableCell className="text-center">
+      {buyer.purchaseIn28Days ? (
+        <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
+      ) : (
+        <XCircle className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+      )}
+    </TableCell>
+    <TableCell className="text-center">
+      {buyer.brokerNeeded ? (
+        <CheckCircle2 className="h-4 w-4 text-blue-500 mx-auto" />
+      ) : (
+        <XCircle className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+      )}
+    </TableCell>
+    <TableCell className="text-center">
+      {buyer.linkedinProfile ? (
+        <a 
+          href={buyer.linkedinProfile.startsWith('http') ? buyer.linkedinProfile : `https://${buyer.linkedinProfile}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center justify-center text-blue-600 hover:text-blue-800"
+        >
+          <Linkedin className="h-4 w-4" />
+        </a>
+      ) : (
+        <span className="text-muted-foreground/30">—</span>
+      )}
+    </TableCell>
+    <TableCell className="text-sm">{buyer.preferredComm || '—'}</TableCell>
+    <TableCell className="text-sm max-w-[200px]">
+      {buyer.agentTranscription ? (
+        <span className="text-xs text-muted-foreground line-clamp-2" title={buyer.agentTranscription}>
+          <FileText className="h-3 w-3 inline mr-1" />
+          {buyer.agentTranscription.slice(0, 60)}{buyer.agentTranscription.length > 60 ? '...' : ''}
+        </span>
+      ) : '—'}
+    </TableCell>
     <TableCell className="text-sm max-w-[200px]">
       {buyer.summary ? (
         <span className="text-xs text-muted-foreground line-clamp-2">{buyer.summary}</span>
@@ -178,12 +224,12 @@ const BuyerTableRow = ({
           <User className="h-3 w-3 mr-1" />{buyer.assignedCaller}
         </Badge>
       ) : (
-        <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => onAssign(buyer)}>
+        <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={(e) => { e.stopPropagation(); onAssign(buyer); }}>
           <UserPlus className="h-3 w-3 mr-1" />Assign
         </Button>
       )}
     </TableCell>
-    <TableCell>
+    <TableCell onClick={(e) => e.stopPropagation()}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="h-7 w-7 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
@@ -560,13 +606,16 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
   const exportToCSV = () => {
     const headers = [
       'Date Added', 'Name', 'Email', 'Phone', 'Budget', 'Bedrooms', 'Location', 'Country', 
-      'Timeline', 'Payment Method', 'Purpose', 'Development', 'Score', 'Intent', 'Status', 
-      'Buyer Summary', 'Assigned To', 'Preferred Communication'
+      'Timeline', 'Payment Method', 'Purpose', 'Development', 'Purchase in 28 Days', 'Broker Needed',
+      'LinkedIn Profile', 'Preferred Communication', 'Agent Transcription', 'Buyer Summary',
+      'Score', 'Intent', 'Status', 'Assigned To'
     ];
     const rows = filteredBuyers.map(b => [
       b.createdTime, b.name, b.email, b.phone, b.budgetRange, b.bedrooms, 
       b.location, b.country, b.timeline, b.paymentMethod, b.purpose, b.development,
-      b.score, b.intent, b.status, b.summary, b.assignedCaller, b.preferredComm
+      b.purchaseIn28Days ? 'Yes' : 'No', b.brokerNeeded ? 'Yes' : 'No',
+      b.linkedinProfile, b.preferredComm, b.agentTranscription, b.summary,
+      b.score, b.intent, b.status, b.assignedCaller
     ]);
     
     const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v || ''}"`).join(','))].join('\n');
@@ -692,6 +741,24 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
                 <TableHead>Payment</TableHead>
                 <TableHead>Purpose</TableHead>
                 <TableHead>Development</TableHead>
+                {/* Extended Airtable Fields */}
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1" title="Purchase in 28 Days">
+                    <Clock className="h-3 w-3" />28d
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1" title="Broker Needed">
+                    <UserCheck className="h-3 w-3" />Broker
+                  </div>
+                </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center" title="LinkedIn Profile">
+                    <Linkedin className="h-3 w-3" />
+                  </div>
+                </TableHead>
+                <TableHead>Pref Comm</TableHead>
+                <TableHead>Transcription</TableHead>
                 <TableHead>Summary</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => handleSort('assignedCaller')}>
                   <div className="flex items-center">Assigned <SortIcon field="assignedCaller" /></div>
@@ -707,7 +774,7 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
                     <>
                       <CollapsibleTrigger asChild>
                         <TableRow className="bg-muted/50 hover:bg-muted cursor-pointer">
-                          <TableCell colSpan={16}>
+                          <TableCell colSpan={21}>
                             <div className="flex items-center gap-2">
                               {expandedGroups.has(groupName) ? (
                                 <ChevronDown className="h-4 w-4" />
