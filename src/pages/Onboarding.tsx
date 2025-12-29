@@ -243,25 +243,6 @@ const Onboarding = () => {
   // Check if user has already completed onboarding
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      // Test accounts skip onboarding entirely
-      if (user?.email && isTestEmail(user.email)) {
-        // Mark onboarding complete in database for test accounts
-        try {
-          await supabase
-            .from('profiles')
-            .update({ 
-              onboarding_completed: true, 
-              onboarding_step: 7,
-              user_type: 'developer'
-            })
-            .eq('user_id', user.id);
-        } catch (error) {
-          console.error('Error updating test account profile:', error);
-        }
-        navigate('/developer');
-        return;
-      }
-
       // For guest/demo users, check localStorage
       if (!user?.id || !isUuid(effectiveUserId)) {
         if (isDemoOnboardingComplete(effectiveUserId)) {
@@ -293,6 +274,29 @@ const Onboarding = () => {
 
     checkOnboardingStatus();
   }, [user, effectiveUserId, navigate]);
+
+  // Handle test account quick onboarding after user type selection
+  const handleTestAccountQuickOnboard = async (selectedUserType: string) => {
+    if (!user?.id || !user?.email || !isTestEmail(user.email)) return;
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ 
+          onboarding_completed: true, 
+          onboarding_step: 7,
+          user_type: selectedUserType
+        })
+        .eq('user_id', user.id);
+
+      const dashboardRoute = selectedUserType === 'developer' ? '/developer' 
+        : selectedUserType === 'agent' ? '/agent' 
+        : '/broker';
+      navigate(dashboardRoute);
+    } catch (error) {
+      console.error('Error completing test account onboarding:', error);
+    }
+  };
 
   const updateFormData = (field: keyof OnboardingData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -578,7 +582,13 @@ const Onboarding = () => {
           return (
             <Card
               key={type.id}
-              onClick={() => updateFormData('userType', type.id)}
+              onClick={() => {
+                updateFormData('userType', type.id);
+                // For test accounts, skip to dashboard after selecting user type
+                if (user?.email && isTestEmail(user.email)) {
+                  handleTestAccountQuickOnboard(type.id);
+                }
+              }}
               className={`
                 p-6 cursor-pointer transition-all duration-200 hover:scale-[1.02]
                 ${isSelected 
