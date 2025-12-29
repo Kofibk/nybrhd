@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
+import { AIRTABLE_TABLES } from '@/lib/airtableConstants';
 // Interface for Buyers Airtable records
 export interface AirtableBuyerRecord {
   id: string;
@@ -44,7 +44,7 @@ async function fetchBuyersRecords(): Promise<AirtableBuyerRecord[]> {
     const { data, error } = await supabase.functions.invoke('airtable-api', {
       body: {
         action: 'list',
-        table: 'Buyers',
+        table: AIRTABLE_TABLES.BUYERS,
         pageSize: 100,
         offset,
         sort: [{ field: 'Score', direction: 'desc' }],
@@ -155,7 +155,7 @@ export function useUpdateAirtableBuyer() {
       const { data: result, error } = await supabase.functions.invoke('airtable-api', {
         body: {
           action: 'update',
-          table: 'Buyers',
+          table: AIRTABLE_TABLES.BUYERS,
           recordId,
           data,
         },
