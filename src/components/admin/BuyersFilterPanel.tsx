@@ -65,9 +65,10 @@ export interface GroupConfig {
 const FILTERABLE_FIELDS: Array<{
   key: keyof TransformedBuyer | string;
   label: string;
-  type: "text" | "number" | "select";
+  type: "text" | "number" | "select" | "date";
   options?: string[];
 }> = [
+  { key: "createdTime", label: "Date Added", type: "date" },
   { key: "name", label: "Name", type: "text" },
   { key: "email", label: "Email", type: "text" },
   { key: "phone", label: "Phone", type: "text" },
@@ -82,19 +83,20 @@ const FILTERABLE_FIELDS: Array<{
   { key: "paymentMethod", label: "Payment Method", type: "select" },
   { key: "purpose", label: "Purpose", type: "text" },
   { key: "assignedCaller", label: "Assigned Caller", type: "select" },
-  { key: "development", label: "Development", type: "text" },
+  { key: "development", label: "Development", type: "select" },
   { key: "preferredComm", label: "Preferred Communication", type: "text" },
+  { key: "summary", label: "Buyer Summary", type: "text" },
 ];
 
-const OPERATORS: Array<{ value: FilterOperator; label: string; appliesTo: ("text" | "number" | "select")[] }> = [
-  { value: "equals", label: "equals", appliesTo: ["text", "number", "select"] },
-  { value: "not_equals", label: "does not equal", appliesTo: ["text", "number", "select"] },
+const OPERATORS: Array<{ value: FilterOperator; label: string; appliesTo: ("text" | "number" | "select" | "date")[] }> = [
+  { value: "equals", label: "equals", appliesTo: ["text", "number", "select", "date"] },
+  { value: "not_equals", label: "does not equal", appliesTo: ["text", "number", "select", "date"] },
   { value: "contains", label: "contains", appliesTo: ["text"] },
   { value: "not_contains", label: "does not contain", appliesTo: ["text"] },
-  { value: "greater_than", label: "greater than", appliesTo: ["number"] },
-  { value: "less_than", label: "less than", appliesTo: ["number"] },
-  { value: "is_empty", label: "is empty", appliesTo: ["text", "number", "select"] },
-  { value: "is_not_empty", label: "is not empty", appliesTo: ["text", "number", "select"] },
+  { value: "greater_than", label: "after", appliesTo: ["number", "date"] },
+  { value: "less_than", label: "before", appliesTo: ["number", "date"] },
+  { value: "is_empty", label: "is empty", appliesTo: ["text", "number", "select", "date"] },
+  { value: "is_not_empty", label: "is not empty", appliesTo: ["text", "number", "select", "date"] },
 ];
 
 const GROUPABLE_FIELDS: Array<{ key: keyof TransformedBuyer | string; label: string }> = [
