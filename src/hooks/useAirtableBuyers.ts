@@ -70,6 +70,24 @@ async function fetchBuyersRecords(): Promise<AirtableBuyerRecord[]> {
 export function transformBuyerForTable(record: AirtableBuyerRecord) {
   const fields = record.fields;
   
+  // Handle Assigned Caller - might be a string, object, or array (linked record)
+  let assignedCaller = '';
+  const rawCaller = fields['Assigned Caller'] as unknown;
+  if (rawCaller) {
+    if (typeof rawCaller === 'string') {
+      assignedCaller = rawCaller;
+    } else if (Array.isArray(rawCaller)) {
+      // Linked records return an array of record IDs or objects
+      assignedCaller = (rawCaller as unknown[]).map((c) => 
+        typeof c === 'string' ? c : ((c as Record<string, unknown>)?.name || (c as Record<string, unknown>)?.email || (c as Record<string, unknown>)?.id || '')
+      ).filter(Boolean).join(', ') as string;
+    } else if (typeof rawCaller === 'object' && rawCaller !== null) {
+      // Object with name/email/id
+      const obj = rawCaller as Record<string, unknown>;
+      assignedCaller = String(obj?.name || obj?.email || obj?.id || '');
+    }
+  }
+  
   return {
     id: record.id,
     leadId: fields['Lead ID'] || 0,
@@ -88,7 +106,7 @@ export function transformBuyerForTable(record: AirtableBuyerRecord) {
     score: fields['Score'] || 0,
     intent: fields['Intent'] || '',
     status: fields['Status'] || 'Contact Pending',
-    assignedCaller: fields['Assigned Caller'] || '',
+    assignedCaller,
     preferredComm: fields['Preferred Communication'] || '',
     summary: fields['Buyer Summary'] || '',
     development: fields['Development Name'] || '',
