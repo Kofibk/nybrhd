@@ -40,7 +40,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ProductTour } from "./ProductTour";
 import { cn } from "@/lib/utils";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
+import { useAirtableBuyersForTable } from "@/hooks/useAirtableData";
 import { useAirtableCampaigns } from "@/hooks/useAirtable";
 import { isTestEmail } from "@/lib/testAccounts";
 

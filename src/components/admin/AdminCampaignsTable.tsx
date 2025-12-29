@@ -46,7 +46,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
 import { useUploadedData } from "@/contexts/DataContext";
-import { useAirtableCampaignsForTable } from "@/hooks/useAirtableCampaigns";
+import { useAirtableCampaignsForTable } from "@/hooks/useAirtableData";
 
 interface AdminCampaignsTableProps {
   searchQuery: string;

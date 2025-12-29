@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useMasterAgent } from "@/hooks/useMasterAgent";
-import { useAirtableCampaignsForDashboard } from "@/hooks/useAirtableCampaigns";
+import { useAirtableCampaignsForDashboard } from "@/hooks/useAirtableData";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import {
   Plus,

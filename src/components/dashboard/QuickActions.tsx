@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { useAirtableBuyersForTable } from '@/hooks/useAirtableBuyers';
+import { useAirtableBuyersForTable } from '@/hooks/useAirtableData';
 import { useAirtableCampaigns } from '@/hooks/useAirtable';
 import { Zap, Megaphone, Brain, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';

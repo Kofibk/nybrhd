@@ -50,7 +50,7 @@ import { Lead } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
+import { useAirtableBuyersForTable } from "@/hooks/useAirtableData";
 
 interface DeveloperLeadsTableProps {
   searchQuery: string;

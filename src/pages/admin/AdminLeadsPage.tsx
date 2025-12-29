@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import { useUploadedData } from "@/contexts/DataContext";
-import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
+import { useAirtableBuyersForTable } from "@/hooks/useAirtableData";
 import { RefreshCw, Users, BarChart3 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useContactedBuyers } from '@/hooks/useContactedBuyers';
-import { useAirtableBuyersForTable, TransformedBuyer } from '@/hooks/useAirtableBuyers';
+import { useAirtableBuyersForTable, TransformedBuyer } from '@/hooks/useAirtableData';
 import { 
   Search, 
   MapPin, 
