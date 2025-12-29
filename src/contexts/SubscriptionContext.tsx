@@ -8,6 +8,7 @@ import {
 } from '@/lib/subscriptionTiers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { isTestEmail } from '@/lib/testAccounts';
 
 interface SubscriptionContextType {
   currentTier: SubscriptionTier;
@@ -59,6 +60,15 @@ export const SubscriptionProvider = ({
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
+    // Check if user is a test account - give them enterprise access
+    if (user?.email && isTestEmail(user.email)) {
+      setCurrentTier('enterprise');
+      setSubscriptionStatus('active');
+      setSubscriptionEnd(null);
+      setIsLoading(false);
+      return;
+    }
+
     if (!profile?.company_id) {
       setIsLoading(false);
       return;
@@ -99,7 +109,7 @@ export const SubscriptionProvider = ({
     } finally {
       setIsLoading(false);
     }
-  }, [profile?.company_id, user?.id]);
+  }, [profile?.company_id, user?.id, user?.email]);
 
   const refreshSubscription = async () => {
     setIsLoading(true);
