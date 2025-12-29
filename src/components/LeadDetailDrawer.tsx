@@ -32,7 +32,12 @@ import {
   RefreshCw,
   Loader2,
   Zap,
-  Activity
+  Activity,
+  Linkedin,
+  ExternalLink,
+  UserCheck,
+  MessageSquare,
+  ClipboardList
 } from "lucide-react";
 import { Lead, LEAD_SOURCES } from "@/lib/types";
 import { LeadClassificationBadge, LeadSourceBadge } from "@/components/LeadClassificationBadge";
@@ -533,6 +538,108 @@ export const LeadDetailDrawer = ({ lead, open, onClose }: LeadDetailDrawerProps)
               </div>
             </div>
           </Card>
+
+          {/* Extended Airtable Details */}
+          {(lead.agentTranscription || lead.linkedinProfile || lead.buyerSummary || lead.assignedCaller || lead.preferredCommunication) && (
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Extended Details</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Quick Status Badges */}
+                <div className="flex flex-wrap gap-2">
+                  {lead.purchaseIn28Days && (
+                    <Badge className="bg-green-500/10 text-green-600 border-green-500/30">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Purchase in 28 Days
+                    </Badge>
+                  )}
+                  {lead.brokerNeeded && (
+                    <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Broker Needed
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  {lead.assignedCaller && (
+                    <div>
+                      <p className="text-muted-foreground text-xs">Assigned Caller</p>
+                      <p className="font-medium flex items-center gap-2">
+                        <User className="h-3 w-3 text-muted-foreground" />
+                        {lead.assignedCaller}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {lead.preferredCommunication && (
+                    <div>
+                      <p className="text-muted-foreground text-xs">Preferred Communication</p>
+                      <p className="font-medium flex items-center gap-2">
+                        <MessageSquare className="h-3 w-3 text-muted-foreground" />
+                        {lead.preferredCommunication}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {lead.location && (
+                    <div>
+                      <p className="text-muted-foreground text-xs">Preferred Location</p>
+                      <p className="font-medium flex items-center gap-2">
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                        {lead.location}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {lead.campaignSource && (
+                    <div>
+                      <p className="text-muted-foreground text-xs">Campaign/Source</p>
+                      <p className="font-medium flex items-center gap-2">
+                        <Target className="h-3 w-3 text-muted-foreground" />
+                        {lead.campaignSource}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {lead.linkedinProfile && (
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">LinkedIn Profile</p>
+                    <a 
+                      href={lead.linkedinProfile.startsWith('http') ? lead.linkedinProfile : `https://${lead.linkedinProfile}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                      View LinkedIn Profile
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+
+                {lead.buyerSummary && (
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Buyer Summary</p>
+                    <p className="text-sm bg-muted/30 p-3 rounded-lg">{lead.buyerSummary}</p>
+                  </div>
+                )}
+
+                {lead.agentTranscription && (
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Agent Transcription</p>
+                    <div className="text-sm bg-muted/30 p-3 rounded-lg max-h-48 overflow-y-auto whitespace-pre-wrap">
+                      {lead.agentTranscription}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
 
           {/* Behavioural Analytics */}
           <Card className="p-4">

@@ -258,11 +258,21 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
       campaignId: '',
       campaignName: buyer.development || '',
       createdAt: buyer.createdTime,
-      notes: buyer.summary || '',
+      notes: buyer.summary || buyer.notes || '',
       source: 'meta_campaign',
       purpose: buyer.purpose?.toLowerCase()?.includes('invest') ? 'investment' : 
                buyer.purpose?.toLowerCase()?.includes('primary') || buyer.purpose?.toLowerCase()?.includes('personal') ? 'primary_residence' : 
                buyer.purpose?.toLowerCase()?.includes('holiday') ? 'holiday_home' : undefined,
+      // Extended Airtable fields
+      agentTranscription: buyer.agentTranscription || '',
+      linkedinProfile: buyer.linkedinProfile || '',
+      purchaseIn28Days: buyer.purchaseIn28Days || false,
+      brokerNeeded: buyer.brokerNeeded || false,
+      preferredCommunication: buyer.preferredComm || '',
+      assignedCaller: buyer.assignedCaller || '',
+      buyerSummary: buyer.summary || '',
+      campaignSource: buyer.source || buyer.campaignName || '',
+      location: buyer.location || '',
     };
   }, []);
   
