@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { AIRTABLE_TABLES } from '@/lib/airtableConstants';
 
-// Interface for Leads_Data Airtable records
+// Interface for Buyers Airtable records (formerly called Leads in some places)
 export interface AirtableLeadRecord {
   id: string;
   fields: {
@@ -32,7 +33,7 @@ function extractFieldValue(value: unknown): string {
   return String(value);
 }
 
-// Fetch all Leads_Data records from Airtable with pagination
+// Fetch all Buyers records from Airtable with pagination
 async function fetchLeadsRecords(): Promise<AirtableLeadRecord[]> {
   const allRecords: AirtableLeadRecord[] = [];
   let offset: string | undefined;
@@ -41,24 +42,24 @@ async function fetchLeadsRecords(): Promise<AirtableLeadRecord[]> {
     const { data, error } = await supabase.functions.invoke('airtable-api', {
       body: {
         action: 'list',
-        table: 'Leads',
+        table: AIRTABLE_TABLES.BUYERS,
         pageSize: 100, // Max per request - don't use maxRecords as it limits total
         offset,
       },
     });
 
     if (error) {
-      console.error('Airtable Leads fetch error:', error);
-      throw new Error(error.message || 'Failed to fetch Leads from Airtable');
+      console.error('Airtable Buyers fetch error:', error);
+      throw new Error(error.message || 'Failed to fetch Buyers from Airtable');
     }
 
     const response = data as AirtableResponse;
-    console.log('Airtable Leads response:', response?.records?.length, 'records, offset:', response?.offset);
+    console.log('Airtable Buyers response:', response?.records?.length, 'records, offset:', response?.offset);
     allRecords.push(...(response?.records || []));
     offset = response?.offset;
   } while (offset);
 
-  console.log('Total Airtable leads fetched:', allRecords.length);
+  console.log('Total Airtable Buyers fetched:', allRecords.length);
   return allRecords;
 }
 

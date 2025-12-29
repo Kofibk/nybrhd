@@ -1,29 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import { AIRTABLE_TABLES, AirtableTableName } from "@/lib/airtableConstants";
 
-// Airtable table names matching the schema
-export const AirtableTables = {
-  USERS: 'Users',
-  COMPANIES: 'Companies',
-  USER_ROLES: 'User_Roles',
-  DEVELOPMENTS: 'Developments',
-  CAMPAIGNS: 'Campaigns',
-  CAMPAIGN_DATA: 'Campaign_Data',
-  CREATIVE_ASSETS: 'Creative_Assets',
-  AD_COPIES: 'Ad_Copies',
-  CAMPAIGN_METRICS: 'Campaign_Metrics',
-  LEADS: 'Leads',
-  LEAD_INTERACTIONS: 'Lead_Interactions',
-  LEAD_SOURCES: 'Lead_Sources',
-  AUTOMATION_SEQUENCES: 'Automation_Sequences',
-  AUTOMATION_MESSAGES: 'Automation_Messages',
-  SUBSCRIPTIONS: 'Subscriptions',
-  INVOICES: 'Invoices',
-  SETTINGS: 'Settings',
-  AUDIT_LOGS: 'Audit_Logs',
-  BUYERS: 'Buyers',
-} as const;
-
-export type AirtableTable = typeof AirtableTables[keyof typeof AirtableTables];
+// Re-export centralized constants for backwards compatibility
+export const AirtableTables = AIRTABLE_TABLES;
+export type AirtableTable = AirtableTableName;
 
 interface AirtableRecord<T = Record<string, unknown>> {
   id: string;
@@ -247,17 +227,18 @@ export interface AirtableLead {
   last_interaction_at?: string;
 }
 
+// leadsAPI now points to Buyers table (Leads and Buyers are the same)
 export const leadsAPI = {
   list: (options?: AirtableOptions) => 
-    callAirtableAPI<AirtableListResponse<AirtableLead>>('list', AirtableTables.LEADS, options),
+    callAirtableAPI<AirtableListResponse<AirtableLead>>('list', AirtableTables.BUYERS, options),
   get: (recordId: string) => 
-    callAirtableAPI<AirtableRecord<AirtableLead>>('get', AirtableTables.LEADS, { recordId }),
+    callAirtableAPI<AirtableRecord<AirtableLead>>('get', AirtableTables.BUYERS, { recordId }),
   create: (data: Partial<AirtableLead>) => 
-    callAirtableAPI<{ records: AirtableRecord<AirtableLead>[] }>('create', AirtableTables.LEADS, { data }),
+    callAirtableAPI<{ records: AirtableRecord<AirtableLead>[] }>('create', AirtableTables.BUYERS, { data }),
   update: (recordId: string, data: Partial<AirtableLead>) => 
-    callAirtableAPI<AirtableRecord<AirtableLead>>('update', AirtableTables.LEADS, { recordId, data }),
+    callAirtableAPI<AirtableRecord<AirtableLead>>('update', AirtableTables.BUYERS, { recordId, data }),
   delete: (recordId: string | string[]) => 
-    callAirtableAPI('delete', AirtableTables.LEADS, { recordId }),
+    callAirtableAPI('delete', AirtableTables.BUYERS, { recordId }),
 };
 
 // ============ CAMPAIGN METRICS ============
