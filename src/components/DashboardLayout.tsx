@@ -29,7 +29,8 @@ import {
   Zap,
   Lock,
   Phone,
-  Mail
+  Mail,
+  Shield
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -41,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { useAirtableBuyersForTable } from "@/hooks/useAirtableBuyers";
 import { useAirtableCampaigns } from "@/hooks/useAirtable";
+import { isTestEmail } from "@/lib/testAccounts";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -64,6 +66,10 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
   const location = useLocation();
   const navigate = useNavigate();
   const { currentTier } = useSubscription();
+  const { user } = useAuth();
+  
+  // Check if current user is a test account
+  const isTestAccount = user?.email ? isTestEmail(user.email) : false;
   
   const basePath = `/${userType}`;
 
@@ -152,9 +158,18 @@ const DashboardLayout = ({ children, title, userType, userName = "User" }: Dashb
       tourId: "settings"
     });
 
+    // Admin Panel - test accounts only
+    if (isTestAccount) {
+      baseNav.push({
+        name: "Admin Panel",
+        icon: Shield,
+        href: "/admin"
+      });
+    }
+
     return baseNav;
   };
-  
+
   // Admin-specific navigation items
   const getAdminNavigation = (): NavItem[] => {
     if (userType !== 'admin') return [];
