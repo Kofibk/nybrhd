@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
+import { Lead } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -110,6 +112,7 @@ const BuyerTableRow = ({
   isSelected, 
   onSelect, 
   onAssign,
+  onRowClick,
   getScoreColor,
   getIntentColor,
   getStatusColor,
@@ -119,13 +122,14 @@ const BuyerTableRow = ({
   isSelected: boolean;
   onSelect: (id: string, checked: boolean) => void;
   onAssign: (buyer: TransformedBuyer) => void;
+  onRowClick: (buyer: TransformedBuyer) => void;
   getScoreColor: (score: number) => string;
   getIntentColor: (intent: string) => string;
   getStatusColor: (status: string) => string;
   showExpanded?: boolean;
 }) => (
-  <TableRow className="hover:bg-muted/50">
-    <TableCell className="w-8">
+  <TableRow className="hover:bg-muted/50 cursor-pointer" onClick={() => onRowClick(buyer)}>
+    <TableCell className="w-8" onClick={(e) => e.stopPropagation()}>
       <Checkbox checked={isSelected} onCheckedChange={(checked) => onSelect(buyer.id, !!checked)} />
     </TableCell>
     <TableCell className="min-w-[120px]">
@@ -218,7 +222,56 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
   const [selectedCaller, setSelectedCaller] = useState<string>("");
   const tableContainerRef = useRef<HTMLDivElement>(null);
   
+  // Drawer state for buyer details
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedBuyerForDrawer, setSelectedBuyerForDrawer] = useState<Lead | null>(null);
+  
   const updateBuyer = useUpdateAirtableBuyer();
+  
+  // Convert TransformedBuyer to Lead type for the drawer
+  const convertBuyerToLead = useCallback((buyer: TransformedBuyer): Lead => {
+    return {
+      id: buyer.id,
+      name: buyer.name,
+      email: buyer.email,
+      phone: buyer.phone,
+      countryCode: buyer.country === 'United Kingdom' ? 'GB' : buyer.country?.slice(0, 2)?.toUpperCase() || '',
+      country: buyer.country || '',
+      budget: buyer.budgetRange || '',
+      bedrooms: buyer.bedrooms || '',
+      paymentMethod: buyer.paymentMethod?.toLowerCase()?.includes('cash') ? 'cash' : 
+                     buyer.paymentMethod?.toLowerCase()?.includes('mortgage') ? 'mortgage' : 'undecided',
+      buyerStatus: buyer.timeline?.includes('28') || buyer.intent?.toLowerCase() === 'hot' ? 'actively_looking' : 'browsing',
+      purchaseTimeline: buyer.timeline?.includes('28') ? 'within_28_days' :
+                        buyer.timeline?.includes('0-3') || buyer.timeline?.includes('0 - 3') ? '0_3_months' :
+                        buyer.timeline?.includes('3-6') || buyer.timeline?.includes('3 - 6') ? '3_6_months' :
+                        buyer.timeline?.includes('6-9') || buyer.timeline?.includes('6 - 9') ? '6_9_months' :
+                        buyer.timeline?.includes('9-12') || buyer.timeline?.includes('9 - 12') ? '9_12_months' : '12_months_plus',
+      intentScore: buyer.intent?.toLowerCase() === 'hot' ? 90 : 
+                   buyer.intent?.toLowerCase() === 'warm' ? 70 : 50,
+      qualityScore: buyer.score || 50,
+      status: buyer.status?.toLowerCase()?.includes('won') ? 'won' :
+              buyer.status?.toLowerCase()?.includes('lost') ? 'lost' :
+              buyer.status?.toLowerCase()?.includes('offer') ? 'offer' :
+              buyer.status?.toLowerCase()?.includes('viewing') ? 'booked_viewing' :
+              buyer.status?.toLowerCase()?.includes('contacted') || buyer.status?.toLowerCase()?.includes('progress') ? 'contacted' : 'new',
+      campaignId: '',
+      campaignName: buyer.development || '',
+      createdAt: buyer.createdTime,
+      notes: buyer.summary || '',
+      source: 'meta_campaign',
+      purpose: buyer.purpose?.toLowerCase()?.includes('invest') ? 'investment' : 
+               buyer.purpose?.toLowerCase()?.includes('primary') || buyer.purpose?.toLowerCase()?.includes('personal') ? 'primary_residence' : 
+               buyer.purpose?.toLowerCase()?.includes('holiday') ? 'holiday_home' : undefined,
+    };
+  }, []);
+  
+  // Handle row click to open drawer
+  const handleRowClick = useCallback((buyer: TransformedBuyer) => {
+    const leadData = convertBuyerToLead(buyer);
+    setSelectedBuyerForDrawer(leadData);
+    setDrawerOpen(true);
+  }, [convertBuyerToLead]);
   
   // Fetch profiles for caller assignment
   const { data: profiles } = useQuery({
@@ -671,6 +724,7 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
                                 setBuyerToAssign(b);
                                 setAssignDialogOpen(true);
                               }}
+                              onRowClick={handleRowClick}
                               getScoreColor={getScoreColor}
                               getIntentColor={getIntentColor}
                               getStatusColor={getStatusColor}
@@ -695,6 +749,7 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
                         setBuyerToAssign(b);
                         setAssignDialogOpen(true);
                       }}
+                      onRowClick={handleRowClick}
                       getScoreColor={getScoreColor}
                       getIntentColor={getIntentColor}
                       getStatusColor={getStatusColor}
@@ -849,6 +904,13 @@ const AdminBuyersTable = ({ searchQuery, buyers, isLoading }: AdminBuyersTablePr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Buyer Detail Drawer */}
+      <LeadDetailDrawer
+        lead={selectedBuyerForDrawer}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
     </div>
   );
 };
