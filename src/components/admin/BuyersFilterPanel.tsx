@@ -65,7 +65,7 @@ export interface GroupConfig {
 const FILTERABLE_FIELDS: Array<{
   key: keyof TransformedBuyer | string;
   label: string;
-  type: "text" | "number" | "select" | "date";
+  type: "text" | "number" | "select" | "date" | "boolean";
   options?: string[];
 }> = [
   { key: "createdTime", label: "Date Added", type: "date" },
@@ -86,11 +86,18 @@ const FILTERABLE_FIELDS: Array<{
   { key: "development", label: "Development", type: "select" },
   { key: "preferredComm", label: "Preferred Communication", type: "text" },
   { key: "summary", label: "Buyer Summary", type: "text" },
+  // Extended Airtable fields
+  { key: "purchaseIn28Days", label: "Purchase in 28 Days", type: "boolean", options: ["Yes", "No"] },
+  { key: "brokerNeeded", label: "Broker Needed", type: "boolean", options: ["Yes", "No"] },
+  { key: "linkedinProfile", label: "LinkedIn Profile", type: "text" },
+  { key: "agentTranscription", label: "Agent Transcription", type: "text" },
+  { key: "source", label: "Source", type: "select" },
+  { key: "campaignName", label: "Campaign", type: "select" },
 ];
 
-const OPERATORS: Array<{ value: FilterOperator; label: string; appliesTo: ("text" | "number" | "select" | "date")[] }> = [
-  { value: "equals", label: "equals", appliesTo: ["text", "number", "select", "date"] },
-  { value: "not_equals", label: "does not equal", appliesTo: ["text", "number", "select", "date"] },
+const OPERATORS: Array<{ value: FilterOperator; label: string; appliesTo: ("text" | "number" | "select" | "date" | "boolean")[] }> = [
+  { value: "equals", label: "equals", appliesTo: ["text", "number", "select", "date", "boolean"] },
+  { value: "not_equals", label: "does not equal", appliesTo: ["text", "number", "select", "date", "boolean"] },
   { value: "contains", label: "contains", appliesTo: ["text"] },
   { value: "not_contains", label: "does not contain", appliesTo: ["text"] },
   { value: "greater_than", label: "after", appliesTo: ["number", "date"] },
@@ -106,6 +113,8 @@ const GROUPABLE_FIELDS: Array<{ key: keyof TransformedBuyer | string; label: str
   { key: "assignedCaller", label: "Assigned Caller" },
   { key: "paymentMethod", label: "Payment Method" },
   { key: "development", label: "Development" },
+  { key: "purchaseIn28Days", label: "Purchase in 28 Days" },
+  { key: "brokerNeeded", label: "Broker Needed" },
 ];
 
 interface BuyersFilterPanelProps {
@@ -532,6 +541,23 @@ export function applyFilters(
   return buyers.filter(buyer => {
     return filters.every(filter => {
       const value = buyer[filter.field as keyof TransformedBuyer];
+      const fieldConfig = FILTERABLE_FIELDS.find(f => f.key === filter.field);
+      
+      // Handle boolean fields specially
+      if (fieldConfig?.type === "boolean") {
+        const boolValue = Boolean(value);
+        const filterBool = filter.value.toLowerCase() === "yes";
+        
+        switch (filter.operator) {
+          case "equals":
+            return boolValue === filterBool;
+          case "not_equals":
+            return boolValue !== filterBool;
+          default:
+            return true;
+        }
+      }
+      
       const strValue = String(value || "").toLowerCase();
       const filterValue = filter.value.toLowerCase();
       
@@ -598,8 +624,15 @@ export function groupBuyers(
     return groups;
   }
   
+  // Check if field is a boolean type
+  const fieldConfig = FILTERABLE_FIELDS.find(f => f.key === groupBy.field);
+  const isBoolean = fieldConfig?.type === "boolean";
+  
   buyers.forEach(buyer => {
-    const value = String(buyer[groupBy.field as keyof TransformedBuyer] || "Unassigned");
+    const rawValue = buyer[groupBy.field as keyof TransformedBuyer];
+    const value = isBoolean 
+      ? (rawValue ? "Yes" : "No")
+      : String(rawValue || "Unassigned");
     const existing = groups.get(value) || [];
     existing.push(buyer);
     groups.set(value, existing);
