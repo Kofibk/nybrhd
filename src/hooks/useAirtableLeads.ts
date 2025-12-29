@@ -41,19 +41,19 @@ async function fetchLeadsRecords(): Promise<AirtableLeadRecord[]> {
     const { data, error } = await supabase.functions.invoke('airtable-api', {
       body: {
         action: 'list',
-        table: 'Leads_Data',
+        table: 'Leads',
         pageSize: 100, // Max per request - don't use maxRecords as it limits total
         offset,
       },
     });
 
     if (error) {
-      console.error('Airtable Leads_Data fetch error:', error);
-      throw new Error(error.message || 'Failed to fetch Leads_Data from Airtable');
+      console.error('Airtable Leads fetch error:', error);
+      throw new Error(error.message || 'Failed to fetch Leads from Airtable');
     }
 
     const response = data as AirtableResponse;
-    console.log('Airtable Leads_Data response:', response?.records?.length, 'records, offset:', response?.offset);
+    console.log('Airtable Leads response:', response?.records?.length, 'records, offset:', response?.offset);
     allRecords.push(...(response?.records || []));
     offset = response?.offset;
   } while (offset);
