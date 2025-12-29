@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { isTestEmail } from "@/lib/testAccounts";
 import {
   addDemoOnboardingSubmission,
   getDemoOnboardingStep,
@@ -242,6 +243,25 @@ const Onboarding = () => {
   // Check if user has already completed onboarding
   useEffect(() => {
     const checkOnboardingStatus = async () => {
+      // Test accounts skip onboarding entirely
+      if (user?.email && isTestEmail(user.email)) {
+        // Mark onboarding complete in database for test accounts
+        try {
+          await supabase
+            .from('profiles')
+            .update({ 
+              onboarding_completed: true, 
+              onboarding_step: 7,
+              user_type: 'developer'
+            })
+            .eq('user_id', user.id);
+        } catch (error) {
+          console.error('Error updating test account profile:', error);
+        }
+        navigate('/developer');
+        return;
+      }
+
       // For guest/demo users, check localStorage
       if (!user?.id || !isUuid(effectiveUserId)) {
         if (isDemoOnboardingComplete(effectiveUserId)) {
@@ -256,12 +276,16 @@ const Onboarding = () => {
       // For authenticated users, check Supabase
       const { data: profile } = await supabase
         .from('profiles')
-        .select('onboarding_completed, onboarding_step')
+        .select('onboarding_completed, onboarding_step, user_type')
         .eq('user_id', user.id)
         .single();
 
       if (profile?.onboarding_completed) {
-        navigate('/developer');
+        const dashboardRoute = profile.user_type === 'developer' ? '/developer' 
+          : profile.user_type === 'agent' ? '/agent' 
+          : profile.user_type === 'broker' ? '/broker'
+          : '/developer';
+        navigate(dashboardRoute);
       } else if (profile?.onboarding_step && profile.onboarding_step > 0) {
         setCurrentStep(profile.onboarding_step);
       }
