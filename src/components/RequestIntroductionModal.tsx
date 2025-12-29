@@ -30,6 +30,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useBuyerAssignmentStatus, useAssignBuyer } from '@/hooks/useBuyerAssignments';
 
 // Define local Buyer type
 interface Buyer {
@@ -109,6 +110,10 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
     }
   }, [isOpen, buyer]);
 
+  // Check if buyer is already assigned to this user
+  const { data: existingAssignment } = useBuyerAssignmentStatus(buyer?.id || '');
+  const assignBuyer = useAssignBuyer();
+
   const handleSend = async () => {
     if (!buyer || !user) return;
 
@@ -123,30 +128,52 @@ I'd love to discuss what we have available and arrange a viewing at your conveni
     setErrorMessage('');
 
     try {
-      // First, record the contact in buyer_contacts table
-      const { error: contactError } = await supabase
-        .from('buyer_contacts')
-        .insert({
-          user_id: user.id,
-          airtable_record_id: buyer.id,
-          assignment_id: crypto.randomUUID(), // Generate a placeholder assignment ID
-          contact_method: channel,
-          contacted_at: new Date().toISOString(),
-          message_content: message,
-        });
+      let assignmentId = existingAssignment?.id;
 
-      if (contactError) {
-        console.error('Error recording contact:', contactError);
-        // Continue anyway - don't block the user
-      } else {
-        // Update local contact count
-        setContactsUsed(contactsUsed + 1);
+      // If no existing assignment, create a self-assignment
+      if (!assignmentId) {
+        try {
+          const newAssignment = await assignBuyer.mutateAsync({
+            airtableRecordId: buyer.id,
+            userId: user.id,
+            notes: 'Self-assigned via introduction request',
+          });
+          assignmentId = newAssignment.id;
+        } catch (assignError) {
+          console.error('Error creating assignment:', assignError);
+          // Continue without assignment - record contact anyway
+        }
       }
 
-      // Then send the introduction
+      // Record the contact in buyer_contacts table
+      if (assignmentId) {
+        const { error: contactError } = await supabase
+          .from('buyer_contacts')
+          .insert({
+            user_id: user.id,
+            airtable_record_id: buyer.id,
+            assignment_id: assignmentId,
+            contact_method: channel,
+            contacted_at: new Date().toISOString(),
+            message_content: message,
+          });
+
+        if (contactError) {
+          console.error('Error recording contact:', contactError);
+          // Continue anyway - don't block the user
+        } else {
+          // Update local contact count
+          setContactsUsed(contactsUsed + 1);
+        }
+      }
+
+      // Send the introduction
       const { data, error } = await supabase.functions.invoke('send-introduction', {
         body: {
           buyerId: buyer.id,
+          buyerName: buyer.name,
+          buyerEmail: buyer.email,
+          buyerPhone: buyer.phone || buyer.whatsapp_number,
           channel,
           customMessage: message,
         },
