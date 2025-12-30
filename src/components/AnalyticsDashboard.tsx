@@ -78,7 +78,7 @@ const AnalyticsDashboard = ({ userType = 'admin' }: AnalyticsDashboardProps) => 
 
     return [
       { label: "Total Leads Generated", value: totalLeads.toString(), change: "From uploaded data", trend: "up" as const, icon: Users },
-      { label: "Avg. CPL", value: avgCPL > 0 ? `£${avgCPL.toFixed(2)}` : "N/A", change: "Based on spend/leads", trend: "up" as const, icon: DollarSign },
+      { label: "Avg. CPL", value: avgCPL > 0 ? `£${Math.round(avgCPL).toLocaleString()}` : "N/A", change: "Based on spend/leads", trend: "up" as const, icon: DollarSign },
       { label: "Conversion Rate", value: `${conversionRate.toFixed(1)}%`, change: "Won/Closed leads", trend: "up" as const, icon: Target },
       { label: "Viewings Booked", value: viewingsBooked.toString(), change: "From lead status", trend: "up" as const, icon: CalendarCheck },
     ];
@@ -98,7 +98,7 @@ const AnalyticsDashboard = ({ userType = 'admin' }: AnalyticsDashboardProps) => 
       return {
         name: name.substring(0, 30),
         leads,
-        avgCPL: `£${cpl.toFixed(2)}`,
+        avgCPL: `£${Math.round(cpl).toLocaleString()}`,
         avgIntent: Math.floor(Math.random() * 30 + 60),
         avgQuality: Math.floor(Math.random() * 30 + 60),
         highIntent: `${Math.floor(Math.random() * 40 + 40)}%`,

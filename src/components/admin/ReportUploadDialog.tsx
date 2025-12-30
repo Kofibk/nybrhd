@@ -539,7 +539,7 @@ const ReportUploadDialog = ({ type, onUploadComplete, onLeadsImport, onCampaigns
                       </div>
                       <div className="text-right min-w-[80px]">
                         <p className="text-xs">{campaign.leads} leads</p>
-                        <p className="text-xs">CPL: £{campaign.cpl?.toFixed(2)}</p>
+                        <p className="text-xs">CPL: £{Math.round(campaign.cpl || 0).toLocaleString()}</p>
                       </div>
                     </div>
                   ))}

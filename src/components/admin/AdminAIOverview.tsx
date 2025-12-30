@@ -327,7 +327,7 @@ const AdminAIOverview = () => {
               <Skeleton className="h-8 w-16" />
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</span>
+                <span className="text-2xl font-bold">£{Math.round(stats.avgCPL).toLocaleString()}</span>
                 <TrendingDown className="h-4 w-4 text-success" />
               </div>
             )}
@@ -549,7 +549,7 @@ const AdminAIOverview = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">{campaign.totalLeads}</TableCell>
-                        <TableCell className="text-right">£{campaign.avgCPL.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">£{Math.round(campaign.avgCPL).toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Badge 
                             variant="secondary" 

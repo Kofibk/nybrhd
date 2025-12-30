@@ -57,7 +57,7 @@ const CampaignDetail = ({ userType }: CampaignDetailProps) => {
   // Calculate KPIs from metrics
   const totalLeads = metrics.reduce((sum, m) => sum + m.leads, 0);
   const totalSpend = metrics.reduce((sum, m) => sum + m.spend, 0);
-  const avgCPL = totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) : "0.00";
+  const avgCPL = totalLeads > 0 ? Math.round(totalSpend / totalLeads).toString() : "0";
 
   // Chart data
   const leadsChartData = metrics.map((m) => ({

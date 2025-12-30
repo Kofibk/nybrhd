@@ -6,6 +6,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Format a number as currency with £ symbol, rounded to nearest pound (no decimals)
+ */
+export function formatCurrency(value: number | undefined | null): string {
+  if (value === undefined || value === null || !Number.isFinite(value)) return "£0";
+  return `£${Math.round(value).toLocaleString()}`;
+}
+
+/**
  * Format a number to compact notation (e.g., 500000 → "£500K", 1500000 → "£1.5M")
  */
 export function formatCompactCurrency(value: number): string {
@@ -17,7 +25,7 @@ export function formatCompactCurrency(value: number): string {
     const thousands = value / 1000;
     return `£${thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(0)}K`;
   }
-  return `£${value}`;
+  return `£${Math.round(value)}`;
 }
 
 /**

@@ -199,7 +199,7 @@ const CreativeBreakdownReport = ({ campaignId }: CreativeBreakdownReportProps) =
                         <div>
                           <p className="text-muted-foreground">CPL</p>
                           <p className={`font-medium ${getPerformanceColor(creative.metrics.cpl, 25, false)}`}>
-                            £{creative.metrics.cpl.toFixed(2)}
+                            £{Math.round(creative.metrics.cpl).toLocaleString()}
                           </p>
                         </div>
                         <div>

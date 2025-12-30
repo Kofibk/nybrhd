@@ -541,7 +541,7 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const handleUpload = (type: 'campaigns' | 'leads') => { setUploadType(type); setUploadDialogOpen(true); };
   const handleCampaignData = (data: any[], fileName: string) => { setCampaignData(data); setCampaignFileName(fileName); setUploadDialogOpen(false); toast.success(`Loaded ${data.length} campaigns`); };
   const handleLeadData = (data: any[], fileName: string) => { setLeadData(data); setLeadFileName(fileName); setUploadDialogOpen(false); toast.success(`Loaded ${data.length} leads`); };
-  const formatCurrency = (v: number) => v >= 1000000 ? `£${(v/1000000).toFixed(1)}M` : v >= 1000 ? `£${(v/1000).toFixed(0)}K` : `£${v}`;
+  const formatCurrencyLocal = (v: number) => v >= 1000000 ? `£${Math.round(v/1000000)}M` : v >= 1000 ? `£${Math.round(v/1000)}K` : `£${Math.round(v)}`;
 
   const [loadingDemo, setLoadingDemo] = useState(false);
   const loadDemoData = async () => {

@@ -113,7 +113,7 @@ export function CampaignAnalysisCard({ campaign, onAnalysisComplete }: CampaignA
           <div className="p-3 bg-muted rounded-lg">
             <p className="text-xs text-muted-foreground">CPL</p>
             <p className={`text-lg font-bold ${getCPLColor(result.metrics.cpl_rating)}`}>
-              £{result.metrics.cpl.toFixed(2)}
+              £{Math.round(result.metrics.cpl).toLocaleString()}
             </p>
           </div>
           <div className="p-3 bg-muted rounded-lg">
@@ -138,7 +138,7 @@ export function CampaignAnalysisCard({ campaign, onAnalysisComplete }: CampaignA
                   <div className="flex items-center gap-4 text-sm">
                     <span>£{platform.spend.toLocaleString()} spend</span>
                     <span>{platform.leads} leads</span>
-                    <span className="font-medium">£{platform.cpl.toFixed(2)} CPL</span>
+                    <span className="font-medium">£{Math.round(platform.cpl).toLocaleString()} CPL</span>
                   </div>
                 </div>
               ))}
@@ -180,7 +180,7 @@ export function CampaignAnalysisCard({ campaign, onAnalysisComplete }: CampaignA
                 <div key={i} className="p-2 bg-green-500/10 rounded">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">{elem.name}</span>
-                    <Badge variant="outline" className="text-green-500">£{elem.cpl.toFixed(2)} CPL</Badge>
+                    <Badge variant="outline" className="text-green-500">£{Math.round(elem.cpl).toLocaleString()} CPL</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{elem.why_working}</p>
                 </div>
@@ -201,7 +201,7 @@ export function CampaignAnalysisCard({ campaign, onAnalysisComplete }: CampaignA
                 <div key={i} className="p-2 bg-red-500/10 rounded">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">{elem.name}</span>
-                    <Badge variant="outline" className="text-red-500">£{elem.cpl.toFixed(2)} CPL</Badge>
+                    <Badge variant="outline" className="text-red-500">£{Math.round(elem.cpl).toLocaleString()} CPL</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{elem.issue}</p>
                   <p className="text-xs text-primary mt-1">→ {elem.recommendation}</p>
