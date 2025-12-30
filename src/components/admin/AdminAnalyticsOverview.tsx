@@ -276,7 +276,7 @@ const AdminAnalyticsOverview = () => {
                       fontSize: "12px",
                     }}
                     formatter={(value: number, name: string) => [
-                      name === "leads" ? value : `£${value.toFixed(2)}`,
+                      name === "leads" ? value : `£${Math.round(value).toLocaleString()}`,
                       name === "leads" ? "Leads" : "CPL",
                     ]}
                   />

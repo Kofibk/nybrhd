@@ -387,9 +387,9 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
           c.reach.toString(),
           c.clicks.toString(),
           c.ctr.toFixed(2),
-          c.cpc.toFixed(2),
+          Math.round(c.cpc).toString(),
           c.leads.toString(), 
-          c.cpl.toFixed(2), 
+          Math.round(c.cpl).toString(),
           c.status
         ]);
       });
@@ -566,7 +566,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                   "font-semibold ml-1",
                   overallStats.avgCpl <= TARGET_CPL ? "text-green-500" : overallStats.avgCpl <= 50 ? "text-amber-500" : "text-red-500"
                 )}>
-                  £{overallStats.avgCpl.toFixed(2)}
+                  £{Math.round(overallStats.avgCpl).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -718,13 +718,13 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                               <TableCell className="text-xs py-2 text-right">{campaign.reach.toLocaleString()}</TableCell>
                               <TableCell className="text-xs py-2 text-right">{campaign.clicks.toLocaleString()}</TableCell>
                               <TableCell className="text-xs py-2 text-right">{campaign.ctr > 0 ? `${campaign.ctr.toFixed(2)}%` : '-'}</TableCell>
-                              <TableCell className="text-xs py-2 text-right">{campaign.cpc > 0 ? `£${campaign.cpc.toFixed(2)}` : '-'}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.cpc > 0 ? `£${Math.round(campaign.cpc).toLocaleString()}` : '-'}</TableCell>
                               <TableCell className="text-xs py-2 text-center">{campaign.leads}</TableCell>
                               <TableCell className={cn(
                                 "text-xs py-2 text-right font-medium",
                                 campaign.cpl > 50 ? "text-red-500" : campaign.cpl > 35 ? "text-amber-500" : "text-green-500"
                               )}>
-                                £{campaign.cpl.toFixed(0)}
+                                £{Math.round(campaign.cpl).toLocaleString()}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -840,10 +840,10 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                               <TableCell className="text-xs py-2 text-right">{campaign.reach.toLocaleString()}</TableCell>
                               <TableCell className="text-xs py-2 text-right">{campaign.clicks.toLocaleString()}</TableCell>
                               <TableCell className="text-xs py-2 text-right">{campaign.ctr > 0 ? `${campaign.ctr.toFixed(2)}%` : '-'}</TableCell>
-                              <TableCell className="text-xs py-2 text-right">{campaign.cpc > 0 ? `£${campaign.cpc.toFixed(2)}` : '-'}</TableCell>
+                              <TableCell className="text-xs py-2 text-right">{campaign.cpc > 0 ? `£${Math.round(campaign.cpc).toLocaleString()}` : '-'}</TableCell>
                               <TableCell className="text-xs py-2 text-center">{campaign.leads}</TableCell>
                               <TableCell className="text-xs py-2 text-right font-medium text-green-500">
-                                £{campaign.cpl.toFixed(0)}
+                                £{Math.round(campaign.cpl).toLocaleString()}
                               </TableCell>
                             </TableRow>
                           ))}

@@ -457,7 +457,7 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
                 </TableCell>
                 <TableCell className="text-center">{campaign.leads}</TableCell>
                 <TableCell className="text-right">
-                  {campaign.cpl > 0 ? `£${campaign.cpl.toFixed(2)}` : "-"}
+                  {campaign.cpl > 0 ? `£${Math.round(campaign.cpl).toLocaleString()}` : "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

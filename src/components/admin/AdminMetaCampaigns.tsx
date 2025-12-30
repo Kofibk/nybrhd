@@ -176,7 +176,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
         <span className={`text-xs sm:text-sm font-medium ${
           status === "good" ? "text-green-600" : status === "bad" ? "text-red-500" : ""
         }`}>
-          {unit === "£" ? `${unit}${value.toFixed(2)}` : `${value.toFixed(1)}${unit}`}
+          {unit === "£" ? `${unit}${Math.round(value).toLocaleString()}` : `${value.toFixed(1)}${unit}`}
         </span>
         {status === "good" && <CheckCircle className="h-3 w-3 text-green-500" />}
         {status === "bad" && <AlertTriangle className="h-3 w-3 text-red-500" />}
@@ -290,7 +290,7 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
               <BarChart3 className="h-4 w-4" />
               <span className="text-xs">Avg CPL</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold">£{stats.avgCPL.toFixed(2)}</p>
+            <p className="text-xl sm:text-2xl font-bold">£{Math.round(stats.avgCPL).toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card className="col-span-2 sm:col-span-1">
@@ -501,9 +501,9 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
                                   <span className="text-xs sm:text-sm truncate">{adset.name}</span>
                                 </div>
                                 <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs flex-wrap">
-                                  <span>£{adset.metrics.spend.toFixed(0)} spent</span>
+                                  <span>£{Math.round(adset.metrics.spend).toLocaleString()} spent</span>
                                   <span>{adset.metrics.leads} leads</span>
-                                  <span>£{adset.metrics.cpl.toFixed(2)} CPL</span>
+                                  <span>£{Math.round(adset.metrics.cpl).toLocaleString()} CPL</span>
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
