@@ -43,20 +43,45 @@ export const BUYER_AIRTABLE_FIELDS = {
 } as const;
 
 export const CAMPAIGN_AIRTABLE_FIELDS = {
+  // Core identification
   CAMPAIGN_NAME: 'Campaign Name',
   CAMPAIGN_ID: 'Campaign ID',
+  AD_SET_NAME: 'Ad Set Name',
+  AD_NAME: 'Ad Name',
+  
+  // Financials - using actual Airtable field names
   BUDGET: 'Budget',
+  TOTAL_SPENT: 'Total Spent',  // Actual field name in Campaign_Data
   SPEND: 'Spend',
   LEADS: 'Leads',
+  LPV: 'LPV',  // Landing Page Views
   CPL: 'CPL',
+  COST_PER_RESULT: 'Cost per result',
+  COST_PER_LPV: 'Cost per LPV',
+  
+  // Status
   STATUS: 'Status',
+  DELIVERY_STATUS: 'Delivery Status',  // Actual field name in Campaign_Data
+  
+  // Dates
+  DATE: 'Date',  // Actual field name in Campaign_Data
   START_DATE: 'Start Date',
   END_DATE: 'End Date',
+  
+  // Performance metrics
   PLATFORM: 'Platform',
   IMPRESSIONS: 'Impressions',
+  REACH: 'Reach',
   CLICKS: 'Clicks',
+  LINK_CLICKS: 'Link Clicks',
   CTR: 'CTR',
+  CPC: 'CPC',
+  CPM: 'CPM',
+  FREQUENCY: 'Frequency',
+  
+  // Linked
   DEVELOPMENT: 'Development',
+  CLIENT: 'Client',
 } as const;
 
 // ============= Default Values =============
