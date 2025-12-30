@@ -123,44 +123,84 @@ export type TransformedBuyer = ReturnType<typeof transformBuyerRecord>;
 // ============= Campaign Transformation =============
 export function transformCampaignRecord(record: AirtableCampaignRecord) {
   const fields = record.fields;
-  const F = CAMPAIGN_AIRTABLE_FIELDS;
 
-  const name = String(fields[F.CAMPAIGN_NAME] || fields['Campaign name'] || 'Unknown Campaign');
-  const rawStatus = String(fields[F.STATUS] || fields['Campaign delivery'] || 'active').toLowerCase();
+  // Try multiple field name variations (Airtable Campaign_Data uses different names)
+  const name = String(
+    fields['Campaign Name'] || 
+    fields['Campaign name'] || 
+    fields['Ad Set Name'] ||
+    'Unknown Campaign'
+  );
+  
+  const rawStatus = String(
+    fields['Delivery Status'] || 
+    fields['Status'] || 
+    fields['Campaign delivery'] || 
+    'ACTIVE'
+  ).toLowerCase();
   
   let status = 'live';
-  if (rawStatus.includes('paused') || rawStatus.includes('inactive') || rawStatus.includes('archived')) {
+  if (rawStatus.includes('paused') || rawStatus.includes('inactive') || rawStatus.includes('archived') || rawStatus.includes('not_delivering')) {
     status = 'paused';
-  } else if (rawStatus.includes('draft')) {
+  } else if (rawStatus.includes('draft') || rawStatus.includes('pending')) {
     status = 'draft';
   }
 
-  const spend = Number(fields[F.SPEND] || fields['Amount spent (GBP)'] || 0);
-  const budget = Number(fields[F.BUDGET] || spend * 1.5 || 1000);
-  const leads = Number(fields['Results'] || fields[F.LEADS] || 0);
-  const cpl = Number(fields[F.CPL] || fields['Cost per result'] || (leads > 0 ? spend / leads : 0));
-  const startDate = String(fields[F.START_DATE] || fields['Reporting starts'] || new Date().toISOString().split('T')[0]);
+  // Spend field variations
+  const spend = Number(
+    fields['Total Spent'] || 
+    fields['Spend'] || 
+    fields['Amount spent (GBP)'] || 
+    0
+  );
+  
+  // Budget - default to 1.5x of spend if not available
+  const budget = Number(fields['Budget'] || spend * 1.5 || 1000);
+  
+  // Leads/Results field variations
+  const leads = Number(
+    fields['Results'] || 
+    fields['Leads'] || 
+    fields['LPV'] || // Landing Page Views as proxy
+    0
+  );
+  
+  // CPL calculation
+  const cpl = Number(
+    fields['CPL'] || 
+    fields['Cost per result'] || 
+    fields['Cost per LPV'] ||
+    (leads > 0 ? spend / leads : 0)
+  );
+  
+  // Date field variations
+  const startDate = String(
+    fields['Date'] || 
+    fields['Start Date'] || 
+    fields['Reporting starts'] || 
+    new Date().toISOString().split('T')[0]
+  );
 
   return {
     id: record.id,
     name,
-    client: String(fields['Client'] || 'Airtable'),
+    client: String(fields['Client'] || 'Campaign'),
     clientType: 'developer' as const,
     status,
     budget: Math.round(budget),
     spent: Math.round(spend),
     leads: Math.round(leads),
-    cpl,
+    cpl: Math.round(cpl),
     startDate,
-    impressions: Number(fields[F.IMPRESSIONS] || 0),
+    impressions: Number(fields['Impressions'] || 0),
     reach: Number(fields['Reach'] || 0),
-    clicks: Number(fields[F.CLICKS] || fields['Link clicks'] || 0),
-    ctr: Number(fields[F.CTR] || 0),
+    clicks: Number(fields['Clicks'] || fields['Link Clicks'] || fields['Link clicks'] || 0),
+    ctr: Number(fields['CTR'] || 0),
     cpc: Number(fields['CPC'] || 0),
-    platform: String(fields[F.PLATFORM] || 'Facebook'),
-    adSetName: String(fields['Ad set name'] || ''),
+    platform: String(fields['Platform'] || 'Facebook'),
+    adSetName: String(fields['Ad Set Name'] || fields['Ad set name'] || ''),
     frequency: Number(fields['Frequency'] || 0),
-    endDate: String(fields[F.END_DATE] || fields['Reporting ends'] || ''),
+    endDate: String(fields['End Date'] || fields['Reporting ends'] || ''),
   };
 }
 
@@ -169,34 +209,36 @@ export type TransformedCampaign = ReturnType<typeof transformCampaignRecord>;
 // Transform to raw format for dashboard context
 export function transformCampaignToRaw(record: AirtableCampaignRecord) {
   const fields = record.fields;
-  const spend = Number(fields['Spend'] || fields['Amount spent (GBP)'] || 0);
-  const results = Number(fields['Results'] || fields['Leads'] || 0);
+  
+  // Use actual Airtable field names from Campaign_Data table
+  const spend = Number(fields['Total Spent'] || fields['Spend'] || fields['Amount spent (GBP)'] || 0);
+  const results = Number(fields['Results'] || fields['Leads'] || fields['LPV'] || 0);
   const calculatedCpl = results > 0 ? spend / results : 0;
 
   return {
     'Campaign Name': fields['Campaign Name'] || fields['Campaign name'] || 'Unknown Campaign',
     'Campaign name': fields['Campaign Name'] || fields['Campaign name'] || 'Unknown Campaign',
-    'Ad set name': fields['Ad set name'] || '',
+    'Ad set name': fields['Ad Set Name'] || fields['Ad set name'] || '',
     'Platform': fields['Platform'] || 'Facebook',
-    'Status': fields['Status'] || fields['Campaign delivery'] || 'Active',
-    'Campaign delivery': fields['Campaign delivery'] || fields['Status'] || 'Active',
-    'Budget': Number(fields['Budget'] || 0),
+    'Status': fields['Delivery Status'] || fields['Status'] || fields['Campaign delivery'] || 'Active',
+    'Campaign delivery': fields['Delivery Status'] || fields['Campaign delivery'] || fields['Status'] || 'Active',
+    'Budget': Number(fields['Budget'] || spend * 1.5 || 0),
     'Spend': spend,
     'Amount spent (GBP)': spend,
     'Results': results,
     'Leads': results,
-    'CPL': Number(fields['CPL'] || fields['Cost per result'] || calculatedCpl),
-    'Cost per result': Number(fields['Cost per result'] || fields['CPL'] || calculatedCpl),
-    'Start Date': fields['Start Date'] || fields['Reporting starts'] || '',
-    'Reporting starts': fields['Reporting starts'] || fields['Start Date'] || '',
+    'CPL': Math.round(Number(fields['CPL'] || fields['Cost per result'] || fields['Cost per LPV'] || calculatedCpl)),
+    'Cost per result': Number(fields['Cost per result'] || fields['CPL'] || fields['Cost per LPV'] || calculatedCpl),
+    'Start Date': fields['Date'] || fields['Start Date'] || fields['Reporting starts'] || '',
+    'Reporting starts': fields['Date'] || fields['Reporting starts'] || fields['Start Date'] || '',
     'End Date': fields['End Date'] || fields['Reporting ends'] || '',
     'Reporting ends': fields['Reporting ends'] || fields['End Date'] || '',
     'Impressions': Number(fields['Impressions'] || 0),
     'Reach': Number(fields['Reach'] || 0),
     'Frequency': Number(fields['Frequency'] || 0),
-    'Cost per 1,000 people reached': Number(fields['Cost per 1,000 people reached'] || 0),
-    'Clicks': Number(fields['Clicks'] || fields['Link clicks'] || 0),
-    'Link clicks': Number(fields['Link clicks'] || fields['Clicks'] || 0),
+    'Cost per 1,000 people reached': Number(fields['Cost per 1,000 people reached'] || fields['CPM'] || 0),
+    'Clicks': Number(fields['Clicks'] || fields['Link Clicks'] || fields['Link clicks'] || 0),
+    'Link clicks': Number(fields['Link Clicks'] || fields['Link clicks'] || fields['Clicks'] || 0),
     'CTR': Number(fields['CTR'] || 0),
     'CPC': Number(fields['CPC'] || 0),
     'Client': fields['Client'] || '',
@@ -239,7 +281,7 @@ export function useAirtableBuyersForTable(options: AirtableHookOptions = {}) {
 export function useAirtableCampaignsData(options: AirtableHookOptions = {}) {
   return useQuery({
     queryKey: ['airtable', 'campaigns'],
-    queryFn: () => fetchAllRecords<AirtableCampaignRecord>('Campaign_Data'),
+    queryFn: () => fetchAllRecords<AirtableCampaignRecord>(AIRTABLE_TABLES.CAMPAIGN_DATA),
     staleTime: CACHE_CONFIG.staleTime * 2, // 4 minutes for campaigns
     refetchOnWindowFocus: CACHE_CONFIG.refetchOnWindowFocus,
     enabled: options.enabled ?? true,
