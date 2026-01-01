@@ -10,6 +10,7 @@ import { useUploadedData } from "@/contexts/DataContext";
 import { useMasterAgent } from "@/hooks/useMasterAgent";
 import { useAirtableCampaignsForDashboard } from "@/hooks/useAirtableData";
 import { useCloudCampaignSummary } from "@/hooks/useCloudCampaignData";
+import { useDashboardMetrics, useCampaignTotals } from "@/hooks/useDashboardMetrics";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import {
   Plus,
@@ -167,6 +168,10 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
 
   // Cloud data summary
   const { data: cloudSummary, isLoading: cloudLoading } = useCloudCampaignSummary();
+  
+  // Database metrics - buyers and campaign_data tables
+  const { data: dbMetrics, isLoading: metricsLoading, refetch: refetchMetrics } = useDashboardMetrics();
+  const { data: campaignTotals, isLoading: campaignTotalsLoading, refetch: refetchCampaignTotals } = useCampaignTotals();
 
   const campaignData = useMemo(() => {
     if (userType !== 'admin') return uploadedCampaignData;
@@ -262,7 +267,7 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
   }, [allCampaigns, statusFilter, dateRange]);
 
   // Group and categorise campaigns
-  const { needsAttention, performingWell, overallStats } = useMemo(() => {
+  const { needsAttention, performingWell, groupStats } = useMemo(() => {
     const groups: Record<string, Campaign[]> = {};
     
     filteredCampaigns.forEach((campaign) => {
@@ -287,25 +292,52 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     const needsAttention = allGroups.filter(g => g.rating === 'poor' || g.rating === 'acceptable').sort((a, b) => b.avgCpl - a.avgCpl);
     const performingWell = allGroups.filter(g => g.rating === 'excellent' || g.rating === 'good').sort((a, b) => a.avgCpl - b.avgCpl);
     
-    const totalSpend = allGroups.reduce((sum, g) => sum + g.totalSpend, 0);
-    const totalLeads = allGroups.reduce((sum, g) => sum + g.totalLeads, 0);
-    const avgCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
-    const efficiency = Math.min(100, Math.round((TARGET_CPL / Math.max(avgCpl, 1)) * 100));
-    
     return {
       needsAttention,
       performingWell,
-      overallStats: {
-        totalSpend,
-        totalLeads,
-        avgCpl,
-        efficiency,
+      groupStats: {
         onTrack: performingWell.length,
         attention: needsAttention.filter(g => g.rating === 'acceptable').length,
         paused: needsAttention.filter(g => g.rating === 'poor').length,
       }
     };
   }, [filteredCampaigns]);
+
+  // Calculate overall stats - prioritize database metrics
+  const overallStats = useMemo(() => {
+    // Use database metrics if available (buyers table for leads, campaign_data for spend)
+    if (dbMetrics && dbMetrics.totalLeads > 0 && campaignTotals) {
+      const totalSpend = campaignTotals.totalSpent;
+      const totalLeads = dbMetrics.totalLeads;
+      const hotLeads = dbMetrics.hotLeads;
+      const avgCpl = campaignTotals.avgCPL;
+      const efficiency = Math.min(100, Math.round((TARGET_CPL / Math.max(avgCpl, 1)) * 100));
+      
+      return {
+        totalSpend,
+        totalLeads,
+        hotLeads,
+        avgCpl,
+        efficiency,
+        ...groupStats,
+      };
+    }
+    
+    // Fallback to calculated from filtered campaigns
+    const totalSpend = filteredCampaigns.reduce((sum, c) => sum + c.spent, 0);
+    const totalLeads = filteredCampaigns.reduce((sum, c) => sum + c.leads, 0);
+    const avgCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
+    const efficiency = Math.min(100, Math.round((TARGET_CPL / Math.max(avgCpl, 1)) * 100));
+    
+    return {
+      totalSpend,
+      totalLeads,
+      hotLeads: 0,
+      avgCpl,
+      efficiency,
+      ...groupStats,
+    };
+  }, [dbMetrics, campaignTotals, filteredCampaigns, groupStats]);
 
   // Fetch AI recommendations
   const fetchAIRecommendations = async () => {
@@ -505,8 +537,12 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => refetchAirtable()}
-                disabled={airtableLoading}
+                onClick={() => {
+                  refetchAirtable();
+                  refetchMetrics();
+                  refetchCampaignTotals();
+                }}
+                disabled={airtableLoading || metricsLoading || campaignTotalsLoading}
               >
                 {airtableLoading ? (
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
@@ -588,6 +624,14 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium text-sm">OVERALL HEALTH</span>
+            {(metricsLoading || campaignTotalsLoading) && (
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            )}
+            {dbMetrics && dbMetrics.totalLeads > 0 && (
+              <Badge variant="outline" className="text-xs ml-auto">
+                From Database
+              </Badge>
+            )}
           </div>
           
           <div className="space-y-4">
@@ -595,14 +639,20 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
             <div className="flex flex-wrap items-center gap-6 text-sm">
               <div>
                 <span className="text-muted-foreground">Total Spend:</span>
-                <span className="font-semibold ml-1">£{overallStats.totalSpend.toLocaleString()}</span>
+                <span className="font-semibold ml-1">£{Math.round(overallStats.totalSpend).toLocaleString()}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">Leads:</span>
+                <span className="text-muted-foreground">Total Leads:</span>
                 <span className="font-semibold ml-1">{overallStats.totalLeads.toLocaleString()}</span>
               </div>
+              {overallStats.hotLeads > 0 && (
+                <div>
+                  <span className="text-muted-foreground">Hot Leads:</span>
+                  <span className="font-semibold ml-1 text-red-500">{overallStats.hotLeads.toLocaleString()}</span>
+                </div>
+              )}
               <div>
-                <span className="text-muted-foreground">CPL:</span>
+                <span className="text-muted-foreground">Avg CPL:</span>
                 <span className={cn(
                   "font-semibold ml-1",
                   overallStats.avgCpl <= TARGET_CPL ? "text-green-500" : overallStats.avgCpl <= 50 ? "text-amber-500" : "text-red-500"
