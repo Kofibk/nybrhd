@@ -59,6 +59,7 @@ import { toast } from "sonner";
 import HybridSignalCampaignBuilder from "./HybridSignalCampaignBuilder";
 import CreativeBreakdownReport from "./CreativeBreakdownReport";
 import { useCloudCampaignSummary, useCloudCampaignsGrouped } from "@/hooks/useCloudCampaignData";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import {
@@ -84,10 +85,14 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   // Fetch real data from Lovable Cloud
   const { data: cloudSummary, isLoading: summaryLoading, refetch: refetchSummary } = useCloudCampaignSummary();
   const { data: cloudCampaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCloudCampaignsGrouped();
+  
+  // Fetch lead metrics from buyers table
+  const { data: dashboardMetrics, isLoading: metricsLoading, refetch: refetchMetrics } = useDashboardMetrics();
 
   const handleRefreshData = () => {
     refetchSummary();
     refetchCampaigns();
+    refetchMetrics();
     toast.success("Refreshing campaign data from Cloud...");
   };
 
@@ -286,17 +291,30 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
       </div>
 
       {/* Cloud Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Database className="h-4 w-4 text-primary" />
-              <span className="text-xs">Campaigns</span>
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-xs">Total Leads</span>
             </div>
-            {summaryLoading ? (
+            {metricsLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <p className="text-xl sm:text-2xl font-bold">{cloudSummary?.uniqueCampaigns || 0}</p>
+              <p className="text-xl sm:text-2xl font-bold">{dashboardMetrics?.totalLeads || 0}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="border-orange-500/20 bg-orange-500/5">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Sparkles className="h-4 w-4 text-orange-500" />
+              <span className="text-xs">Hot Leads</span>
+            </div>
+            {metricsLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold text-orange-600">{dashboardMetrics?.hotLeads || 0}</p>
             )}
           </CardContent>
         </Card>
@@ -310,6 +328,32 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
               <Skeleton className="h-8 w-20" />
             ) : (
               <p className="text-xl sm:text-2xl font-bold">£{Math.round(cloudSummary?.totalSpent || 0).toLocaleString()}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Target className="h-4 w-4" />
+              <span className="text-xs">Avg CPL</span>
+            </div>
+            {metricsLoading || summaryLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">£{Math.round(dashboardMetrics?.avgCPL || 0)}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <Database className="h-4 w-4" />
+              <span className="text-xs">Campaigns</span>
+            </div>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">{cloudSummary?.uniqueCampaigns || 0}</p>
             )}
           </CardContent>
         </Card>
@@ -330,19 +374,6 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <MousePointer className="h-4 w-4" />
-              <span className="text-xs">Clicks</span>
-            </div>
-            {summaryLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <p className="text-xl sm:text-2xl font-bold">{(cloudSummary?.totalClicks || 0).toLocaleString()}</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <TrendingUp className="h-4 w-4" />
               <span className="text-xs">LPVs</span>
             </div>
             {summaryLoading ? (
