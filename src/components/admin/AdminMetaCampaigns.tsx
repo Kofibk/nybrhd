@@ -51,10 +51,15 @@ import {
   Sparkles,
   Brain,
   Zap,
+  Database,
+  RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import HybridSignalCampaignBuilder from "./HybridSignalCampaignBuilder";
 import CreativeBreakdownReport from "./CreativeBreakdownReport";
+import { useCloudCampaignSummary, useCloudCampaignsGrouped } from "@/hooks/useCloudCampaignData";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   MOCK_META_CAMPAIGNS,
@@ -74,7 +79,17 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<"campaigns" | "breakdown">("campaigns");
+  const [activeView, setActiveView] = useState<"campaigns" | "breakdown" | "cloud">("cloud");
+
+  // Fetch real data from Lovable Cloud
+  const { data: cloudSummary, isLoading: summaryLoading, refetch: refetchSummary } = useCloudCampaignSummary();
+  const { data: cloudCampaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useCloudCampaignsGrouped();
+
+  const handleRefreshData = () => {
+    refetchSummary();
+    refetchCampaigns();
+    toast.success("Refreshing campaign data from Cloud...");
+  };
 
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(c => {
@@ -87,6 +102,15 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
       return matchesSearch && matchesStatus && matchesPhase && matchesRegion;
     });
   }, [campaigns, searchQuery, statusFilter, phaseFilter, regionFilter]);
+
+  // Filter cloud campaigns by search
+  const filteredCloudCampaigns = useMemo(() => {
+    if (!cloudCampaigns) return [];
+    if (!searchQuery) return cloudCampaigns;
+    return cloudCampaigns.filter(c => 
+      c.campaign_name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [cloudCampaigns, searchQuery]);
 
   const stats = useMemo(() => {
     const active = campaigns.filter(c => c.status === "active");
@@ -230,40 +254,50 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
             Campaigns
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            {stats.activeCampaigns} active of {stats.totalCampaigns} campaigns • Powered by Naybourhood Attribution
+            {cloudSummary?.uniqueCampaigns || 0} campaigns • {cloudSummary?.totalRecords?.toLocaleString() || 0} records • Synced from Airtable
           </p>
         </div>
-        <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              New Campaign
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                Campaign Builder
-              </DialogTitle>
-            </DialogHeader>
-            <HybridSignalCampaignBuilder 
-              onCampaignCreated={handleCampaignCreated}
-              onClose={() => setIsBuilderOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefreshData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                New Campaign
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  Campaign Builder
+                </DialogTitle>
+              </DialogHeader>
+              <HybridSignalCampaignBuilder 
+                onCampaignCreated={handleCampaignCreated}
+                onClose={() => setIsBuilderOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <Card>
+      {/* Cloud Stats Overview */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Target className="h-4 w-4" />
+              <Database className="h-4 w-4 text-primary" />
               <span className="text-xs">Campaigns</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold">{stats.totalCampaigns}</p>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">{cloudSummary?.uniqueCampaigns || 0}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -272,42 +306,75 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
               <DollarSign className="h-4 w-4" />
               <span className="text-xs">Total Spend</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold">£{stats.totalSpend.toLocaleString()}</p>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">£{Math.round(cloudSummary?.totalSpent || 0).toLocaleString()}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Users className="h-4 w-4" />
-              <span className="text-xs">Total Leads</span>
+              <Eye className="h-4 w-4" />
+              <span className="text-xs">Impressions</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold">{stats.totalLeads}</p>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">{((cloudSummary?.totalImpressions || 0) / 1000000).toFixed(1)}M</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <MousePointer className="h-4 w-4" />
+              <span className="text-xs">Clicks</span>
+            </div>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">{(cloudSummary?.totalClicks || 0).toLocaleString()}</p>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 text-muted-foreground mb-1">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs">LPVs</span>
+            </div>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">{(cloudSummary?.totalLpv || 0).toLocaleString()}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <BarChart3 className="h-4 w-4" />
-              <span className="text-xs">Avg CPL</span>
+              <span className="text-xs">Avg CPC</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold">£{Math.round(stats.avgCPL).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-        <Card className="col-span-2 sm:col-span-1">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <MousePointer className="h-4 w-4" />
-              <span className="text-xs">Avg CTR</span>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold">{stats.avgCTR.toFixed(1)}%</p>
+            {summaryLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <p className="text-xl sm:text-2xl font-bold">£{(cloudSummary?.avgCpc || 0).toFixed(2)}</p>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* View Toggle Tabs */}
-      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as "campaigns" | "breakdown")}>
+      <Tabs value={activeView} onValueChange={(v) => setActiveView(v as "campaigns" | "breakdown" | "cloud")}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <TabsList>
+            <TabsTrigger value="cloud" className="gap-1 text-xs">
+              <Database className="h-3 w-3" />
+              Cloud Data
+            </TabsTrigger>
             <TabsTrigger value="campaigns" className="gap-1 text-xs">
               <Target className="h-3 w-3" />
               Campaigns
@@ -357,6 +424,101 @@ const AdminMetaCampaigns = ({ searchQuery }: AdminMetaCampaignsProps) => {
             </div>
           )}
         </div>
+
+        {/* Cloud Data Tab Content */}
+        <TabsContent value="cloud" className="mt-4 space-y-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Database className="h-4 w-4 text-primary" />
+                  Campaign Data from Lovable Cloud
+                </h3>
+                <Badge variant="outline" className="text-xs">
+                  Auto-syncing every minute
+                </Badge>
+              </div>
+              
+              {campaignsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[300px]">Campaign Name</TableHead>
+                        <TableHead className="text-right">Spend</TableHead>
+                        <TableHead className="text-right">Impressions</TableHead>
+                        <TableHead className="text-right">Clicks</TableHead>
+                        <TableHead className="text-right">LPVs</TableHead>
+                        <TableHead className="text-right">CPC</TableHead>
+                        <TableHead className="text-right">CTR</TableHead>
+                        <TableHead className="text-center">Platforms</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCloudCampaigns.map((campaign) => (
+                        <TableRow key={campaign.campaign_name}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium text-sm truncate max-w-[280px]">{campaign.campaign_name}</p>
+                              <p className="text-xs text-muted-foreground">{campaign.record_count} ad records</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            £{Math.round(campaign.total_spent).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {campaign.total_impressions >= 1000000 
+                              ? `${(campaign.total_impressions / 1000000).toFixed(1)}M`
+                              : campaign.total_impressions >= 1000
+                                ? `${(campaign.total_impressions / 1000).toFixed(1)}K`
+                                : campaign.total_impressions.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {campaign.total_clicks.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {campaign.total_lpv.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className={campaign.avg_cpc < 1.5 ? "text-green-600" : campaign.avg_cpc > 3 ? "text-red-500" : ""}>
+                              £{campaign.avg_cpc.toFixed(2)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className={campaign.avg_ctr > 2 ? "text-green-600" : campaign.avg_ctr < 1 ? "text-red-500" : ""}>
+                              {campaign.avg_ctr.toFixed(2)}%
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex gap-1 justify-center">
+                              {campaign.platforms.map(p => (
+                                <Badge key={p} variant="outline" className="text-[10px] capitalize">
+                                  {p}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+              
+              {!campaignsLoading && filteredCloudCampaigns.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No campaigns found matching your search.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Campaigns Tab Content */}
         <TabsContent value="campaigns" className="mt-4 space-y-4">
