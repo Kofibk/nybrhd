@@ -12,7 +12,7 @@ export const AIRTABLE_TABLES = {
   
   // Campaigns & Marketing
   CAMPAIGNS: 'Campaigns',
-  CAMPAIGN_DATA: 'Campaign_Data',
+  CAMPAIGN_DATA: 'Previous Campaign Data',
   CREATIVE_ASSETS: 'Creative_Assets',
   AD_COPIES: 'Ad_Copies',
   CAMPAIGN_METRICS: 'Campaign_Metrics',
