@@ -9,6 +9,7 @@ import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useMasterAgent } from "@/hooks/useMasterAgent";
 import { useAirtableCampaignsForDashboard } from "@/hooks/useAirtableData";
+import { useCloudCampaignSummary } from "@/hooks/useCloudCampaignData";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import {
   Plus,
@@ -163,6 +164,9 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     isLoading: airtableLoading,
     refetch: refetchAirtable,
   } = useAirtableCampaignsForDashboard({ enabled: userType === 'admin' });
+
+  // Cloud data summary
+  const { data: cloudSummary, isLoading: cloudLoading } = useCloudCampaignSummary();
 
   const campaignData = useMemo(() => {
     if (userType !== 'admin') return uploadedCampaignData;
@@ -542,7 +546,44 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
           data={{ campaigns: campaignData, leads: leadData }}
         />
 
-        {/* Overall Health */}
+        {/* Cloud Data Summary - for admin users */}
+        {userType === 'admin' && cloudSummary && (
+          <Card className="p-4 border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span className="font-medium text-sm">CLOUD DATA SUMMARY</span>
+              <Badge variant="outline" className="text-xs ml-auto">
+                Auto-syncing from Airtable
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Campaigns</p>
+                <p className="text-lg font-bold">{cloudSummary.uniqueCampaigns}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Spend</p>
+                <p className="text-lg font-bold">£{Math.round(cloudSummary.totalSpent).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Impressions</p>
+                <p className="text-lg font-bold">{(cloudSummary.totalImpressions / 1000000).toFixed(1)}M</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Clicks</p>
+                <p className="text-lg font-bold">{cloudSummary.totalClicks.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">LPVs</p>
+                <p className="text-lg font-bold">{cloudSummary.totalLpv.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Avg CPC</p>
+                <p className="text-lg font-bold">£{cloudSummary.avgCpc.toFixed(2)}</p>
+              </div>
+            </div>
+          </Card>
+        )}
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
