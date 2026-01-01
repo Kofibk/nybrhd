@@ -180,8 +180,8 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   const { campaignData: airtableCampaignData, isLoading: airtableLoading, refetch: refetchAirtable } = useAirtableCampaignsForDashboard();
   
   // Fetch real metrics from database
-  const { data: dbMetrics, isLoading: metricsLoading, refetch: refetchMetrics } = useDashboardMetrics();
-  const { data: campaignTotals, isLoading: campaignTotalsLoading, refetch: refetchCampaignTotals } = useCampaignTotals();
+  const { data: dbMetrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useDashboardMetrics();
+  const { data: campaignTotals, isLoading: campaignTotalsLoading, error: campaignTotalsError, refetch: refetchCampaignTotals } = useCampaignTotals();
   
   // Merge Airtable data with uploaded data (Airtable takes priority)
   const campaignData = React.useMemo(() => {
@@ -205,6 +205,19 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    // Debug: why totals may not be showing
+    if (metricsError || campaignTotalsError) {
+      console.error("Dashboard metrics error:", { metricsError, campaignTotalsError });
+    }
+    if (!metricsLoading && !campaignTotalsLoading) {
+      console.log("Dashboard metrics loaded:", {
+        dbMetrics,
+        campaignTotals,
+      });
+    }
+  }, [metricsError, campaignTotalsError, metricsLoading, campaignTotalsLoading, dbMetrics, campaignTotals]);
 
   useEffect(() => {
     if (leadData.length > 0 || campaignData.length > 0) fetchRecommendations();
@@ -517,21 +530,30 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     }).filter(Boolean).slice(0, 3) as CampaignAlert[];
   }, [campaignData]);
 
-  // KPIs - Prioritize database metrics, fallback to calculated from uploads
+  // KPIs - Prefer database metrics when available
   const kpis = React.useMemo(() => {
-    // Use database metrics if available
-    if (dbMetrics && dbMetrics.totalLeads > 0) {
+    const hasDbCampaigns = (campaignTotals?.totalCampaigns ?? 0) > 0;
+    const hasDbSpend = (campaignTotals?.totalSpent ?? 0) > 0 || (dbMetrics?.totalSpend ?? 0) > 0;
+    const hasDbLeads = (dbMetrics?.totalLeads ?? 0) > 0;
+
+    // If we have any DB campaign info, at least show spend/CPL from DB
+    if (hasDbCampaigns || hasDbSpend || hasDbLeads) {
+      const totalLeads = dbMetrics?.totalLeads ?? 0;
+      const totalSpend = campaignTotals?.totalSpent ?? dbMetrics?.totalSpend ?? 0;
+      const avgCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
+
       return {
-        totalLeads: dbMetrics.totalLeads,
-        hotLeads: dbMetrics.hotLeads,
+        totalLeads,
+        hotLeads: dbMetrics?.hotLeads ?? 0,
         avgScore: calculatedMetrics.avgScore || 50,
-        totalSpend: campaignTotals?.totalSpent || dbMetrics.totalSpend,
-        avgCPL: campaignTotals?.avgCPL || dbMetrics.avgCPL,
-        qualifiedRate: dbMetrics.qualifiedRate,
+        totalSpend,
+        avgCPL,
+        qualifiedRate: dbMetrics?.qualifiedRate ?? 0,
         totalResults: calculatedMetrics.totalResults,
-        classifications: calculatedMetrics.classifications
+        classifications: calculatedMetrics.classifications,
       };
     }
+
     // Fallback to calculated metrics from uploaded data
     return calculatedMetrics;
   }, [dbMetrics, campaignTotals, calculatedMetrics]);
@@ -591,10 +613,13 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             <h1 className="text-xl md:text-2xl font-bold">{greeting}, {userName}</h1>
             <p className="text-sm text-muted-foreground">{dateString}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {dbMetrics && dbMetrics.totalLeads > 0 ? (
+              {((dbMetrics && (dbMetrics.totalLeads > 0 || (campaignTotals?.totalCampaigns || 0) > 0)) ? (
                 <>Leads: {dbMetrics.totalLeads} (Database) · Campaigns: {campaignTotals?.totalCampaigns || 0} (Database)</>
               ) : (
                 <>Campaigns: {campaignData.length}{airtableCampaignData && airtableCampaignData.length > 0 ? ' (Airtable)' : campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}</>
+              ))}
+              {(metricsError || campaignTotalsError) && (
+                <span className="ml-2 text-destructive">Metrics blocked by permissions</span>
               )}
               {isDataLoading && <span className="ml-2 text-primary">Loading...</span>}
             </p>
