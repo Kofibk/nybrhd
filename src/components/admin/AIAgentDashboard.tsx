@@ -46,6 +46,7 @@ import { classifyLead } from '@/lib/leadClassification';
 import Papa from 'papaparse';
 import { AnimatedNumber } from '@/hooks/useAnimatedCounter';
 import { useAirtableCampaignsForDashboard } from '@/hooks/useAirtableData';
+import { useDashboardMetrics, useCampaignTotals } from '@/hooks/useDashboardMetrics';
 import {
   Dialog,
   DialogContent,
@@ -177,6 +178,10 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
   
   // Fetch campaigns from Airtable Campaign_Date table
   const { campaignData: airtableCampaignData, isLoading: airtableLoading, refetch: refetchAirtable } = useAirtableCampaignsForDashboard();
+  
+  // Fetch real metrics from database
+  const { data: dbMetrics, isLoading: metricsLoading, refetch: refetchMetrics } = useDashboardMetrics();
+  const { data: campaignTotals, isLoading: campaignTotalsLoading, refetch: refetchCampaignTotals } = useCampaignTotals();
   
   // Merge Airtable data with uploaded data (Airtable takes priority)
   const campaignData = React.useMemo(() => {
@@ -512,10 +517,24 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     }).filter(Boolean).slice(0, 3) as CampaignAlert[];
   }, [campaignData]);
 
-  // KPIs - Use calculated metrics from real data
+  // KPIs - Prioritize database metrics, fallback to calculated from uploads
   const kpis = React.useMemo(() => {
+    // Use database metrics if available
+    if (dbMetrics && dbMetrics.totalLeads > 0) {
+      return {
+        totalLeads: dbMetrics.totalLeads,
+        hotLeads: dbMetrics.hotLeads,
+        avgScore: calculatedMetrics.avgScore || 50,
+        totalSpend: campaignTotals?.totalSpent || dbMetrics.totalSpend,
+        avgCPL: campaignTotals?.avgCPL || dbMetrics.avgCPL,
+        qualifiedRate: dbMetrics.qualifiedRate,
+        totalResults: calculatedMetrics.totalResults,
+        classifications: calculatedMetrics.classifications
+      };
+    }
+    // Fallback to calculated metrics from uploaded data
     return calculatedMetrics;
-  }, [calculatedMetrics]);
+  }, [dbMetrics, campaignTotals, calculatedMetrics]);
 
   const handleAction = (action: string, lead: ActionLead) => {
     if (action === 'call' && lead.phone) window.open(`tel:${lead.phone}`, '_blank');
@@ -558,7 +577,9 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
     finally { setLoadingDemo(false); }
   };
 
-  const hasData = leadData.length > 0 || campaignData.length > 0;
+  // Has data if we have uploaded data OR database has leads/campaigns
+  const hasData = leadData.length > 0 || campaignData.length > 0 || (dbMetrics && dbMetrics.totalLeads > 0) || (campaignTotals && campaignTotals.totalCampaigns > 0);
+  const isDataLoading = airtableLoading || metricsLoading || campaignTotalsLoading;
 
   return (
     <div className="h-full">
@@ -570,8 +591,12 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
             <h1 className="text-xl md:text-2xl font-bold">{greeting}, {userName}</h1>
             <p className="text-sm text-muted-foreground">{dateString}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Campaigns: {campaignData.length}{airtableCampaignData && airtableCampaignData.length > 0 ? ' (Airtable)' : campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}
-              {airtableLoading && <span className="ml-2 text-primary">Loading from Airtable...</span>}
+              {dbMetrics && dbMetrics.totalLeads > 0 ? (
+                <>Leads: {dbMetrics.totalLeads} (Database) · Campaigns: {campaignTotals?.totalCampaigns || 0} (Database)</>
+              ) : (
+                <>Campaigns: {campaignData.length}{airtableCampaignData && airtableCampaignData.length > 0 ? ' (Airtable)' : campaignFileName ? ` (${campaignFileName})` : ''} · Leads: {leadData.length}{leadFileName ? ` (${leadFileName})` : ''}</>
+              )}
+              {isDataLoading && <span className="ml-2 text-primary">Loading...</span>}
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -580,10 +605,14 @@ export function AIAgentDashboard({ userType = 'admin' }: AIAgentDashboardProps) 
                 variant="outline"
                 size="sm"
                 className="text-xs"
-                onClick={() => refetchAirtable()}
-                disabled={airtableLoading}
+                onClick={() => {
+                  refetchAirtable();
+                  refetchMetrics();
+                  refetchCampaignTotals();
+                }}
+                disabled={isDataLoading}
               >
-                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${airtableLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isDataLoading ? 'animate-spin' : ''}`} />
                 <span className="hidden xs:inline">Sync Airtable</span>
                 <span className="xs:hidden">Sync</span>
               </Button>
