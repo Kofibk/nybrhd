@@ -995,6 +995,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_campaign_totals: {
+        Args: never
+        Returns: {
+          campaign_name: string
+          clicks: number
+          date_max: string
+          date_min: string
+          impressions: number
+          link_clicks: number
+          lpv: number
+          platforms: string[]
+          reach: number
+          record_count: number
+          statuses: string[]
+          total_spent: number
+        }[]
+      }
+      get_dashboard_metrics: {
+        Args: never
+        Returns: {
+          hot_leads: number
+          qualified_rate: number
+          status_breakdown: Json
+          total_leads: number
+          total_spend: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
