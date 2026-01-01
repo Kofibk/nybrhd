@@ -47,6 +47,7 @@ import { toast } from "@/hooks/use-toast";
 import ReportUploadDialog from "./ReportUploadDialog";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useAirtableCampaignsForTable } from "@/hooks/useAirtableData";
+import { useCloudCampaignsGrouped } from "@/hooks/useCloudCampaignData";
 
 interface AdminCampaignsTableProps {
   searchQuery: string;
@@ -169,37 +170,66 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
   // Fetch campaigns from Airtable Campaign_Date table
   const { campaigns: airtableCampaigns, isLoading: airtableLoading, refetch: refetchAirtable } = useAirtableCampaignsForTable();
   
+  // Fetch campaigns from Cloud (synced from Airtable)
+  const { data: cloudCampaigns, isLoading: cloudLoading, refetch: refetchCloud } = useCloudCampaignsGrouped();
+  
   // Get uploaded campaign data from context
   const { campaignData, setCampaignData, setCampaignFileName } = useUploadedData('admin');
   
-  // Local campaigns state (airtable + mockCampaigns + imported campaigns)
+  // Local campaigns state (cloud + airtable + mockCampaigns + imported campaigns)
   const [localCampaigns, setLocalCampaigns] = useState<Campaign[]>(mockCampaigns);
 
-  // Merge Airtable + uploaded campaign data with local campaigns
+  // Merge Cloud + Airtable + uploaded campaign data with local campaigns
   useEffect(() => {
     const allCampaigns: Campaign[] = [];
     
-    // Add Airtable campaigns first (priority)
+    // Add Cloud campaigns first (priority - synced every minute)
+    if (cloudCampaigns && cloudCampaigns.length > 0) {
+      const cloudMapped: Campaign[] = cloudCampaigns.map((c, index) => ({
+        id: `cloud-${index}`,
+        name: c.campaign_name || 'Unknown Campaign',
+        client: 'Cloud Sync',
+        clientType: 'developer',
+        status: c.statuses.includes('Active') || c.statuses.includes('active') ? 'live' : 
+                c.statuses.includes('paused') || c.statuses.includes('Paused') ? 'paused' : 'live',
+        budget: Math.round(c.total_spent * 1.5) || 1000,
+        spent: c.total_spent,
+        leads: c.total_lpv,
+        cpl: c.total_lpv > 0 ? c.total_spent / c.total_lpv : 0,
+        startDate: c.date_range.min || new Date().toISOString().split('T')[0],
+      }));
+      allCampaigns.push(...cloudMapped);
+    }
+    
+    // Add Airtable campaigns (if not already in Cloud)
     if (airtableCampaigns && airtableCampaigns.length > 0) {
-      allCampaigns.push(...airtableCampaigns);
+      const existingNames = new Set(allCampaigns.map(c => c.name.toLowerCase()));
+      const newFromAirtable = airtableCampaigns.filter(c => !existingNames.has(c.name.toLowerCase()));
+      allCampaigns.push(...newFromAirtable);
     }
     
     // Add uploaded campaigns
     if (campaignData && campaignData.length > 0) {
-      const mappedCampaigns: Campaign[] = campaignData.map((c, index) => ({
-        id: `uploaded-${index}`,
-        name: c['Campaign Name'] || c['Campaign name'] || c.name || 'Unknown Campaign',
-        client: c.client || 'Uploaded',
-        clientType: c.clientType || 'developer',
-        status: c.Status === 'Active' ? 'live' : 
-                c['Campaign delivery'] === 'archived' ? 'paused' : 
-                c['Campaign delivery'] === 'inactive' ? 'paused' : 'live',
-        budget: parseFloat(c.Spend || c['Amount spent (GBP)'] || c.budget || '0') * 1.5 || 1000,
-        spent: parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spent || '0'),
-        leads: parseInt(c.Results || c.leads || '0', 10),
-        cpl: parseFloat(c.CPL || c.Spend || c['Amount spent (GBP)'] || '0') / Math.max(parseInt(c.Results || '1', 10), 1),
-        startDate: c['Start Date'] || c['Reporting starts'] || c.startDate || new Date().toISOString().split('T')[0],
-      }));
+      const existingNames = new Set(allCampaigns.map(c => c.name.toLowerCase()));
+      const mappedCampaigns: Campaign[] = campaignData
+        .filter(c => {
+          const name = (c['Campaign Name'] || c['Campaign name'] || c.name || '').toLowerCase();
+          return !existingNames.has(name);
+        })
+        .map((c, index) => ({
+          id: `uploaded-${index}`,
+          name: c['Campaign Name'] || c['Campaign name'] || c.name || 'Unknown Campaign',
+          client: c.client || 'Uploaded',
+          clientType: c.clientType || 'developer',
+          status: c.Status === 'Active' ? 'live' : 
+                  c['Campaign delivery'] === 'archived' ? 'paused' : 
+                  c['Campaign delivery'] === 'inactive' ? 'paused' : 'live',
+          budget: parseFloat(c.Spend || c['Amount spent (GBP)'] || c.budget || '0') * 1.5 || 1000,
+          spent: parseFloat(c.Spend || c['Amount spent (GBP)'] || c.spent || '0'),
+          leads: parseInt(c.Results || c.leads || '0', 10),
+          cpl: parseFloat(c.CPL || c.Spend || c['Amount spent (GBP)'] || '0') / Math.max(parseInt(c.Results || '1', 10), 1),
+          startDate: c['Start Date'] || c['Reporting starts'] || c.startDate || new Date().toISOString().split('T')[0],
+        }));
       allCampaigns.push(...mappedCampaigns);
     }
     
@@ -210,10 +240,10 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
     
     // Remove duplicates by name
     const unique = allCampaigns.filter((c, i, arr) => 
-      arr.findIndex(x => x.name === c.name) === i
+      arr.findIndex(x => x.name.toLowerCase() === c.name.toLowerCase()) === i
     );
     setLocalCampaigns(unique);
-  }, [airtableCampaigns, campaignData]);
+  }, [airtableCampaigns, cloudCampaigns, campaignData]);
 
   // Handle importing campaigns from file upload - also save to DataContext
   const handleCampaignsImport = (importedCampaigns: Campaign[]) => {
@@ -347,23 +377,30 @@ const AdminCampaignsTable = ({ searchQuery }: AdminCampaignsTableProps) => {
     </TableHead>
   );
 
+  const isLoading = airtableLoading || cloudLoading;
+
+  const handleRefresh = () => {
+    refetchAirtable();
+    refetchCloud();
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 md:p-6">
         <div className="flex items-center gap-2">
           <CardTitle className="text-base md:text-lg">All Campaigns ({filteredCampaigns.length})</CardTitle>
-          {airtableLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
         </div>
         <div className="flex gap-2 w-full sm:w-auto flex-wrap">
           <Button 
-            onClick={() => refetchAirtable()} 
+            onClick={handleRefresh} 
             variant="outline" 
             size="sm" 
             className="gap-2 h-8"
-            disabled={airtableLoading}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 ${airtableLoading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Sync Airtable</span>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Sync Data</span>
           </Button>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-32 text-xs md:text-sm h-8">
