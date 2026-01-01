@@ -8,8 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { UserRole } from "@/lib/types";
 import { useUploadedData } from "@/contexts/DataContext";
 import { useMasterAgent } from "@/hooks/useMasterAgent";
-import { useAirtableCampaignsForDashboard } from "@/hooks/useAirtableData";
-import { useCloudCampaignSummary } from "@/hooks/useCloudCampaignData";
+// Cloud data hooks - campaign_data table is the primary source
+import { useCloudCampaignSummary, useCloudCampaignsGrouped } from "@/hooks/useCloudCampaignData";
 import { useDashboardMetrics, useCampaignTotals } from "@/hooks/useDashboardMetrics";
 import { AIInsightsPanel } from "@/components/AIInsightsPanel";
 import {
@@ -160,12 +160,9 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
   const { campaignData: uploadedCampaignData, leadData } = useUploadedData(userType);
   const { getCampaignRecommendations, isLoading: aiLoading } = useMasterAgent();
 
-  const {
-    campaignData: airtableCampaignData,
-    isLoading: airtableLoading,
-    refetch: refetchAirtable,
-  } = useAirtableCampaignsForDashboard({ enabled: userType === 'admin' });
-
+  // Cloud campaign data from campaign_data table (PRIMARY SOURCE)
+  const { data: cloudCampaigns, isLoading: cloudCampaignsLoading, refetch: refetchCloudCampaigns } = useCloudCampaignsGrouped();
+  
   // Cloud data summary
   const { data: cloudSummary, isLoading: cloudLoading } = useCloudCampaignSummary();
   
@@ -173,15 +170,31 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
   const { data: dbMetrics, isLoading: metricsLoading, refetch: refetchMetrics } = useDashboardMetrics();
   const { data: campaignTotals, isLoading: campaignTotalsLoading, refetch: refetchCampaignTotals } = useCampaignTotals();
 
+  // Transform cloud campaigns to the format expected by the page
   const campaignData = useMemo(() => {
-    if (userType !== 'admin') return uploadedCampaignData;
-    if (!airtableCampaignData || airtableCampaignData.length === 0) return uploadedCampaignData;
-
-    const combined = [...airtableCampaignData, ...uploadedCampaignData];
-    return combined.filter(
-      (c, i, arr) => arr.findIndex((x) => x['Campaign Name'] === c['Campaign Name']) === i
-    );
-  }, [airtableCampaignData, uploadedCampaignData, userType]);
+    // For admin, use cloud data from campaign_data table
+    if (userType === 'admin' && cloudCampaigns && cloudCampaigns.length > 0) {
+      return cloudCampaigns.map(c => ({
+        'Campaign Name': c.campaign_name,
+        'Campaign name': c.campaign_name,
+        Spend: c.total_spent,
+        'Amount spent (GBP)': c.total_spent,
+        Results: c.total_lpv,
+        Impressions: c.total_impressions,
+        Reach: c.total_reach,
+        Clicks: c.total_clicks,
+        'Link clicks': c.total_link_clicks,
+        CTR: c.avg_ctr,
+        CPC: c.avg_cpc,
+        CPM: c.avg_cpm,
+        Platform: c.platforms.join(', ') || 'Meta',
+        Status: c.statuses[0] || 'Active',
+        'Reporting starts': c.date_range.min || new Date().toISOString(),
+      }));
+    }
+    // Fallback to uploaded data for non-admin users
+    return uploadedCampaignData;
+  }, [cloudCampaigns, uploadedCampaignData, userType]);
   const [performingExpanded, setPerformingExpanded] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -445,22 +458,22 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
     return aiRecommendations[group.name] || group.aiRecommendation;
   };
 
-  // Loading state for admin (Airtable fetching)
-  if (userType === 'admin' && airtableLoading) {
+  // Loading state for admin (Cloud data fetching)
+  if (userType === 'admin' && cloudCampaignsLoading) {
     return (
       <DashboardLayout title="Campaigns" userType={userType}>
         <div className="h-full flex flex-col min-h-0 space-y-6 overflow-auto">
           <div className="flex items-center justify-between flex-shrink-0">
             <div>
               <h2 className="text-xl font-semibold">Campaigns</h2>
-              <p className="text-muted-foreground text-sm">Loading campaign data from Airtable...</p>
+              <p className="text-muted-foreground text-sm">Loading campaign data...</p>
             </div>
           </div>
           <Card className="p-12 text-center">
             <Loader2 className="h-12 w-12 mx-auto text-primary mb-4 animate-spin" />
             <h3 className="text-lg font-semibold mb-2">Loading Campaigns</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Fetching campaign data from Airtable...
+              Fetching campaign data from database...
             </p>
           </Card>
         </div>
@@ -483,11 +496,15 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => refetchAirtable()}
-                  disabled={airtableLoading}
+                  onClick={() => {
+                    refetchCloudCampaigns();
+                    refetchMetrics();
+                    refetchCampaignTotals();
+                  }}
+                  disabled={cloudCampaignsLoading}
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${airtableLoading ? 'animate-spin' : ''}`} />
-                  Sync Airtable
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${cloudCampaignsLoading ? 'animate-spin' : ''}`} />
+                  Refresh Data
                 </Button>
               ) : (
                 <Button variant="outline" size="sm">
@@ -506,13 +523,13 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
             <h3 className="text-lg font-semibold mb-2">No Campaign Data</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               {userType === 'admin' 
-                ? 'Click "Sync Airtable" to fetch campaign data from your Campaign_Date table.'
+                ? 'No campaign data found in the database. Data syncs automatically from your connected sources.'
                 : 'Upload your campaign data CSV from the main dashboard to view performance and get AI recommendations.'}
             </p>
             {userType === 'admin' && (
-              <Button onClick={() => refetchAirtable()} disabled={airtableLoading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${airtableLoading ? 'animate-spin' : ''}`} />
-                Sync from Airtable
+              <Button onClick={() => refetchCloudCampaigns()} disabled={cloudCampaignsLoading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${cloudCampaignsLoading ? 'animate-spin' : ''}`} />
+                Refresh Data
               </Button>
             )}
           </Card>
@@ -538,18 +555,18 @@ const CampaignsList = ({ userType }: CampaignsListProps) => {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  refetchAirtable();
+                  refetchCloudCampaigns();
                   refetchMetrics();
                   refetchCampaignTotals();
                 }}
-                disabled={airtableLoading || metricsLoading || campaignTotalsLoading}
+                disabled={cloudCampaignsLoading || metricsLoading || campaignTotalsLoading}
               >
-                {airtableLoading ? (
+                {cloudCampaignsLoading ? (
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                 ) : (
                   <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                 )}
-                Sync Airtable
+                Refresh Data
               </Button>
             )}
             <Button 
