@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.send-message-notification]
 verify_jwt = false
+
+[functions.migrate-airtable]
+verify_jwt = false

@@ -167,16 +167,26 @@ export type Database = {
       }
       buyers: {
         Row: {
+          airtable_record_id: string | null
+          assigned_caller: string | null
           bedrooms: number | null
           budget_max: number | null
           budget_min: number | null
+          budget_range: string | null
+          country: string | null
           created_at: string
+          date_added: string | null
+          development_name: string | null
           email: string | null
           first_name: string | null
           id: string
+          intent: string | null
           intent_score: number | null
           last_name: string | null
+          lead_id: number | null
           location_preferences: string[] | null
+          name: string | null
+          notes: string | null
           payment_method: string | null
           phone: string | null
           priority: string | null
@@ -185,21 +195,32 @@ export type Database = {
           quality_score: number | null
           source: string | null
           source_campaign_id: string | null
+          status: string | null
           timeline: string | null
           updated_at: string
           verified: boolean | null
         }
         Insert: {
+          airtable_record_id?: string | null
+          assigned_caller?: string | null
           bedrooms?: number | null
           budget_max?: number | null
           budget_min?: number | null
+          budget_range?: string | null
+          country?: string | null
           created_at?: string
+          date_added?: string | null
+          development_name?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
+          intent?: string | null
           intent_score?: number | null
           last_name?: string | null
+          lead_id?: number | null
           location_preferences?: string[] | null
+          name?: string | null
+          notes?: string | null
           payment_method?: string | null
           phone?: string | null
           priority?: string | null
@@ -208,21 +229,32 @@ export type Database = {
           quality_score?: number | null
           source?: string | null
           source_campaign_id?: string | null
+          status?: string | null
           timeline?: string | null
           updated_at?: string
           verified?: boolean | null
         }
         Update: {
+          airtable_record_id?: string | null
+          assigned_caller?: string | null
           bedrooms?: number | null
           budget_max?: number | null
           budget_min?: number | null
+          budget_range?: string | null
+          country?: string | null
           created_at?: string
+          date_added?: string | null
+          development_name?: string | null
           email?: string | null
           first_name?: string | null
           id?: string
+          intent?: string | null
           intent_score?: number | null
           last_name?: string | null
+          lead_id?: number | null
           location_preferences?: string[] | null
+          name?: string | null
+          notes?: string | null
           payment_method?: string | null
           phone?: string | null
           priority?: string | null
@@ -231,9 +263,115 @@ export type Database = {
           quality_score?: number | null
           source?: string | null
           source_campaign_id?: string | null
+          status?: string | null
           timeline?: string | null
           updated_at?: string
           verified?: boolean | null
+        }
+        Relationships: []
+      }
+      campaign_data: {
+        Row: {
+          ad_id: string | null
+          ad_name: string | null
+          ad_set_id: string | null
+          ad_set_name: string | null
+          airtable_record_id: string | null
+          campaign_id: string | null
+          campaign_name: string | null
+          clicks: number | null
+          cost_per_lpv: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          date: string | null
+          delivery_status: string | null
+          destination_url: string | null
+          format: string | null
+          frequency: number | null
+          headline: string | null
+          id: string
+          impressions: number | null
+          link_clicks: number | null
+          lpv: number | null
+          page_likes: number | null
+          platform: string | null
+          post_engagement: number | null
+          primary_text: string | null
+          reach: number | null
+          thumbnail_url: string | null
+          total_spent: number | null
+          updated_at: string
+          video_plays: number | null
+        }
+        Insert: {
+          ad_id?: string | null
+          ad_name?: string | null
+          ad_set_id?: string | null
+          ad_set_name?: string | null
+          airtable_record_id?: string | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          clicks?: number | null
+          cost_per_lpv?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string | null
+          delivery_status?: string | null
+          destination_url?: string | null
+          format?: string | null
+          frequency?: number | null
+          headline?: string | null
+          id?: string
+          impressions?: number | null
+          link_clicks?: number | null
+          lpv?: number | null
+          page_likes?: number | null
+          platform?: string | null
+          post_engagement?: number | null
+          primary_text?: string | null
+          reach?: number | null
+          thumbnail_url?: string | null
+          total_spent?: number | null
+          updated_at?: string
+          video_plays?: number | null
+        }
+        Update: {
+          ad_id?: string | null
+          ad_name?: string | null
+          ad_set_id?: string | null
+          ad_set_name?: string | null
+          airtable_record_id?: string | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          clicks?: number | null
+          cost_per_lpv?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string | null
+          delivery_status?: string | null
+          destination_url?: string | null
+          format?: string | null
+          frequency?: number | null
+          headline?: string | null
+          id?: string
+          impressions?: number | null
+          link_clicks?: number | null
+          lpv?: number | null
+          page_likes?: number | null
+          platform?: string | null
+          post_engagement?: number | null
+          primary_text?: string | null
+          reach?: number | null
+          thumbnail_url?: string | null
+          total_spent?: number | null
+          updated_at?: string
+          video_plays?: number | null
         }
         Relationships: []
       }
