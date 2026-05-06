@@ -55,6 +55,10 @@ import AdminBillingPage from "./pages/admin/AdminBillingPage";
 import AdminRoute from "./components/admin/AdminRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthCallback from "./pages/AuthCallback";
+import NaybourhoodLayout from "./pages/naybourhood/NaybourhoodLayout";
+import LeadInbox from "./pages/naybourhood/LeadInbox";
+import BuyerProfile from "./pages/naybourhood/BuyerProfile";
+import QualificationTimeline from "./pages/naybourhood/QualificationTimeline";
 
 const queryClient = new QueryClient();
 
@@ -206,7 +210,13 @@ const AppRoutes = () => {
       } />
       <Route path="/admin/settings" element={<AdminRoute><Settings userType="admin" /></AdminRoute>} />
 
-      <Route path="*" element={<NotFound />} />
+      {/* Naybourhood — Buyer Intelligence */}
+      <Route path="/naybourhood" element={<NaybourhoodLayout />}>
+        <Route index element={<LeadInbox />} />
+        <Route path="buyers" element={<LeadInbox />} />
+        <Route path="buyer/:id" element={<BuyerProfile />} />
+        <Route path="buyer/:id/timeline" element={<QualificationTimeline />} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>

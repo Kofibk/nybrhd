@@ -61,6 +61,10 @@
     --gold: 45 93% 47%;
     --gold-foreground: 0 0% 0%;
 
+    /* Naybourhood teal accent */
+    --nb-teal: 168 76% 50%;
+    --nb-teal-foreground: 0 0% 5%;
+
     /* Chart Colors for Dashboards */
     --chart-1: 142 76% 36%;
     --chart-2: 38 92% 50%;
