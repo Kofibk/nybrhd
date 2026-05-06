@@ -1,4 +1,4 @@
-import removeBackground from '@imgly/background-removal';
+import { removeBackground } from '@imgly/background-removal';
 
 export const removeBackgroundFromImage = async (imageElement: HTMLImageElement): Promise<Blob> => {
   try {
